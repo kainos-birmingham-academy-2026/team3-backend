@@ -6,6 +6,7 @@
         "esModuleInterop": true, // allows default imports from CommonJS packages
         "strict": true, // enables all strict type checks
         "outDir": "./dist", // compiled JS output folder
+    "types": ["jest", "node"],
         "rootDir": "./src" // where your TypeScript source lives
     },
     "include": ["src/**/*"],

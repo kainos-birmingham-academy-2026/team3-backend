@@ -4,11 +4,11 @@
   "description": "Team3 Backend",
   "main": "dist/index.js",
   "scripts": {
-    "build" : "tsc",
+    "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
     "lint": "tsc --noEmit",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -21,12 +21,28 @@
     "url": "https://github.com/kainos-birmingham-academy-2026/team3-backend/issues"
   },
   "homepage": "https://github.com/kainos-birmingham-academy-2026/team3-backend#readme",
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/*.test.ts"
+    ],
+    "transform": {
+      "^.+\\.tsx?$": "babel-jest"
+    }
+  },
   "dependencies": {
     "express": "^5.2.1"
   },
   "devDependencies": {
+    "@babel/core": "^8.0.1",
+    "@babel/preset-env": "^8.0.2",
+    "@babel/preset-typescript": "^8.0.1",
     "@types/express": "^5.0.6",
+    "@types/jest": "^30.0.0",
     "@types/node": "^26.1.2",
+    "babel-jest": "^30.4.1",
+    "jest": "^30.4.2",
+    "ts-jest": "^29.4.12",
     "tsx": "^4.23.5",
     "typescript": "^7.0.2"
   }
