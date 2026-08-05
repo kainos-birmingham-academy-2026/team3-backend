@@ -47,8 +47,9 @@ npm start
 - `npm run dev` - Run the server in watch mode for development.
 - `npm run build` - Compile TypeScript into `dist/`.
 - `npm start` - Run the compiled app from `dist/index.js`.
-- `npm run lint` - Type-check without emitting files.
 - `npm test` - Placeholder test command.
+- `npm run lint` - Lints files and flags issues
+- `npm run lint:fix` - Lints files and auto all fixes (both safe and unsafe fixes) with biome .
 
 ## API Endpoints
 
