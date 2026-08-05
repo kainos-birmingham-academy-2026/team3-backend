@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import express from "express";
 
 const app = express();
@@ -16,8 +17,13 @@ app.get("/health", (req, res) => {
 	res.json({ status: "UP", timestamp: new Date().toISOString() });
 });
 
-// Start server
-app.listen(PORT, () => {
-	console.log(`Server running on http://localhost:${PORT}`);
-	console.log(`Try: http://localhost:${PORT}/health`);
-});
+const isMainModule = process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1];
+
+if (isMainModule) {
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Try: http://localhost:${PORT}/health`);
+  });
+}
+
+export default app;
