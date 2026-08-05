@@ -29,12 +29,21 @@ Then set a valid `DATABASE_URL` in `.env` for your local Postgres instance.
 
 Use your own local Postgres username, and set the password to `password`.
 
-### 3. Apply database migrations
+### 3. Ensure Docker is running and start Postgres
+
+Make sure Docker is running, then start the local Postgres container:
+
+```bash
+docker run --name jobRoles-db -e POSTGRES_PASSWORD=password -e POSTGRES_DB=jobRoles -p 5432:5432 -d postgres
+```
+
+### 4. Apply database migrations
 
 ```bash
 npx prisma migrate dev
 ```
-### 4. Run in development mode
+
+### 5. Run in development mode
 
 Starts the app with file watching via `tsx watch`.
 
