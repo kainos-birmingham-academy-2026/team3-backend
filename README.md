@@ -34,14 +34,7 @@ Use your own local Postgres username, and set the password to `password`.
 ```bash
 npx prisma migrate dev
 ```
-
-### 4. Seed the database (optional)
-
-```bash
-npm run seed
-```
-
-### 5. Run in development mode
+### 4. Run in development mode
 
 Starts the app with file watching via `tsx watch`.
 
