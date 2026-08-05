@@ -43,7 +43,13 @@ docker run --name jobRoles-db -e POSTGRES_PASSWORD=password -e POSTGRES_DB=jobRo
 npx prisma migrate dev
 ```
 
-### 5. Run in development mode
+### 5. Open Prisma Studio (optional)
+
+```bash
+npx prisma studio
+```
+
+### 6. Run in development mode
 
 Starts the app with file watching via `tsx watch`.
 
@@ -57,13 +63,13 @@ The server runs on:
 http://localhost:3000
 ```
 
-### 6. Build for production
+### 7. Build for production
 
 ```bash
 npm run build
 ```
 
-### 7. Start production build
+### 8. Start production build
 
 ```bash
 npm start
