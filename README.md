@@ -16,7 +16,32 @@ An API framework built in Express + TypeScript.
 npm install
 ```
 
-### 2. Run in development mode
+### 2. Configure environment variables
+
+This repository already contains Prisma files, so running `npx prisma init` again will fail.
+
+Create your local `.env` from the template:
+
+```bash
+cp .env.example .env
+```
+Then set a valid `DATABASE_URL` in `.env` for your local Postgres instance.
+
+Use your own local Postgres username, and set the password to `password`.
+
+### 3. Apply database migrations
+
+```bash
+npx prisma migrate dev
+```
+
+### 4. Seed the database (optional)
+
+```bash
+npm run seed
+```
+
+### 5. Run in development mode
 
 Starts the app with file watching via `tsx watch`.
 
@@ -30,13 +55,13 @@ The server runs on:
 http://localhost:3000
 ```
 
-### 3. Build for production
+### 6. Build for production
 
 ```bash
 npm run build
 ```
 
-### 4. Start production build
+### 7. Start production build
 
 ```bash
 npm start
