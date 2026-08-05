@@ -48,7 +48,9 @@ npm start
 - `npm run build` - Compile TypeScript into `dist/`.
 - `npm start` - Run the compiled app from `dist/index.js`.
 - `npm run lint` - Type-check without emitting files.
-- `npm test` - Placeholder test command.
+- `npm test` - Executes unit tests.
+- `npm run test:watch` - Runs unit tests in watch mode.
+- `npm run test:coverage` - Generates coverage report.
 
 ## API Endpoints
 
