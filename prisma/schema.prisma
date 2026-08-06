@@ -12,6 +12,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  //using deprecated prisma v6, ignore warning as for v7, the url field is required
 }
 
 model JobRole {

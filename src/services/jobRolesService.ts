@@ -3,6 +3,6 @@ import type { JobRole } from "../generated/prisma/client.js";
 
 export class JobRolesService {
     async findAll(): Promise<JobRole[]> {
-        return prisma.jobRole.findMany();
+        return await prisma.jobRole.findMany();
     }
 }

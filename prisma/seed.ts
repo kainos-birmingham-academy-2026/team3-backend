@@ -3,7 +3,7 @@ import { PrismaClient } from "../src/generated/prisma/client";
 
 const prisma = new PrismaClient();
 
-async function main() {
+ async function main() {
   // Capabilities
   const [engineering, data, cloud, security, delivery] = await Promise.all([
     prisma.capability.create({ data: { capabilityName: "Software Engineering" } }),
