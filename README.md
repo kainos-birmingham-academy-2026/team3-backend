@@ -27,7 +27,7 @@ cp .env.example .env
 ```
 Then set a valid `DATABASE_URL` in `.env` for your local Postgres instance.
 
-Use your own local Postgres username, and set the password to `password`.
+! Use your own local Postgres username, and set the password to `password`. !
 
 ### 3. Ensure Docker is running and start Postgres
 
@@ -60,7 +60,7 @@ npm run dev
 The server runs on:
 
 ```text
-http://localhost:3000
+http://localhost:4000
 ```
 
 ### 7. Build for production
@@ -80,8 +80,7 @@ npm start
 - `npm run dev` - Run the server in watch mode for development.
 - `npm run build` - Compile TypeScript into `dist/`.
 - `npm start` - Run the compiled app from `dist/index.js`.
-- `npm run lint` - Type-check without emitting files.
-- `npm test` - Placeholder test command.
+- `npm seed` - Seeds the database.
 
 ## API Endpoints
 
@@ -93,6 +92,38 @@ Example response:
 
 ```text
 Welcome to your API!
+```
+
+### `GET /job-roles`
+
+Returns a all job roles in the database (currently seeded with test data).
+
+Example response:
+
+```json
+[
+  {
+    "jobRoleId": 1,
+    "roleName": "Software Engineer",
+    "location": "Belfast",
+    "closingDate": "2026-09-30T00:00:00.000Z",
+    "status": "open"
+  },
+  {
+    "jobRoleId": 2,
+    "roleName": "Senior Software Engineer",
+    "location": "Glasgow",
+    "closingDate": "2026-10-15T00:00:00.000Z",
+    "status": "open"
+  },
+  {
+    "jobRoleId": 3,
+    "roleName": "Lead Software Engineer",
+    "location": "Birmingham",
+    "closingDate": "2026-09-05T00:00:00.000Z",
+    "status": "open"
+  }
+]
 ```
 
 ### `GET /health`
@@ -113,6 +144,6 @@ Example response:
 After starting the app, you can verify endpoints with:
 
 ```bash
-curl http://localhost:3000/
-curl http://localhost:3000/health
+curl http://localhost:4000/
+curl http://localhost:4000/health
 ```
