@@ -36,6 +36,8 @@
 	"devDependencies": {
 		"@types/express": "^5.0.6",
 		"@types/node": "^26.1.2",
+		"@types/supertest": "^7.2.1",
+		"@vitest/coverage-v8": "^4.1.10",
 		"tsx": "^4.23.5",
 		"typescript": "^7.0.2"
 	},

@@ -1,0 +1,275 @@
+import { describe, it, expect, beforeEach } from 'vitest';
+import { JobRoleMapper } from '../../src/mappers/jobRoleMapper.ts';
+import { JobRole } from '../../src/models/jobRole.ts';
+
+describe('JobRoleMapper', () => {
+    let mapper: JobRoleMapper;
+
+    beforeEach(() => {
+        mapper = new JobRoleMapper();
+    });
+
+    describe('toResponse()', () => {
+        it('should transform JobRole to JobRoleResponse correctly', () => {
+            const jobRole = new JobRole(
+                1,
+                'Software Engineer',
+                'Birmingham',
+                1,
+                1,
+                new Date('2026-12-31'),
+                'OPEN',
+                new Date('2026-01-01'),
+                new Date('2026-01-01')
+            );
+
+            const response = mapper.toResponse(jobRole);
+
+            expect(response).toBeDefined();
+            expect(response.jobRoleId).toBe(1);
+            expect(response.roleName).toBe('Software Engineer');
+            expect(response.location).toBe('Birmingham');
+            expect(response.capabilityId).toBe(1);
+            expect(response.bandId).toBe(1);
+            expect(response.status).toBe('OPEN');
+        });
+
+        it('should map jobRoleId field correctly', () => {
+            const jobRole = new JobRole(
+                42,
+                'Role',
+                'Location',
+                1,
+                1,
+                new Date('2026-12-31'),
+                'OPEN',
+                new Date(),
+                new Date()
+            );
+
+            const response = mapper.toResponse(jobRole);
+
+            expect(response.jobRoleId).toBe(42);
+        });
+
+        it('should map roleName field correctly', () => {
+            const jobRole = new JobRole(
+                1,
+                'Senior Developer',
+                'Location',
+                1,
+                1,
+                new Date('2026-12-31'),
+                'OPEN',
+                new Date(),
+                new Date()
+            );
+
+            const response = mapper.toResponse(jobRole);
+
+            expect(response.roleName).toBe('Senior Developer');
+        });
+
+        it('should map location field correctly', () => {
+            const jobRole = new JobRole(
+                1,
+                'Role',
+                'Manchester',
+                1,
+                1,
+                new Date('2026-12-31'),
+                'OPEN',
+                new Date(),
+                new Date()
+            );
+
+            const response = mapper.toResponse(jobRole);
+
+            expect(response.location).toBe('Manchester');
+        });
+
+        it('should map capabilityId field correctly', () => {
+            const jobRole = new JobRole(
+                1,
+                'Role',
+                'Location',
+                5,
+                1,
+                new Date('2026-12-31'),
+                'OPEN',
+                new Date(),
+                new Date()
+            );
+
+            const response = mapper.toResponse(jobRole);
+
+            expect(response.capabilityId).toBe(5);
+        });
+
+        it('should map bandId field correctly', () => {
+            const jobRole = new JobRole(
+                1,
+                'Role',
+                'Location',
+                1,
+                3,
+                new Date('2026-12-31'),
+                'OPEN',
+                new Date(),
+                new Date()
+            );
+
+            const response = mapper.toResponse(jobRole);
+
+            expect(response.bandId).toBe(3);
+        });
+
+        it('should map closingDate field correctly', () => {
+            const closingDate = new Date('2026-12-31');
+            const jobRole = new JobRole(
+                1,
+                'Role',
+                'Location',
+                1,
+                1,
+                closingDate,
+                'OPEN',
+                new Date(),
+                new Date()
+            );
+
+            const response = mapper.toResponse(jobRole);
+
+            expect(response.closingDate).toEqual(closingDate);
+        });
+
+        it('should map status field correctly', () => {
+            const jobRole = new JobRole(
+                1,
+                'Role',
+                'Location',
+                1,
+                1,
+                new Date('2026-12-31'),
+                'CLOSED',
+                new Date(),
+                new Date()
+            );
+
+            const response = mapper.toResponse(jobRole);
+
+            expect(response.status).toBe('CLOSED');
+        });
+
+        it('should exclude createdAt from response', () => {
+            const jobRole = new JobRole(
+                1,
+                'Role',
+                'Location',
+                1,
+                1,
+                new Date('2026-12-31'),
+                'OPEN',
+                new Date('2026-01-01'),
+                new Date('2026-01-01')
+            );
+
+            const response = mapper.toResponse(jobRole);
+
+            expect(response).not.toHaveProperty('createdAt');
+        });
+
+        it('should exclude updatedAt from response', () => {
+            const jobRole = new JobRole(
+                1,
+                'Role',
+                'Location',
+                1,
+                1,
+                new Date('2026-12-31'),
+                'OPEN',
+                new Date('2026-01-01'),
+                new Date('2026-01-01')
+            );
+
+            const response = mapper.toResponse(jobRole);
+
+            expect(response).not.toHaveProperty('updatedAt');
+        });
+
+        it('should handle Date objects correctly in closingDate field', () => {
+            const closingDate = new Date('2026-06-15T10:30:00Z');
+            const jobRole = new JobRole(
+                1,
+                'Role',
+                'Location',
+                1,
+                1,
+                closingDate,
+                'OPEN',
+                new Date(),
+                new Date()
+            );
+
+            const response = mapper.toResponse(jobRole);
+
+            expect(response.closingDate).toBeInstanceOf(Date);
+            expect(response.closingDate.getTime()).toBe(closingDate.getTime());
+        });
+
+        it('should handle multiple transformations independently', () => {
+            const jobRole1 = new JobRole(
+                1,
+                'Role 1',
+                'Location 1',
+                1,
+                1,
+                new Date('2026-12-31'),
+                'OPEN',
+                new Date(),
+                new Date()
+            );
+
+            const jobRole2 = new JobRole(
+                2,
+                'Role 2',
+                'Location 2',
+                2,
+                2,
+                new Date('2026-11-30'),
+                'CLOSED',
+                new Date(),
+                new Date()
+            );
+
+            const response1 = mapper.toResponse(jobRole1);
+            const response2 = mapper.toResponse(jobRole2);
+
+            expect(response1.jobRoleId).toBe(1);
+            expect(response1.roleName).toBe('Role 1');
+            expect(response2.jobRoleId).toBe(2);
+            expect(response2.roleName).toBe('Role 2');
+        });
+
+        it('should only include expected response fields', () => {
+            const jobRole = new JobRole(
+                1,
+                'Role',
+                'Location',
+                1,
+                1,
+                new Date('2026-12-31'),
+                'OPEN',
+                new Date(),
+                new Date()
+            );
+
+            const response = mapper.toResponse(jobRole);
+
+            const expectedKeys = ['jobRoleId', 'roleName', 'location', 'capabilityId', 'bandId', 'closingDate', 'status'];
+            const actualKeys = Object.keys(response);
+
+            expect(actualKeys.sort()).toEqual(expectedKeys.sort());
+        });
+    });
+});
