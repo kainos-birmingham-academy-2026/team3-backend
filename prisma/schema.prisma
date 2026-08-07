@@ -21,6 +21,8 @@ model JobRole {
   location     String
   capabilityId Int
   bandId       Int
+  capability   Capability @relation(fields: [capabilityId], references: [capabilityId], onDelete: Restrict, onUpdate: Cascade)
+  band         Band       @relation(fields: [bandId], references: [nameId], onDelete: Restrict, onUpdate: Cascade)
   closingDate  DateTime
   status       String
   createdAt    DateTime @default(now())
@@ -30,6 +32,7 @@ model JobRole {
 model Capability {
   capabilityId   Int      @id @default(autoincrement())
   capabilityName String
+  jobRoles       JobRole[]
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
@@ -37,6 +40,7 @@ model Capability {
 model Band {
   nameId    Int      @id @default(autoincrement())
   bandName  String
+  jobRoles  JobRole[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
