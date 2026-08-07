@@ -16,7 +16,40 @@ An API framework built in Express + TypeScript.
 npm install
 ```
 
-### 2. Run in development mode
+### 2. Configure environment variables
+
+This repository already contains Prisma files, so running `npx prisma init` again will fail.
+
+Create your local `.env` from the template:
+
+```bash
+cp .env.example .env
+```
+Then set a valid `DATABASE_URL` in `.env` for your local Postgres instance.
+
+! Use your own local Postgres username, and set the password to `password`. !
+
+### 3. Ensure Docker is running and start Postgres
+
+Make sure Docker is running, then start the local Postgres container:
+
+```bash
+docker run --name jobRoles-db -e POSTGRES_PASSWORD=password -e POSTGRES_DB=jobRoles -p 5432:5432 -d postgres
+```
+
+### 4. Apply database migrations
+
+```bash
+npx prisma migrate dev
+```
+
+### 5. Open Prisma Studio (optional)
+
+```bash
+npx prisma studio
+```
+
+### 6. Run in development mode
 
 Starts the app with file watching via `tsx watch`.
 
@@ -27,16 +60,16 @@ npm run dev
 The server runs on:
 
 ```text
-http://localhost:3000
+http://localhost:4000
 ```
 
-### 3. Build for production
+### 7. Build for production
 
 ```bash
 npm run build
 ```
 
-### 4. Start production build
+### 8. Start production build
 
 ```bash
 npm start
@@ -52,6 +85,7 @@ npm start
 - `npm test` - Executes unit tests.
 - `npm run test:watch` - Runs unit tests in watch mode.
 - `npm run test:coverage` - Generates coverage report.
+- `npm seed` - Seeds the database.
 
 ## API Endpoints
 
@@ -63,6 +97,38 @@ Example response:
 
 ```text
 Welcome to your API!
+```
+
+### `GET /job-roles`
+
+Returns a all job roles in the database (currently seeded with test data).
+
+Example response:
+
+```json
+[
+  {
+    "jobRoleId": 1,
+    "roleName": "Software Engineer",
+    "location": "Belfast",
+    "closingDate": "2026-09-30T00:00:00.000Z",
+    "status": "open"
+  },
+  {
+    "jobRoleId": 2,
+    "roleName": "Senior Software Engineer",
+    "location": "Glasgow",
+    "closingDate": "2026-10-15T00:00:00.000Z",
+    "status": "open"
+  },
+  {
+    "jobRoleId": 3,
+    "roleName": "Lead Software Engineer",
+    "location": "Birmingham",
+    "closingDate": "2026-09-05T00:00:00.000Z",
+    "status": "open"
+  }
+]
 ```
 
 ### `GET /health`
@@ -83,6 +149,6 @@ Example response:
 After starting the app, you can verify endpoints with:
 
 ```bash
-curl http://localhost:3000/
-curl http://localhost:3000/health
+curl http://localhost:4000/
+curl http://localhost:4000/health
 ```

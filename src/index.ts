@@ -1,11 +1,14 @@
 import { fileURLToPath } from "node:url";
 import express from "express";
+import jobRolesRouter from "./routes/jobRolesRouter";
 
 const app = express();
-const PORT = 3000;
+const PORT = 4000;
 
 // Middleware
 app.use(express.json());
+
+app.use("/", jobRolesRouter);
 
 // Root endpoint
 app.get("/", (req, res) => {

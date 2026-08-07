@@ -1,0 +1,46 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  //using deprecated prisma v6, ignore warning as for v7, the url field is required
+}
+
+model JobRole {
+  jobRoleId    Int      @id @default(autoincrement())
+  roleName     String
+  location     String
+  capabilityId Int
+  bandId       Int
+  capability   Capability @relation(fields: [capabilityId], references: [capabilityId], onDelete: Restrict, onUpdate: Cascade)
+  band         Band       @relation(fields: [bandId], references: [nameId], onDelete: Restrict, onUpdate: Cascade)
+  closingDate  DateTime
+  status       String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Capability {
+  capabilityId   Int      @id @default(autoincrement())
+  capabilityName String
+  jobRoles       JobRole[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Band {
+  nameId    Int      @id @default(autoincrement())
+  bandName  String
+  jobRoles  JobRole[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
