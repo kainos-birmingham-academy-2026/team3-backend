@@ -7,6 +7,7 @@
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {
@@ -15,32 +16,47 @@ datasource db {
   //using deprecated prisma v6, ignore warning as for v7, the url field is required
 }
 
+enum Status {
+  OPEN
+  CLOSED
+}
+
+
 model JobRole {
-  jobRoleId    Int      @id @default(autoincrement())
-  roleName     String
-  location     String
+  jobRoleId    Int         @id @default(autoincrement())
+  roleName     String      @db.VarChar(100)
   capabilityId Int
   bandId       Int
+  locationId   Int
   capability   Capability @relation(fields: [capabilityId], references: [capabilityId], onDelete: Restrict, onUpdate: Cascade)
   band         Band       @relation(fields: [bandId], references: [nameId], onDelete: Restrict, onUpdate: Cascade)
-  closingDate  DateTime
-  status       String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  location     Location   @relation(fields: [locationId], references: [locationId], onDelete: Restrict, onUpdate: Cascade)
+  closingDate  DateTime?
+  status       Status
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 }
 
 model Capability {
-  capabilityId   Int      @id @default(autoincrement())
-  capabilityName String
+  capabilityId   Int        @id @default(autoincrement())
+  capabilityName String     @unique @db.VarChar(100)
   jobRoles       JobRole[]
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 }
 
 model Band {
-  nameId    Int      @id @default(autoincrement())
-  bandName  String
+  nameId    Int        @id @default(autoincrement())
+  bandName  String     @unique @db.VarChar(100)
   jobRoles  JobRole[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Location {
+  locationId   Int        @id @default(autoincrement())
+  locationName String     @unique @db.VarChar(100)
+  jobRoles     JobRole[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
