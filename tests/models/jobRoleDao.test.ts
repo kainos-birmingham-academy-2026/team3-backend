@@ -12,6 +12,39 @@ vi.mock('../../src/prismaClient.ts', () => ({
 import { JobRoleDao } from '../../src/models/jobRoleDao.ts';
 import prisma from '../../src/prismaClient.ts';
 
+function mockRow(overrides: Record<string, unknown> = {}) {
+    return {
+        jobRoleId: 1,
+        roleName: 'Software Engineer',
+        locationId: 1,
+        capabilityId: 1,
+        bandId: 1,
+        closingDate: new Date('2026-12-31'),
+        status: 'OPEN',
+        createdAt: new Date('2026-01-01'),
+        updatedAt: new Date('2026-01-02'),
+        location: {
+            locationId: 1,
+            locationName: 'Belfast',
+            createdAt: new Date('2026-01-01'),
+            updatedAt: new Date('2026-01-01'),
+        },
+        capability: {
+            capabilityId: 1,
+            capabilityName: 'Software Engineering',
+            createdAt: new Date('2026-01-01'),
+            updatedAt: new Date('2026-01-01'),
+        },
+        band: {
+            nameId: 1,
+            bandName: 'Engineer',
+            createdAt: new Date('2026-01-01'),
+            updatedAt: new Date('2026-01-01'),
+        },
+        ...overrides,
+    };
+}
+
 describe('JobRoleDao', () => {
     let dao: JobRoleDao;
 
@@ -31,32 +64,45 @@ describe('JobRoleDao', () => {
             await dao.findAll();
 
             expect(prisma.jobRole.findMany).toHaveBeenCalledTimes(1);
+            expect(prisma.jobRole.findMany).toHaveBeenCalledWith({
+                relationLoadStrategy: 'join',
+                include: {
+                    location: true,
+                    capability: true,
+                    band: true,
+                },
+            });
         });
 
         it('should return array of JobRole objects when data exists', async () => {
             const mockJobRoles = [
-                {
-                    jobRoleId: 1,
-                    roleName: 'Software Engineer',
-                    location: 'Birmingham',
-                    capabilityId: 1,
-                    bandId: 1,
-                    closingDate: new Date('2026-12-31'),
-                    status: 'OPEN',
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                },
-                {
+                mockRow(),
+                mockRow({
                     jobRoleId: 2,
                     roleName: 'Product Manager',
-                    location: 'London',
+                    locationId: 2,
                     capabilityId: 2,
                     bandId: 2,
-                    closingDate: new Date('2026-11-30'),
                     status: 'CLOSED',
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                },
+                    location: {
+                        locationId: 2,
+                        locationName: 'London',
+                        createdAt: new Date('2026-01-01'),
+                        updatedAt: new Date('2026-01-01'),
+                    },
+                    capability: {
+                        capabilityId: 2,
+                        capabilityName: 'Delivery Management',
+                        createdAt: new Date('2026-01-01'),
+                        updatedAt: new Date('2026-01-01'),
+                    },
+                    band: {
+                        nameId: 2,
+                        bandName: 'Senior Engineer',
+                        createdAt: new Date('2026-01-01'),
+                        updatedAt: new Date('2026-01-01'),
+                    },
+                }),
             ];
 
             vi.mocked(prisma.jobRole.findMany as any).mockResolvedValueOnce(mockJobRoles);
@@ -91,19 +137,7 @@ describe('JobRoleDao', () => {
         });
 
         it('should return data with all fields', async () => {
-            const mockJobRoles = [
-                {
-                    jobRoleId: 1,
-                    roleName: 'Developer',
-                    location: 'Location',
-                    capabilityId: 1,
-                    bandId: 1,
-                    closingDate: new Date('2026-12-31'),
-                    status: 'OPEN',
-                    createdAt: new Date('2026-01-01'),
-                    updatedAt: new Date('2026-01-01'),
-                },
-            ];
+            const mockJobRoles = [mockRow()];
 
             vi.mocked(prisma.jobRole.findMany as any).mockResolvedValueOnce(mockJobRoles);
 
@@ -111,9 +145,12 @@ describe('JobRoleDao', () => {
 
             expect(result[0]).toHaveProperty('jobRoleId');
             expect(result[0]).toHaveProperty('roleName');
-            expect(result[0]).toHaveProperty('location');
+            expect(result[0]).toHaveProperty('locationId');
+            expect(result[0]).toHaveProperty('locationName');
             expect(result[0]).toHaveProperty('capabilityId');
+            expect(result[0]).toHaveProperty('capabilityName');
             expect(result[0]).toHaveProperty('bandId');
+            expect(result[0]).toHaveProperty('bandName');
             expect(result[0]).toHaveProperty('closingDate');
             expect(result[0]).toHaveProperty('status');
             expect(result[0]).toHaveProperty('createdAt');
@@ -122,39 +159,9 @@ describe('JobRoleDao', () => {
 
         it('should preserve order from database', async () => {
             const mockJobRoles = [
-                {
-                    jobRoleId: 1,
-                    roleName: 'Role 1',
-                    location: 'Location 1',
-                    capabilityId: 1,
-                    bandId: 1,
-                    closingDate: new Date('2026-12-31'),
-                    status: 'OPEN',
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                },
-                {
-                    jobRoleId: 2,
-                    roleName: 'Role 2',
-                    location: 'Location 2',
-                    capabilityId: 2,
-                    bandId: 2,
-                    closingDate: new Date('2026-11-30'),
-                    status: 'OPEN',
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                },
-                {
-                    jobRoleId: 3,
-                    roleName: 'Role 3',
-                    location: 'Location 3',
-                    capabilityId: 3,
-                    bandId: 3,
-                    closingDate: new Date('2026-10-30'),
-                    status: 'OPEN',
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                },
+                mockRow({ jobRoleId: 1, roleName: 'Role 1', location: { locationId: 1, locationName: 'Location 1', createdAt: new Date(), updatedAt: new Date() } }),
+                mockRow({ jobRoleId: 2, roleName: 'Role 2', location: { locationId: 2, locationName: 'Location 2', createdAt: new Date(), updatedAt: new Date() } }),
+                mockRow({ jobRoleId: 3, roleName: 'Role 3', location: { locationId: 3, locationName: 'Location 3', createdAt: new Date(), updatedAt: new Date() } }),
             ];
 
             vi.mocked(prisma.jobRole.findMany as any).mockResolvedValueOnce(mockJobRoles);
@@ -167,33 +174,8 @@ describe('JobRoleDao', () => {
         });
 
         it('should handle multiple calls correctly', async () => {
-            const mockJobRoles1 = [
-                {
-                    jobRoleId: 1,
-                    roleName: 'Role 1',
-                    location: 'Location 1',
-                    capabilityId: 1,
-                    bandId: 1,
-                    closingDate: new Date('2026-12-31'),
-                    status: 'OPEN',
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                },
-            ];
-
-            const mockJobRoles2 = [
-                {
-                    jobRoleId: 2,
-                    roleName: 'Role 2',
-                    location: 'Location 2',
-                    capabilityId: 2,
-                    bandId: 2,
-                    closingDate: new Date('2026-11-30'),
-                    status: 'OPEN',
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                },
-            ];
+            const mockJobRoles1 = [mockRow({ jobRoleId: 1, roleName: 'Role 1' })];
+            const mockJobRoles2 = [mockRow({ jobRoleId: 2, roleName: 'Role 2' })];
 
             vi.mocked(prisma.jobRole.findMany as any)
                 .mockResolvedValueOnce(mockJobRoles1)
