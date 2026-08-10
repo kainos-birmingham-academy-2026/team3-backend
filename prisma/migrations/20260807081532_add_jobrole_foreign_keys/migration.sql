@@ -3,3 +3,5 @@ ALTER TABLE "JobRole" ADD CONSTRAINT "JobRole_capabilityId_fkey" FOREIGN KEY ("c
 
 -- AddForeignKey
 ALTER TABLE "JobRole" ADD CONSTRAINT "JobRole_bandId_fkey" FOREIGN KEY ("bandId") REFERENCES "Band"("nameId") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+

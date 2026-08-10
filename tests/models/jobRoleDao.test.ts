@@ -197,4 +197,5 @@ describe('JobRoleDao', () => {
             await expect(dao.findAll()).rejects.toThrow('P1000: Authentication failed against database server');
         });
     });
+
 });
