@@ -1,4 +1,3 @@
-
 export class JobRole {
     public readonly jobRoleId: number;
     public readonly roleName: string;
@@ -10,7 +9,17 @@ export class JobRole {
     public readonly createdAt: Date;
     public readonly updatedAt: Date;
 
-    constructor(jobRoleId: number, roleName: string, location: string, capabilityId: number, bandId: number, closingDate: Date | null, status: string, createdAt: Date, updatedAt: Date) {
+    constructor(
+        jobRoleId: number,
+        roleName: string,
+        location: string,
+        capabilityId: number,
+        bandId: number,
+        closingDate: Date | null,
+        status: string,
+        createdAt: Date,
+        updatedAt: Date
+    ) {
         this.jobRoleId = jobRoleId;
         this.roleName = roleName;
         this.location = location;
