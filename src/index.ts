@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import express from "express";
 import jobRolesRouter from "./routes/jobRolesRouter";
+import authRouter from "./routes/authRouter";
 
 const app = express();
 const PORT = 4000;
@@ -9,6 +10,7 @@ const PORT = 4000;
 app.use(express.json());
 
 app.use("/", jobRolesRouter);
+app.use("/api/login", authRouter);
 
 // Root endpoint
 app.get("/", (req, res) => {
