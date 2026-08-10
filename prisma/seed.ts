@@ -1,14 +1,15 @@
 import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
 
+//status 
+enum Status {
+  OPEN = "OPEN",
+  CLOSED = "CLOSED",
+}
+
 const prisma = new PrismaClient();
 
- async function main() {
-  //status 
-  enum Status {
-    OPEN = "OPEN",
-    CLOSED = "CLOSED",
-  }
+async function main() {
   // Locations
   const [belfast, glasgow, birmingham, london, manchester, edinburgh, remote] = await Promise.all([
     prisma.location.create({ data: { locationName: "Belfast" } }),
