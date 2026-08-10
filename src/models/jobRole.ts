@@ -2,33 +2,20 @@
 export class JobRole {
     public readonly jobRoleId: number;
     public readonly roleName: string;
-    public readonly locationId: number;
-    public readonly locationName: string;
+    public readonly location: string;
     public readonly capabilityId: number;
-    public readonly capabilityName: string;
     public readonly bandId: number;
-<<<<<<< HEAD
-=======
-    public readonly bandName: string;
->>>>>>> main
     public readonly closingDate: Date | null;
     public readonly status: string;
     public readonly createdAt: Date;
     public readonly updatedAt: Date;
 
-<<<<<<< HEAD
     constructor(jobRoleId: number, roleName: string, location: string, capabilityId: number, bandId: number, closingDate: Date | null, status: string, createdAt: Date, updatedAt: Date) {
-=======
-    constructor(jobRoleId: number, roleName: string, locationId: number, locationName: string, capabilityId: number, capabilityName: string, bandId: number, bandName: string, closingDate: Date | null, status: string, createdAt: Date, updatedAt: Date) {
->>>>>>> main
         this.jobRoleId = jobRoleId;
         this.roleName = roleName;
-        this.locationId = locationId;
-        this.locationName = locationName;
+        this.location = location;
         this.capabilityId = capabilityId;
-        this.capabilityName = capabilityName;
         this.bandId = bandId;
-        this.bandName = bandName;
         this.closingDate = closingDate;
         this.status = status;
         this.createdAt = createdAt;
