@@ -6,9 +6,9 @@ export class JobRoleMapper {
         return {
             jobRoleId: jobRole.jobRoleId,
             roleName: jobRole.roleName,
-            location: jobRole.location,
-            capabilityId: jobRole.capabilityId,
-            bandId: jobRole.bandId,
+            locationName: jobRole.locationName,
+            capabilityName: jobRole.capabilityName,
+            bandName: jobRole.bandName,
             closingDate: jobRole.closingDate,
             status: jobRole.status
         };
