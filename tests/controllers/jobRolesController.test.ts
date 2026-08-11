@@ -1,138 +1,148 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import type { Mock } from 'vitest';
-import { JobRolesController } from '../../src/controllers/jobRolesController.ts';
-import type { JobRolesService } from '../../src/services/jobRolesService.ts';
-import type { JobRoleResponse } from '../../src/models/jobRoleResponse.ts';
-import type { Request, Response } from 'express';
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { JobRolesController } from "../../src/controllers/jobRolesController.js";
+import { NotFoundError } from "error-lib";
+import type { Request, Response } from "express";
 
-describe('JobRolesController', () => {
-    let controller: JobRolesController;
-    let mockFindAll: Mock<() => Promise<JobRoleResponse[]>>;
-    let mockService: JobRolesService;
-    let mockRequest: Partial<Request>;
-    let mockResponse: Partial<Response>;
-    let statusSpy: Mock;
-    let sendSpy: Mock;
-    let jsonSpy: Mock;
+const CREATED_AT = new Date("2026-01-01T10:00:00.000Z");
+const UPDATED_AT = new Date("2026-01-02T10:00:00.000Z");
 
-    beforeEach(() => {
-        // Setup mock response
-        statusSpy = vi.fn().mockReturnThis();
-        sendSpy = vi.fn().mockReturnThis();
-        jsonSpy = vi.fn().mockReturnThis();
+const createMockResponse = () => {
+	const res = {
+		status: vi.fn(),
+		send: vi.fn(),
+		json: vi.fn(),
+	};
 
-        // Create mock service with proper type
-        mockFindAll = vi.fn() as Mock<() => Promise<JobRoleResponse[]>>;
-        mockService = {
-            findAll: mockFindAll,
-        } as unknown as JobRolesService;
+	res.status.mockReturnValue(res);
+	res.send.mockReturnValue(res);
+	res.json.mockReturnValue(res);
 
-        mockResponse = {
-            status: statusSpy as any,
-            send: sendSpy as any,
-            json: jsonSpy as any,
-        };
+	return res;
+};
 
-        mockRequest = {};
+describe("JobRolesController", () => {
+	const mockService = {
+		findAll: vi.fn(),
+		findById: vi.fn(),
+	} as unknown as JobRolesService;
 
-        controller = new JobRolesController(mockService);
-    });
+	let controller: JobRolesController;
 
-    afterEach(() => {
-        vi.clearAllMocks();
-    });
+	beforeEach(() => {
+		vi.resetAllMocks();
+		controller = new JobRolesController(mockService);
+	});
 
-    describe('getAll()', () => {
-        it('should return 200 status with job roles', async () => {
-            const mockJobRoles = [
-                {
-                    jobRoleId: 1,
-                    roleName: 'Software Engineer',
-                    location: 'Birmingham',
-                    capabilityId: 1,
-                    bandId: 1,
-                    closingDate: new Date('2026-12-31'),
-                    status: 'OPEN',
-                },
-            ];
+	describe("getAll", () => {
+		it("should return 200 with the job roles array", async () => {
+			const req = {};
+			const res = createMockResponse();
 
-            vi.mocked(mockFindAll).mockResolvedValueOnce(mockJobRoles);
+			vi.mocked(mockService.findAll).mockResolvedValue([
+				{
+					jobRoleId: 1,
+					roleName: "Software Engineer",
+					closingDate: new Date("2026-12-31"),
+					capabilityName: "Software Engineering",
+					bandName: "Engineer",
+					locationName: "Birmingham",
+					statusName: "OPEN",
+				},
+			]);
 
-            await controller.getAll(mockRequest as Request, mockResponse as Response);
+			await controller.getAll(req as never, res as never);
 
-            expect(statusSpy).toHaveBeenCalledWith(200);
-            expect(sendSpy).toHaveBeenCalledWith(mockJobRoles);
-        });
+			expect(res.status).toHaveBeenCalledWith(200);
+			const [payload] = vi.mocked(res.send).mock.calls.at(-1) ?? [];
+			expect(payload).toSatisfy(
+				(value) =>
+					Array.isArray(value) &&
+					value.length === 1 &&
+					value[0].jobRoleId === 1 &&
+					value[0].roleName === "Software Engineer" &&
+					value[0].locationName === "Birmingham",
+			);
+		});
 
-        it('should call service.findAll() method', async () => {
-            const mockJobRoles: any[] = [];
-            vi.mocked(mockFindAll).mockResolvedValueOnce(mockJobRoles);
+		it("should return 500 when the service throws", async () => {
+			const req = {};
+			const res = createMockResponse();
 
-            await controller.getAll(mockRequest as Request, mockResponse as Response);
+			vi.mocked(mockService.findAll).mockRejectedValue(new Error("boom"));
 
-            expect(mockFindAll).toHaveBeenCalledTimes(1);
-        });
+			await controller.getAll(req as never, res as never);
 
-        it('should return 500 error when service throws', async () => {
-            vi.mocked(mockFindAll).mockRejectedValueOnce(
-                new Error('Service error')
-            );
+			expect(res.status).toHaveBeenCalledWith(500);
+			expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
+		});
+	});
 
-            await controller.getAll(mockRequest as Request, mockResponse as Response);
+	describe("getById", () => {
+		it("should return 200 when the job role is found", async () => {
+			const req = { params: { id: "1" } };
+			const res = createMockResponse();
 
-            expect(statusSpy).toHaveBeenCalledWith(500);
-            expect(jsonSpy).toHaveBeenCalledWith({ error: 'Internal Server Error' });
-        });
+			vi.mocked(mockService.findById).mockResolvedValue({
+				jobRoleId: 1,
+				roleName: "Software Engineer",
+				description: "Build and maintain software systems",
+				responsibilities: "Code development, testing, deployment",
+				sharepointUrl: "https://sharepoint.example.com/roles/1",
+				numberOfOpenPositions: 2,
+				closingDate: new Date("2026-12-31"),
+				capabilityName: "Software Engineering",
+				bandName: "Engineer",
+				locationName: "Birmingham",
+				statusName: "OPEN",
+				addressLine1: "123 Street",
+				addressLine2: null,
+				postcode: "B1 1AA",
+			});
 
-        it('should handle service returning empty array', async () => {
-            vi.mocked(mockFindAll).mockResolvedValueOnce([]);
+			await controller.getById(req as never, res as never);
 
-            await controller.getAll(mockRequest as Request, mockResponse as Response);
+			expect(res.status).toHaveBeenCalledWith(200);
+			const [payload] = vi.mocked(res.send).mock.calls.at(-1) ?? [];
+			expect(payload).toSatisfy(
+				(value) =>
+					value.jobRoleId === 1 &&
+					value.roleName === "Software Engineer" &&
+					value.locationName === "Birmingham",
+			);
+		});
 
-            expect(statusSpy).toHaveBeenCalledWith(200);
-            expect(sendSpy).toHaveBeenCalledWith([]);
-        });
+		it("should return 404 when the job role is not found", async () => {
+			const req = { params: { id: "999" } };
+			const res = createMockResponse();
 
-        it('should handle database errors gracefully', async () => {
-            const dbError = new Error('Database connection failed');
-            vi.mocked(mockFindAll).mockRejectedValueOnce(dbError);
+			vi.mocked(mockService.findById).mockRejectedValue(new NotFoundError("JobRole with id 999 not found"));
 
-            await controller.getAll(mockRequest as Request, mockResponse as Response);
+			await controller.getById(req as never, res as never);
 
-            expect(statusSpy).toHaveBeenCalledWith(500);
-            expect(jsonSpy).toHaveBeenCalledWith({ error: 'Internal Server Error' });
-        });
+			expect(res.status).toHaveBeenCalledWith(404);
+			expect(res.json).toHaveBeenCalledWith({ error: "JobRole with id 999 not found" });
+		});
 
-        it('should chain status and send correctly', async () => {
-            const mockJobRoles = [
-                {
-                    jobRoleId: 1,
-                    roleName: 'Developer',
-                    location: 'London',
-                    capabilityId: 1,
-                    bandId: 2,
-                    closingDate: new Date('2026-12-31'),
-                    status: 'OPEN',
-                },
-            ];
+		it("should return 400 when the id is invalid", async () => {
+			const req = { params: { id: "abc" } };
+			const res = createMockResponse();
 
-            vi.mocked(mockFindAll).mockResolvedValueOnce(mockJobRoles);
+			await controller.getById(req as never, res as never);
 
-            await controller.getAll(mockRequest as Request, mockResponse as Response);
+			expect(res.status).toHaveBeenCalledWith(400);
+			expect(res.json).toHaveBeenCalledWith({ error: "Invalid job role ID" });
+		});
 
-            expect(statusSpy).toHaveBeenCalledBefore(sendSpy);
-            expect(statusSpy).toHaveBeenCalledWith(200);
-            expect(sendSpy).toHaveBeenCalledWith(mockJobRoles);
-        });
+		it("should return 500 when the service throws", async () => {
+			const req = { params: { id: "1" } };
+			const res = createMockResponse();
 
-        it('should handle network errors', async () => {
-            const networkError = new Error('Network timeout');
-            vi.mocked(mockFindAll).mockRejectedValueOnce(networkError);
+			vi.mocked(mockService.findById).mockRejectedValue(new Error("boom"));
 
-            await controller.getAll(mockRequest as Request, mockResponse as Response);
+			await controller.getById(req as never, res as never);
 
-            expect(statusSpy).toHaveBeenCalledWith(500);
-            expect(jsonSpy).toHaveBeenCalledWith({ error: 'Internal Server Error' });
-        });
-    });
+			expect(res.status).toHaveBeenCalledWith(500);
+			expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
+		});
+	});
 });
