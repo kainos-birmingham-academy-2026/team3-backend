@@ -51,8 +51,18 @@ jobRolesRouter.get(
     },
 );
 
+<<<<<<< HEAD
 jobRolesRouter.get('/job-roles/:id', validateParams(IdParamSchema), (req: R, res: Res) => {
     controller.getById(req, res);
 });
+=======
+jobRolesRouter.post(
+    '/',
+    allowRoles([USER_ROLES.ADMIN]),
+    (req: R, res: Res) => {
+    controller.createMock(req, res);
+    },
+);
+>>>>>>> 3d14e84 (added create endpoint)
 
 export default jobRolesRouter;

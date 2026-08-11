@@ -88,4 +88,41 @@ describe('GET /job-roles auth protection', () => {
 		expect(response.status).toBe(200);
 		expect(response.body).toEqual(expected);
 	});
+
+	it('should return 403 for user token on create endpoint', async () => {
+		const token = jwt.sign(
+			{ userId: 1, email: 'test1@example.com', role: 'USER' },
+			process.env.JWT_SECRET as string,
+			{ expiresIn: '1h' },
+		);
+
+		const response = await request(app)
+			.post('/job-roles')
+			.set('Authorization', `Bearer ${token}`)
+			.send({ roleName: 'Mock Role' });
+
+		expect(response.status).toBe(403);
+		expect(response.body).toEqual({ message: 'Forbidden' });
+	});
+
+	it('should return 201 for admin token on create endpoint', async () => {
+		const token = jwt.sign(
+			{ userId: 2, email: 'admin@example.com', role: 'ADMIN' },
+			process.env.JWT_SECRET as string,
+			{ expiresIn: '1h' },
+		);
+
+		const payload = { roleName: 'Mock Role' };
+
+		const response = await request(app)
+			.post('/job-roles')
+			.set('Authorization', `Bearer ${token}`)
+			.send(payload);
+
+		expect(response.status).toBe(201);
+		expect(response.body).toEqual({
+			message: 'Mock create endpoint reached',
+			payload,
+		});
+	});
 });

@@ -18,6 +18,7 @@ export class JobRolesController {
         }
     }
 
+<<<<<<< HEAD
     async getById(req: Request, res: Response) {
         const idParam = req.params.id;
         const jobRoleId = parseInt(Array.isArray(idParam) ? idParam[0] : idParam, 10);
@@ -32,6 +33,15 @@ export class JobRolesController {
             if (error instanceof NotFoundError) {
                 return res.status(404).json({ error: error.message });
             }
+=======
+    async createMock(req: Request, res: Response) {
+        try {
+            res.status(201).json({
+                message: 'Mock create endpoint reached',
+                payload: req.body,
+            });
+        } catch (error) {
+>>>>>>> 3d14e84 (added create endpoint)
             res.status(500).json({ error: 'Internal Server Error' });
         }
     }
