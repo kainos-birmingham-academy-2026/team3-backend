@@ -3,7 +3,7 @@ import { Request as R, Response as Res } from 'express';
 
 import { JobRolesController } from '../controllers/jobRolesController';
 import { JobRolesService } from '../services/jobRolesService';
-import { validateParams } from '../middleware/validation';
+import { validateParams } from '../middleware/validate';
 import { IdParamSchema } from '../dtos/jobRoleDto';
 
 const jobRolesRouter = Router();
