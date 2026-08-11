@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
+import argon2 from "argon2";
 
 //status 
 enum Status {
@@ -20,6 +21,18 @@ async function main() {
     prisma.location.create({ data: { locationName: "Edinburgh" } }),
     prisma.location.create({ data: { locationName: "Remote" } }),
   ]);
+  
+  // Create a test user
+	const passwordHash = await argon2.hash("password");
+
+	await prisma.user.upsert({
+		where: { email: "test@example.com" },
+		update: { passwordHash },
+		create: {
+			email: "test@example.com",
+			passwordHash,
+		},
+	});
 
   // Capabilities
   const [engineering, data, cloud, security, delivery] = await Promise.all([
@@ -132,6 +145,6 @@ async function main() {
 main()
   .catch((e) => {
     console.error(e);
-    process.exit(1);
+    throw e;
   })
   .finally(() => prisma.$disconnect());

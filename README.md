@@ -25,9 +25,23 @@ Create your local `.env` from the template:
 ```bash
 cp .env.example .env
 ```
-Then set a valid `DATABASE_URL` in `.env` for your local Postgres instance.
+Then set these values in `.env`:
 
-! Use your own local Postgres username, and set the password to `password`. !
+- `DATABASE_URL` for your local Postgres instance
+- `JWT_SECRET` for signing login tokens
+
+Generate a strong JWT secret in your terminal:
+
+```bash
+openssl rand -hex 32
+```
+
+Example:
+
+```env
+DATABASE_URL="postgresql://YOUR_USER:password@localhost:5432/jobRoles?schema=public"
+JWT_SECRET="replace-with-a-strong-local-secret"
+```
 
 ### 3. Ensure Docker is running and start Postgres
 
@@ -85,7 +99,7 @@ npm start
 - `npm test` - Executes unit tests.
 - `npm run test:watch` - Runs unit tests in watch mode.
 - `npm run test:coverage` - Generates coverage report.
-- `npm seed` - Seeds the database.
+- `npm run seed` - Seeds the database.
 
 ## API Endpoints
 
@@ -95,13 +109,15 @@ Returns a simple welcome response.
 
 Example response:
 
-```text
-Welcome to your API!
+```json
+{
+  "message": "Welcome to your API!"
+}
 ```
 
 ### `GET /job-roles`
 
-Returns a all job roles in the database (currently seeded with test data).
+Returns all job roles in the database (currently seeded with test data).
 
 Example response:
 
@@ -111,6 +127,8 @@ Example response:
     "jobRoleId": 1,
     "roleName": "Software Engineer",
     "location": "Belfast",
+    "capabilityId": 1,
+    "bandId": 3,
     "closingDate": "2026-09-30T00:00:00.000Z",
     "status": "open"
   },
@@ -118,6 +136,8 @@ Example response:
     "jobRoleId": 2,
     "roleName": "Senior Software Engineer",
     "location": "Glasgow",
+    "capabilityId": 1,
+    "bandId": 4,
     "closingDate": "2026-10-15T00:00:00.000Z",
     "status": "open"
   },
@@ -125,6 +145,8 @@ Example response:
     "jobRoleId": 3,
     "roleName": "Lead Software Engineer",
     "location": "Birmingham",
+    "capabilityId": 1,
+    "bandId": 5,
     "closingDate": "2026-09-05T00:00:00.000Z",
     "status": "open"
   }
@@ -139,10 +161,57 @@ Example response:
 
 ```json
 {
-    "status": "UP",
-    "time": "Tue Aug 04 2026 10:00:00 GMT..."
+  "status": "UP",
+  "timestamp": "2026-08-10T14:10:00.000Z"
 }
 ```
+
+### `POST /api/login`
+
+Authenticates a user with email and password and returns a JWT token.
+
+Request body:
+
+```json
+{
+  "email": "test@example.com",
+  "password": "password"
+}
+```
+
+Success response (`200`):
+
+```json
+{
+  "token": "<jwt-token>"
+}
+```
+
+Validation error (`400`) example:
+
+```json
+{
+  "errors": [
+    {
+      "field": "email",
+      "message": "Invalid email address"
+    }
+  ]
+}
+```
+
+Authentication error (`401`) example:
+
+```json
+{
+  "message": "Invalid email or password"
+}
+```
+
+Seeded login user for local testing:
+
+- email: `test@example.com`
+- password: `password`
 
 ## Quick Check
 
@@ -151,4 +220,7 @@ After starting the app, you can verify endpoints with:
 ```bash
 curl http://localhost:4000/
 curl http://localhost:4000/health
+curl -X POST http://localhost:4000/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"password"}'
 ```
