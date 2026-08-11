@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { JobRolesService } from '../services/jobRolesService';
+import { NotFoundError } from 'error-lib';
 
 export class JobRolesController {
     private service: JobRolesService;
@@ -24,14 +25,13 @@ export class JobRolesController {
         if (isNaN(jobRoleId)) {
             return res.status(400).json({ error: 'Invalid job role ID' });
         }
-        
         try {
             const jobRole = await this.service.findById(jobRoleId);
-            if (!jobRole) {
-                return res.status(404).json({ error: 'Job role not found' });
-            }
             res.status(200).send(jobRole);
         } catch (error) {
+            if (error instanceof NotFoundError) {
+                return res.status(404).json({ error: error.message });
+            }
             res.status(500).json({ error: 'Internal Server Error' });
         }
     }

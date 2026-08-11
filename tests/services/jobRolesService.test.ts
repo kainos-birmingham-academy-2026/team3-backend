@@ -26,6 +26,7 @@ vi.mock("../../src/mappers/jobRoleMapper.js", () => ({
 
 import { JobRolesService } from "../../src/services/jobRolesService.js";
 import { JobRole } from "../../src/models/jobRole.js";
+import { NotFoundError } from "error-lib";
 
 const jobRole1 = new JobRole(
 	1,
@@ -125,12 +126,10 @@ describe("JobRolesService", () => {
 			expect(mockDao.findById).toHaveBeenCalledWith(1);
 		});
 
-		it("should return null when the id does not exist", async () => {
+		it("should throw NotFoundError when the id does not exist", async () => {
 			mockDao.findById.mockResolvedValue(null);
 
-			const jobRole = await service.findById(999);
-
-			expect(jobRole).toBeNull();
+			await expect(service.findById(999)).rejects.toThrow(NotFoundError);
 		});
 	});
 });

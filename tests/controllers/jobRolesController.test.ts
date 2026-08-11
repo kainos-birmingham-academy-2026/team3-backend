@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { JobRolesController } from "../../src/controllers/jobRolesController.js";
-import type { JobRolesService } from "../../src/services/jobRolesService.js";
+import { NotFoundError } from "error-lib";
 import type { Request, Response } from "express";
 
 const CREATED_AT = new Date("2026-01-01T10:00:00.000Z");
@@ -115,12 +115,12 @@ describe("JobRolesController", () => {
 			const req = { params: { id: "999" } };
 			const res = createMockResponse();
 
-			vi.mocked(mockService.findById).mockResolvedValue(null);
+			vi.mocked(mockService.findById).mockRejectedValue(new NotFoundError("JobRole with id 999 not found"));
 
 			await controller.getById(req as never, res as never);
 
 			expect(res.status).toHaveBeenCalledWith(404);
-			expect(res.json).toHaveBeenCalledWith({ error: "Job role not found" });
+			expect(res.json).toHaveBeenCalledWith({ error: "JobRole with id 999 not found" });
 		});
 
 		it("should return 400 when the id is invalid", async () => {
