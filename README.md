@@ -30,6 +30,12 @@ Then set these values in `.env`:
 - `DATABASE_URL` for your local Postgres instance
 - `JWT_SECRET` for signing login tokens
 
+Generate a strong JWT secret in your terminal:
+
+```bash
+openssl rand -hex 32
+```
+
 Example:
 
 ```env
