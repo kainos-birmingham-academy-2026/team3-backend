@@ -36,7 +36,13 @@ export class AuthService {
 			throw new Error("JWT_SECRET is not configured");
 		}
 
-		return jwt.sign({ userId: user.id, email: user.email }, secret, {
+		const userRecord = user as Record<string, unknown>;
+		const role =
+			userRecord.role === "RECRUITMENT_ADMIN"
+				? "RECRUITMENT_ADMIN"
+				: "APPLICANT";
+
+		return jwt.sign({ userId: user.id, email: user.email, role }, secret, {
 			expiresIn: "1h",
 		});
 	}

@@ -1,11 +1,13 @@
 import type { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
+import { USER_ROLES, type UserRole } from "./authorise.js";
 
 const TOKEN_ERROR = "Invalid token";
 
 interface AuthTokenPayload {
 	userId: number;
 	email: string;
+	role: UserRole;
 }
 
 export const requireAuth: RequestHandler = (req, res, next) => {
@@ -45,7 +47,9 @@ export const requireAuth: RequestHandler = (req, res, next) => {
 		// Enforce required claim types before trusting payload values.
 		if (
 			typeof payload.userId !== "number" ||
-			typeof payload.email !== "string"
+			typeof payload.email !== "string" ||
+			(payload.role !== USER_ROLES.RECRUITMENT_ADMIN &&
+				payload.role !== USER_ROLES.APPLICANT)
 		) {
 			return res.status(401).json({ message: TOKEN_ERROR });
 		}
@@ -54,6 +58,7 @@ export const requireAuth: RequestHandler = (req, res, next) => {
 		res.locals.authUser = {
 			userId: payload.userId,
 			email: payload.email,
+			role: payload.role,
 		};
 
 		// Continue request pipeline.

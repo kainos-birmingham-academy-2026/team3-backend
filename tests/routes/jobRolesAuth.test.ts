@@ -28,7 +28,7 @@ describe('GET /job-roles auth protection', () => {
 		expect(response.body).toEqual({ message: 'Invalid token' });
 	});
 
-	it('should return 200 with valid bearer token', async () => {
+	it('should return 200 with applicant token on list endpoint', async () => {
 		const expected = [
 			{
 				jobRoleId: 1,
@@ -44,7 +44,26 @@ describe('GET /job-roles auth protection', () => {
 		vi.spyOn(JobRolesService.prototype, 'findAll').mockResolvedValueOnce(expected);
 
 		const token = jwt.sign(
-			{ userId: 1, email: 'test1@example.com' },
+			{ userId: 1, email: 'test1@example.com', role: 'APPLICANT' },
+			process.env.JWT_SECRET as string,
+			{ expiresIn: '1h' },
+		);
+
+		const response = await request(app)
+			.get('/job-roles')
+			.set('Authorization', `Bearer ${token}`);
+
+		expect(response.status).toBe(200);
+		expect(response.body).toEqual(expected);
+	});
+
+	it('should return 200 with admin token on list endpoint', async () => {
+		const expected = [];
+
+		vi.spyOn(JobRolesService.prototype, 'findAll').mockResolvedValueOnce(expected);
+
+		const token = jwt.sign(
+			{ userId: 2, email: 'admin@example.com', role: 'RECRUITMENT_ADMIN' },
 			process.env.JWT_SECRET as string,
 			{ expiresIn: '1h' },
 		);

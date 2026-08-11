@@ -25,6 +25,15 @@ enum StatusEnum {
   CLOSED
 }
 
+<<<<<<< HEAD
+=======
+enum UserRole {
+  RECRUITMENT_ADMIN
+  APPLICANT
+}
+
+
+>>>>>>> c4817ca (implemented role-based route protection)
 model JobRole {
   jobRoleId             Int        @id @default(autoincrement())
   roleName              String     @db.VarChar(100)
@@ -84,5 +93,6 @@ model User {
   id           Int      @id @default(autoincrement())
   email        String   @unique
   passwordHash String
+  role         UserRole @default(APPLICANT)
   createdAt    DateTime @default(now())
 }

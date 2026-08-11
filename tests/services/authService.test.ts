@@ -60,6 +60,7 @@ describe('AuthService', () => {
 			id: 12,
 			email: 'user@example.com',
 			passwordHash: 'stored-hash',
+			role: 'RECRUITMENT_ADMIN',
 		});
 		mockVerify.mockResolvedValueOnce(true);
 		mockSign.mockReturnValueOnce('signed-jwt-token');
@@ -75,7 +76,7 @@ describe('AuthService', () => {
 		});
 		expect(mockVerify).toHaveBeenCalledWith('stored-hash', 'password123');
 		expect(mockSign).toHaveBeenCalledWith(
-			{ userId: 12, email: 'user@example.com' },
+			{ userId: 12, email: 'user@example.com', role: 'RECRUITMENT_ADMIN' },
 			'test-secret',
 			{ expiresIn: '1h' },
 		);
@@ -97,6 +98,7 @@ describe('AuthService', () => {
 			id: 99,
 			email: 'user@example.com',
 			passwordHash: 'stored-hash',
+			role: 'APPLICANT',
 		});
 		mockVerify.mockResolvedValueOnce(false);
 
@@ -112,6 +114,7 @@ describe('AuthService', () => {
 			id: 99,
 			email: 'user@example.com',
 			passwordHash: 'stored-hash',
+			role: 'APPLICANT',
 		});
 		mockVerify.mockResolvedValueOnce(true);
 		delete process.env.JWT_SECRET;
