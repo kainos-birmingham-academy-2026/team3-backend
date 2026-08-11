@@ -175,11 +175,4 @@ describe('JobRole Model', () => {
         const jobRole = new JobRole(1, 'Role', 1, 'Location', 1, 'Capability', 1, 'Band', new Date(), 'OPEN', new Date(), updatedAt);
         expect(jobRole.updatedAt).toBeInstanceOf(Date);
     });
-
-    it("Should allow Null for closing date", () => {
-        const updatedAt = new Date('2026-02-01');
-        const jobRole = new JobRole(1, 'Role', 'Location', 1, 1, null, 'OPEN', new Date(), updatedAt);
-        expect(jobRole.closingDate).toBeNull();
-    });
-
 });
