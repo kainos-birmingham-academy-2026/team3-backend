@@ -44,7 +44,7 @@ jobRolesRouter.get('/', (req: R, res: Res) => {
 =======
 jobRolesRouter.get(
     '/',
-    allowRoles([USER_ROLES.RECRUITMENT_ADMIN, USER_ROLES.APPLICANT]),
+    allowRoles([USER_ROLES.RECRUITMENT_ADMIN, USER_ROLES.USER]),
     (req: R, res: Res) => {
 >>>>>>> c4817ca (implemented role-based route protection)
     controller.getAll(req, res);

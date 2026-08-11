@@ -11,7 +11,7 @@ describe('POST /api/register', () => {
 	it('should return 400 for invalid email format', async () => {
 		const response = await request(app).post('/api/register').send({
 			email: 'not-an-email',
-			password: 'password123',
+			password: 'Password123!',
 		});
 
 		expect(response.status).toBe(400);
@@ -22,12 +22,26 @@ describe('POST /api/register', () => {
 		});
 	});
 
+	it('should return 400 for weak registration password', async () => {
+		const response = await request(app).post('/api/register').send({
+			email: 'new@example.com',
+			password: 'password123',
+		});
+
+		expect(response.status).toBe(400);
+		expect(response.body).toEqual({
+			errors: expect.arrayContaining([
+				expect.objectContaining({ field: 'password', message: expect.any(String) }),
+			]),
+		});
+	});
+
 	it('should return 201 when registration succeeds', async () => {
 		vi.spyOn(AuthService.prototype, 'register').mockResolvedValueOnce(undefined);
 
 		const response = await request(app).post('/api/register').send({
 			email: 'new@example.com',
-			password: 'password123',
+			password: 'Password123!',
 		});
 
 		expect(response.status).toBe(201);
@@ -41,7 +55,7 @@ describe('POST /api/register', () => {
 
 		const response = await request(app).post('/api/register').send({
 			email: 'existing@example.com',
-			password: 'password123',
+			password: 'Password123!',
 		});
 
 		expect(response.status).toBe(409);

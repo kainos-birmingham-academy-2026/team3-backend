@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import jwt from 'jsonwebtoken';
 import request from 'supertest';
 import app from '../../src/index.ts';
+import type { JobRoleResponse } from '../../src/models/jobRoleResponse.ts';
 import { JobRolesService } from '../../src/services/jobRolesService.ts';
 
 describe('GET /job-roles auth protection', () => {
@@ -28,23 +29,35 @@ describe('GET /job-roles auth protection', () => {
 		expect(response.body).toEqual({ message: 'Invalid token' });
 	});
 
-	it('should return 200 with applicant token on list endpoint', async () => {
-		const expected = [
+	it('should return 200 with user token on list endpoint', async () => {
+		const serviceResponse: JobRoleResponse[] = [
 			{
 				jobRoleId: 1,
 				roleName: 'Engineer',
-				capability: 'Software',
-				band: 'Band 1',
-				location: 'Singapore',
-				closingDate: null,
+				capabilityName: 'Software',
+				bandName: 'Band 1',
+				locationName: 'Singapore',
+				closingDate: new Date('2026-08-01T00:00:00.000Z'),
 				status: 'OPEN',
 			},
 		];
 
-		vi.spyOn(JobRolesService.prototype, 'findAll').mockResolvedValueOnce(expected);
+		const expectedResponse = [
+			{
+				jobRoleId: 1,
+				roleName: 'Engineer',
+				capabilityName: 'Software',
+				bandName: 'Band 1',
+				locationName: 'Singapore',
+				closingDate: '2026-08-01T00:00:00.000Z',
+				status: 'OPEN',
+			},
+		];
+
+		vi.spyOn(JobRolesService.prototype, 'findAll').mockResolvedValueOnce(serviceResponse);
 
 		const token = jwt.sign(
-			{ userId: 1, email: 'test1@example.com', role: 'APPLICANT' },
+			{ userId: 1, email: 'test1@example.com', role: 'USER' },
 			process.env.JWT_SECRET as string,
 			{ expiresIn: '1h' },
 		);
@@ -54,11 +67,11 @@ describe('GET /job-roles auth protection', () => {
 			.set('Authorization', `Bearer ${token}`);
 
 		expect(response.status).toBe(200);
-		expect(response.body).toEqual(expected);
+		expect(response.body).toEqual(expectedResponse);
 	});
 
 	it('should return 200 with admin token on list endpoint', async () => {
-		const expected = [];
+		const expected: JobRoleResponse[] = [];
 
 		vi.spyOn(JobRolesService.prototype, 'findAll').mockResolvedValueOnce(expected);
 

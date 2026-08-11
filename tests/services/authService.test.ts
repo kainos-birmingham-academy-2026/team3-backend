@@ -24,6 +24,7 @@ vi.mock('../../src/prismaClient.ts', () => {
 vi.mock('argon2', () => {
 	return {
 		default: {
+			argon2id: 'argon2id',
 			hash: mockHash,
 			verify: mockVerify,
 		},
@@ -86,7 +87,7 @@ describe('AuthService', () => {
 		);
 	});
 
-	it('should register a new applicant user', async () => {
+	it('should register a new user role account', async () => {
 		mockFindUnique.mockResolvedValueOnce(null);
 		mockHash.mockResolvedValueOnce('hashed-password');
 		mockCreate.mockResolvedValueOnce({});
@@ -98,12 +99,14 @@ describe('AuthService', () => {
 		expect(mockFindUnique).toHaveBeenCalledWith({
 			where: { email: 'new@example.com' },
 		});
-		expect(mockHash).toHaveBeenCalledWith('password123');
+		expect(mockHash).toHaveBeenCalledWith('password123', {
+			type: 'argon2id',
+		});
 		expect(mockCreate).toHaveBeenCalledWith({
 			data: {
 				email: 'new@example.com',
 				passwordHash: 'hashed-password',
-				role: 'APPLICANT',
+				role: 'USER',
 			},
 		});
 	});
@@ -113,7 +116,7 @@ describe('AuthService', () => {
 			id: 20,
 			email: 'existing@example.com',
 			passwordHash: 'stored-hash',
-			role: 'APPLICANT',
+			role: 'USER',
 		});
 
 		await expect(
@@ -140,7 +143,7 @@ describe('AuthService', () => {
 			id: 99,
 			email: 'user@example.com',
 			passwordHash: 'stored-hash',
-			role: 'APPLICANT',
+			role: 'USER',
 		});
 		mockVerify.mockResolvedValueOnce(false);
 
@@ -156,7 +159,7 @@ describe('AuthService', () => {
 			id: 99,
 			email: 'user@example.com',
 			passwordHash: 'stored-hash',
-			role: 'APPLICANT',
+			role: 'USER',
 		});
 		mockVerify.mockResolvedValueOnce(true);
 		delete process.env.JWT_SECRET;

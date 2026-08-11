@@ -21,7 +21,7 @@ describe('allowRoles middleware', () => {
 		}
 	});
 
-	it('should return 403 when applicant accesses admin-only endpoint', async () => {
+	it('should return 403 when user accesses admin-only endpoint', async () => {
 		const app = express();
 
 		app.get(
@@ -33,15 +33,15 @@ describe('allowRoles middleware', () => {
 			},
 		);
 
-		const applicantToken = jwt.sign(
-			{ userId: 1, email: 'applicant@example.com', role: 'APPLICANT' },
+		const userToken = jwt.sign(
+			{ userId: 1, email: 'user@example.com', role: 'USER' },
 			process.env.JWT_SECRET as string,
 			{ expiresIn: '1h' },
 		);
 
 		const response = await request(app)
 			.get('/admin-only')
-			.set('Authorization', `Bearer ${applicantToken}`);
+			.set('Authorization', `Bearer ${userToken}`);
 
 		expect(response.status).toBe(403);
 		expect(response.body).toEqual({ message: 'Forbidden' });

@@ -24,13 +24,15 @@ export class AuthService {
 			throw new AuthError(409, "Email already in use");
 		}
 
-		const passwordHash = await argon2.hash(input.password);
+		const passwordHash = await argon2.hash(input.password, {
+			type: argon2.argon2id,
+		});
 
 		await prisma.user.create({
 			data: {
 				email: input.email,
 				passwordHash,
-				role: "APPLICANT",
+				role: "USER",
 			},
 		});
 	}
@@ -60,7 +62,7 @@ export class AuthService {
 		const role =
 			userRecord.role === "RECRUITMENT_ADMIN"
 				? "RECRUITMENT_ADMIN"
-				: "APPLICANT";
+				: "USER";
 
 		return jwt.sign({ userId: user.id, email: user.email, role }, secret, {
 			expiresIn: "1h",

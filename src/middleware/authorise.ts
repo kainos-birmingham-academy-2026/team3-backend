@@ -2,7 +2,7 @@ import type { RequestHandler } from "express";
 
 export const USER_ROLES = {
 	RECRUITMENT_ADMIN: "RECRUITMENT_ADMIN",
-	APPLICANT: "APPLICANT",
+	USER: "USER",
 } as const;
 
 export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
