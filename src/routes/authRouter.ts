@@ -1,12 +1,13 @@
 import { Router } from "express";
 import { AuthController } from "../controllers/authController.js";
-import { LoginSchema } from "../dtos/authDto.js";
+import { LoginSchema, RegisterSchema } from "../dtos/authDto.js";
 import { validateBody } from "../middleware/validate";
 import { AuthService } from "../services/authService.js";
 
 const router = Router();
 const controller = new AuthController(new AuthService());
 
+<<<<<<< HEAD
 /**
  * @openapi
  * /api/login:
@@ -49,5 +50,9 @@ const controller = new AuthController(new AuthService());
  */
 
 router.post("/", validateBody(LoginSchema), controller.login.bind(controller));
+=======
+router.post("/register", validateBody(RegisterSchema), controller.register.bind(controller));
+router.post("/login", validateBody(LoginSchema), controller.login.bind(controller));
+>>>>>>> 3701eb2 (added registration flow and auth foundation for roles)
 
 export default router;

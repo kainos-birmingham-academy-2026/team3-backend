@@ -16,7 +16,7 @@ app.get("/docs.json", (_req, res) => {
 });
 
 app.use("/job-roles", jobRolesRouter);
-app.use("/api/login", authRouter);
+app.use("/api", authRouter);
 
 // Root endpoint
 

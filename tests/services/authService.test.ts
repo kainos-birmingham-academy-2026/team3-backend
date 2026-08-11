@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-const { mockFindUnique, mockVerify, mockSign } = vi.hoisted(() => {
+const { mockFindUnique, mockCreate, mockHash, mockVerify, mockSign } = vi.hoisted(() => {
 	return {
 		mockFindUnique: vi.fn(),
+		mockCreate: vi.fn(),
+		mockHash: vi.fn(),
 		mockVerify: vi.fn(),
 		mockSign: vi.fn(),
 	};
@@ -13,6 +15,7 @@ vi.mock('../../src/prismaClient.ts', () => {
 		default: {
 			user: {
 				findUnique: mockFindUnique,
+				create: mockCreate,
 			},
 		},
 	};
@@ -21,6 +24,7 @@ vi.mock('../../src/prismaClient.ts', () => {
 vi.mock('argon2', () => {
 	return {
 		default: {
+			hash: mockHash,
 			verify: mockVerify,
 		},
 	};
@@ -80,6 +84,44 @@ describe('AuthService', () => {
 			'test-secret',
 			{ expiresIn: '1h' },
 		);
+	});
+
+	it('should register a new applicant user', async () => {
+		mockFindUnique.mockResolvedValueOnce(null);
+		mockHash.mockResolvedValueOnce('hashed-password');
+		mockCreate.mockResolvedValueOnce({});
+
+		await expect(
+			service.register({ email: 'new@example.com', password: 'password123' }),
+		).resolves.toBeUndefined();
+
+		expect(mockFindUnique).toHaveBeenCalledWith({
+			where: { email: 'new@example.com' },
+		});
+		expect(mockHash).toHaveBeenCalledWith('password123');
+		expect(mockCreate).toHaveBeenCalledWith({
+			data: {
+				email: 'new@example.com',
+				passwordHash: 'hashed-password',
+				role: 'APPLICANT',
+			},
+		});
+	});
+
+	it('should throw 409 when email is already in use', async () => {
+		mockFindUnique.mockResolvedValueOnce({
+			id: 20,
+			email: 'existing@example.com',
+			passwordHash: 'stored-hash',
+			role: 'APPLICANT',
+		});
+
+		await expect(
+			service.register({ email: 'existing@example.com', password: 'password123' }),
+		).rejects.toEqual(new AuthError(409, 'Email already in use'));
+
+		expect(mockHash).not.toHaveBeenCalled();
+		expect(mockCreate).not.toHaveBeenCalled();
 	});
 
 	it('should throw 401 when user does not exist', async () => {
