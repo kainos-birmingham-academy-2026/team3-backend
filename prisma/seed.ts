@@ -85,12 +85,12 @@ async function main() {
 		where: { email: "test@example.com" },
     update: {
       passwordHash,
-      role: "RECRUITMENT_ADMIN",
+      role: "ADMIN",
     },
 		create: {
 			email: "test@example.com",
 			passwordHash,
-      role: "RECRUITMENT_ADMIN",
+      role: "ADMIN",
 		},
 	});
 

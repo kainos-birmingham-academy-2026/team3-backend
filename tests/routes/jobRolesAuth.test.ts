@@ -76,7 +76,7 @@ describe('GET /job-roles auth protection', () => {
 		vi.spyOn(JobRolesService.prototype, 'findAll').mockResolvedValueOnce(expected);
 
 		const token = jwt.sign(
-			{ userId: 2, email: 'admin@example.com', role: 'RECRUITMENT_ADMIN' },
+			{ userId: 2, email: 'admin@example.com', role: 'ADMIN' },
 			process.env.JWT_SECRET as string,
 			{ expiresIn: '1h' },
 		);

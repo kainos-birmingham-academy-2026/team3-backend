@@ -65,7 +65,7 @@ describe('AuthService', () => {
 			id: 12,
 			email: 'user@example.com',
 			passwordHash: 'stored-hash',
-			role: 'RECRUITMENT_ADMIN',
+			role: 'ADMIN',
 		});
 		mockVerify.mockResolvedValueOnce(true);
 		mockSign.mockReturnValueOnce('signed-jwt-token');
@@ -81,7 +81,7 @@ describe('AuthService', () => {
 		});
 		expect(mockVerify).toHaveBeenCalledWith('stored-hash', 'password123');
 		expect(mockSign).toHaveBeenCalledWith(
-			{ userId: 12, email: 'user@example.com', role: 'RECRUITMENT_ADMIN' },
+			{ userId: 12, email: 'user@example.com', role: 'ADMIN' },
 			'test-secret',
 			{ expiresIn: '1h' },
 		);

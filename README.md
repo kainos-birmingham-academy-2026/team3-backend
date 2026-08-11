@@ -142,7 +142,7 @@ Returns all job roles in the database (currently seeded with test data).
 Authentication:
 
 - Requires `Authorization: Bearer <jwt>`
-- Accepted roles: `RECRUITMENT_ADMIN` and `USER`
+- Accepted roles: `ADMIN` and `USER`
 
 Example response:
 

@@ -27,7 +27,7 @@ describe('allowRoles middleware', () => {
 		app.get(
 			'/admin-only',
 			requireAuth,
-			allowRoles([USER_ROLES.RECRUITMENT_ADMIN]),
+			allowRoles([USER_ROLES.ADMIN]),
 			(_req, res) => {
 				res.status(200).json({ ok: true });
 			},

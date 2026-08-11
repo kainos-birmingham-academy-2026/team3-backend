@@ -28,7 +28,7 @@ enum StatusEnum {
 <<<<<<< HEAD
 =======
 enum UserRole {
-  RECRUITMENT_ADMIN
+  ADMIN
   USER
 }
 

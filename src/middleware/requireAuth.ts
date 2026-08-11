@@ -48,7 +48,7 @@ export const requireAuth: RequestHandler = (req, res, next) => {
 		if (
 			typeof payload.userId !== "number" ||
 			typeof payload.email !== "string" ||
-			(payload.role !== USER_ROLES.RECRUITMENT_ADMIN &&
+			(payload.role !== USER_ROLES.ADMIN &&
 				payload.role !== USER_ROLES.USER)
 		) {
 			return res.status(401).json({ message: TOKEN_ERROR });

@@ -60,8 +60,8 @@ export class AuthService {
 
 		const userRecord = user as Record<string, unknown>;
 		const role =
-			userRecord.role === "RECRUITMENT_ADMIN"
-				? "RECRUITMENT_ADMIN"
+			userRecord.role === "ADMIN"
+				? "ADMIN"
 				: "USER";
 
 		return jwt.sign({ userId: user.id, email: user.email, role }, secret, {
