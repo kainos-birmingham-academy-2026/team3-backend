@@ -15,7 +15,7 @@ app.get("/docs.json", (_req, res) => {
   res.json(swaggerSpec);
 });
 
-app.use("/", jobRolesRouter);
+app.use("/job-roles", jobRolesRouter);
 app.use("/api/login", authRouter);
 
 // Root endpoint

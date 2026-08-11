@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { Request as R, Response as Res } from 'express';
 
 import { JobRolesController } from '../controllers/jobRolesController';
+import { requireAuth } from '../middleware/requireAuth';
 import { JobRolesService } from '../services/jobRolesService';
 import { validateParams } from '../middleware/validate';
 import { IdParamSchema } from '../dtos/jobRoleDto';
@@ -9,6 +10,7 @@ import { IdParamSchema } from '../dtos/jobRoleDto';
 const jobRolesRouter = Router();
 const controller = new JobRolesController(new JobRolesService());
 
+<<<<<<< HEAD
 /**
  * @openapi
  * /job-roles:
@@ -32,6 +34,11 @@ const controller = new JobRolesController(new JobRolesService());
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 jobRolesRouter.get('/job-roles', (req: R, res: Res) => {
+=======
+jobRolesRouter.use(requireAuth);
+
+jobRolesRouter.get('/', (req: R, res: Res) => {
+>>>>>>> 8d3f07c (project job roles route with JWT middleware)
     controller.getAll(req, res);
 });
 
