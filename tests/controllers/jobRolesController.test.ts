@@ -48,11 +48,15 @@ describe('JobRolesController', () => {
                 {
                     jobRoleId: 1,
                     roleName: 'Software Engineer',
-                    location: 'Birmingham',
-                    capabilityId: 1,
-                    bandId: 1,
+                    description: 'Build and maintain software systems',
+                    responsibilities: 'Code development, testing, deployment',
+                    sharepointUrl: 'https://sharepoint.example.com/roles/1',
+                    numberOfOpenPositions: 2,
+                    locationName: 'Birmingham',
+                    capabilityName: 'Software Engineering',
+                    bandName: 'Engineer',
+                    statusName: 'OPEN',
                     closingDate: new Date('2026-12-31'),
-                    status: 'OPEN',
                 },
             ];
 

@@ -16,16 +16,23 @@ function mockRow(overrides: Record<string, unknown> = {}) {
     return {
         jobRoleId: 1,
         roleName: 'Software Engineer',
-        locationId: 1,
+        description: 'Build and maintain software systems',
+        responsibilities: 'Code development, testing, deployment',
+        sharepointUrl: 'https://sharepoint.example.com/roles/1',
+        numberOfOpenPositions: 2,
+        closingDate: new Date('2026-12-31'),
         capabilityId: 1,
         bandId: 1,
-        closingDate: new Date('2026-12-31'),
-        status: 'OPEN',
+        locationId: 1,
+        statusId: 1,
         createdAt: new Date('2026-01-01'),
         updatedAt: new Date('2026-01-02'),
         location: {
             locationId: 1,
             locationName: 'Belfast',
+            addressLine1: '123 Street',
+            addressLine2: null,
+            postcode: 'BT1 1AA',
             createdAt: new Date('2026-01-01'),
             updatedAt: new Date('2026-01-01'),
         },
@@ -36,8 +43,14 @@ function mockRow(overrides: Record<string, unknown> = {}) {
             updatedAt: new Date('2026-01-01'),
         },
         band: {
-            nameId: 1,
+            bandId: 1,
             bandName: 'Engineer',
+            createdAt: new Date('2026-01-01'),
+            updatedAt: new Date('2026-01-01'),
+        },
+        status: {
+            statusId: 1,
+            statusName: 'OPEN',
             createdAt: new Date('2026-01-01'),
             updatedAt: new Date('2026-01-01'),
         },
@@ -67,6 +80,7 @@ describe('JobRoleDao', () => {
             expect(prisma.jobRole.findMany).toHaveBeenCalledWith({
                 relationLoadStrategy: 'join',
                 include: {
+                    status: true,
                     location: true,
                     capability: true,
                     band: true,
@@ -80,13 +94,20 @@ describe('JobRoleDao', () => {
                 mockRow({
                     jobRoleId: 2,
                     roleName: 'Product Manager',
+                    description: 'Manage product strategy',
+                    responsibilities: 'Define roadmap, coordinate releases',
+                    sharepointUrl: 'https://sharepoint.example.com/roles/2',
+                    numberOfOpenPositions: 1,
+                    statusId: 2,
                     locationId: 2,
                     capabilityId: 2,
                     bandId: 2,
-                    status: 'CLOSED',
                     location: {
                         locationId: 2,
                         locationName: 'London',
+                        addressLine1: '456 Avenue',
+                        addressLine2: null,
+                        postcode: 'SW1A 1AA',
                         createdAt: new Date('2026-01-01'),
                         updatedAt: new Date('2026-01-01'),
                     },
@@ -97,8 +118,14 @@ describe('JobRoleDao', () => {
                         updatedAt: new Date('2026-01-01'),
                     },
                     band: {
-                        nameId: 2,
+                        bandId: 2,
                         bandName: 'Senior Engineer',
+                        createdAt: new Date('2026-01-01'),
+                        updatedAt: new Date('2026-01-01'),
+                    },
+                    status: {
+                        statusId: 2,
+                        statusName: 'CLOSED',
                         createdAt: new Date('2026-01-01'),
                         updatedAt: new Date('2026-01-01'),
                     },
@@ -145,23 +172,39 @@ describe('JobRoleDao', () => {
 
             expect(result[0]).toHaveProperty('jobRoleId');
             expect(result[0]).toHaveProperty('roleName');
-            expect(result[0]).toHaveProperty('locationId');
-            expect(result[0]).toHaveProperty('locationName');
-            expect(result[0]).toHaveProperty('capabilityId');
+            expect(result[0]).toHaveProperty('description');
+            expect(result[0]).toHaveProperty('responsibilities');
+            expect(result[0]).toHaveProperty('sharepointUrl');
+            expect(result[0]).toHaveProperty('numberOfOpenPositions');
             expect(result[0]).toHaveProperty('capabilityName');
-            expect(result[0]).toHaveProperty('bandId');
             expect(result[0]).toHaveProperty('bandName');
+            expect(result[0]).toHaveProperty('locationName');
+            expect(result[0]).toHaveProperty('statusName');
             expect(result[0]).toHaveProperty('closingDate');
-            expect(result[0]).toHaveProperty('status');
             expect(result[0]).toHaveProperty('createdAt');
             expect(result[0]).toHaveProperty('updatedAt');
         });
 
         it('should preserve order from database', async () => {
             const mockJobRoles = [
-                mockRow({ jobRoleId: 1, roleName: 'Role 1', location: { locationId: 1, locationName: 'Location 1', createdAt: new Date(), updatedAt: new Date() } }),
-                mockRow({ jobRoleId: 2, roleName: 'Role 2', location: { locationId: 2, locationName: 'Location 2', createdAt: new Date(), updatedAt: new Date() } }),
-                mockRow({ jobRoleId: 3, roleName: 'Role 3', location: { locationId: 3, locationName: 'Location 3', createdAt: new Date(), updatedAt: new Date() } }),
+                mockRow({ 
+                    jobRoleId: 1, 
+                    roleName: 'Role 1', 
+                    location: { locationId: 1, locationName: 'Location 1', addressLine1: 'addr1', addressLine2: null, postcode: 'post1', createdAt: new Date(), updatedAt: new Date() },
+                    status: { statusId: 1, statusName: 'OPEN', createdAt: new Date(), updatedAt: new Date() }
+                }),
+                mockRow({ 
+                    jobRoleId: 2, 
+                    roleName: 'Role 2', 
+                    location: { locationId: 2, locationName: 'Location 2', addressLine1: 'addr2', addressLine2: null, postcode: 'post2', createdAt: new Date(), updatedAt: new Date() },
+                    status: { statusId: 1, statusName: 'OPEN', createdAt: new Date(), updatedAt: new Date() }
+                }),
+                mockRow({ 
+                    jobRoleId: 3, 
+                    roleName: 'Role 3', 
+                    location: { locationId: 3, locationName: 'Location 3', addressLine1: 'addr3', addressLine2: null, postcode: 'post3', createdAt: new Date(), updatedAt: new Date() },
+                    status: { statusId: 1, statusName: 'OPEN', createdAt: new Date(), updatedAt: new Date() }
+                }),
             ];
 
             vi.mocked(prisma.jobRole.findMany as any).mockResolvedValueOnce(mockJobRoles);

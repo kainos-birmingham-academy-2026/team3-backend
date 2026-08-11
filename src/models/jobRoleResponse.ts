@@ -2,19 +2,28 @@
 export class JobRoleResponse {
     public readonly jobRoleId: number;
     public readonly roleName: string;
-    public readonly locationName: string;
+    public readonly closingDate: Date | null;
     public readonly capabilityName: string;
     public readonly bandName: string;
-    public readonly closingDate: Date;
-    public readonly status: string;
+    public readonly locationName: string;
+    public readonly statusName: string;
 
-    constructor(jobRoleId: number, roleName: string, locationName: string, capabilityName: string, bandName: string, closingDate: Date, status: string) {
+
+    constructor(
+        jobRoleId: number,
+        roleName: string,
+        closingDate: Date | null,
+        capabilityName: string,
+        bandName: string,
+        locationName: string,
+        statusName: string
+    ) {
         this.jobRoleId = jobRoleId;
         this.roleName = roleName;
-        this.locationName = locationName;
+        this.closingDate = closingDate;
         this.capabilityName = capabilityName;
         this.bandName = bandName;
-        this.closingDate = closingDate;
-        this.status = status;
+        this.locationName = locationName;
+        this.statusName = statusName;
     }
 }
