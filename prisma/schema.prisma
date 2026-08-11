@@ -30,7 +30,6 @@ enum StatusEnum {
 enum UserRole {
   RECRUITMENT_ADMIN
   USER
-  APPLICANT
 }
 
 
