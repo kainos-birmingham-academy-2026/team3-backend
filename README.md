@@ -77,6 +77,26 @@ The server runs on:
 http://localhost:4000
 ```
 
+### 6.1 Open Swagger docs
+
+Swagger UI is served by the same backend process. Once `npm run dev` is running, open:
+
+```text
+http://localhost:4000/docs
+```
+
+OpenAPI JSON is also available at:
+
+```text
+http://localhost:4000/docs.json
+```
+
+Quick check from terminal:
+
+```bash
+curl http://localhost:4000/docs.json
+```
+
 ### 7. Build for production
 
 ```bash
