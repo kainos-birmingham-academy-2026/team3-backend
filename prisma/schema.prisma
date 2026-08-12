@@ -103,17 +103,18 @@ model User {
 
 
 model Application {
-  applicationId Int      @id @default(autoincrement())
-  cvReference   String   @db.VarChar(255)
-  jobRoleId     Int
-  userId        Int
-  jobRole       JobRole  @relation(fields: [jobRoleId], references: [jobRoleId], onDelete: Cascade, onUpdate: Cascade)
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  applicationId Int    @id @default(autoincrement())
+  cvText   String @db.Text 
+  jobRoleId Int
+  userId    Int
+  jobRole JobRole @relation(fields: [jobRoleId], references: [jobRoleId], onDelete: Cascade, onUpdate: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   applicationStatus ApplicationStatus @default(IN_PROGRESS)
-  @@unique([jobRoleId, userId])
+  @@unique([jobRoleId, userId]) 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
+
 
  enum ApplicationStatus {
   IN_PROGRESS
