@@ -182,7 +182,7 @@ describe("JobRolesController", () => {
 		it("should return 201 with application data when application is created successfully", async () => {
 			const req = {
 				params: { id: "1" },
-				body: { cvReference: "CV-2026-001" },
+				body: { cvText: "CV-2026-001" },
 			};
 			const res = createMockResponse();
 			res.locals = { authUser: { userId: 1 } };
@@ -191,7 +191,7 @@ describe("JobRolesController", () => {
 				applicationId: 1,
 				jobRoleId: 1,
 				userId: 1,
-				cvReference: "CV-2026-001",
+				cvText: "CV-2026-001",
 			});
 
 			await controller.createApplication(req as never, res as never);
@@ -203,14 +203,14 @@ describe("JobRolesController", () => {
 					value.applicationId === 1 &&
 					value.jobRoleId === 1 &&
 					value.userId === 1 &&
-					value.cvReference === "CV-2026-001",
+					value.cvText === "CV-2026-001",
 			);
 		});
 
 		it("should return 404 when job role does not exist", async () => {
 			const req = {
 				params: { id: "999" },
-				body: { cvReference: "CV-2026-001" },
+				body: { cvText: "CV-2026-001" },
 			};
 			const res = createMockResponse();
 			res.locals = { authUser: { userId: 1 } };
@@ -230,7 +230,7 @@ describe("JobRolesController", () => {
 		it("should return 409 when user has already applied for the job role", async () => {
 			const req = {
 				params: { id: "1" },
-				body: { cvReference: "CV-2026-001" },
+				body: { cvText: "CV-2026-001" },
 			};
 			const res = createMockResponse();
 			res.locals = { authUser: { userId: 1 } };
@@ -250,7 +250,7 @@ describe("JobRolesController", () => {
 		it("should return 401 when user is not authenticated", async () => {
 			const req = {
 				params: { id: "1" },
-				body: { cvReference: "CV-2026-001" },
+				body: { cvText: "CV-2026-001" },
 			};
 			const res = createMockResponse();
 			res.locals = { authUser: undefined };
@@ -264,7 +264,7 @@ describe("JobRolesController", () => {
 		it("should return 500 when an unexpected error occurs", async () => {
 			const req = {
 				params: { id: "1" },
-				body: { cvReference: "CV-2026-001" },
+				body: { cvText: "CV-2026-001" },
 			};
 			const res = createMockResponse();
 			res.locals = { authUser: { userId: 1 } };

@@ -7,6 +7,6 @@ describe('JobRoleApplication', () => {
 		expect(app.applicationId).toBe(1);
 		expect(app.jobRoleId).toBe(2);
 		expect(app.userId).toBe(3);
-		expect(app.cvReference).toBe('cv-ref');
+		expect(app.cvText).toBe('cv-ref');
 	});
 });

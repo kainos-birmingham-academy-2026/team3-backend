@@ -143,7 +143,7 @@ describe("JobRolesService", () => {
 			const applicationData = {
 				jobRoleId: 1,
 				userId: 1,
-				cvReference: "CV-2026-001",
+				cvText: "CV-2026-001",
 			};
 
 			mockDao.findById.mockResolvedValue(jobRole1);
@@ -152,7 +152,7 @@ describe("JobRolesService", () => {
 				applicationId: 1,
 				jobRoleId: 1,
 				userId: 1,
-				cvReference: "CV-2026-001",
+				cvText: "CV-2026-001",
 			});
 
 			const result = await service.createApplication(applicationData);
@@ -162,7 +162,7 @@ describe("JobRolesService", () => {
 					value.applicationId === 1 &&
 					value.jobRoleId === 1 &&
 					value.userId === 1 &&
-					value.cvReference === "CV-2026-001",
+					value.cvText === "CV-2026-001",
 			);
 			expect(mockDao.findById).toHaveBeenCalledWith(1);
 			expect(mockDao.findApplicationByUserIdAndJobRoleId).toHaveBeenCalledWith(1, 1);
@@ -173,7 +173,7 @@ describe("JobRolesService", () => {
 			const applicationData = {
 				jobRoleId: 999,
 				userId: 1,
-				cvReference: "CV-2026-001",
+				cvText: "CV-2026-001",
 			};
 
 			mockDao.findById.mockResolvedValue(null);
@@ -190,14 +190,14 @@ describe("JobRolesService", () => {
 			const applicationData = {
 				jobRoleId: 1,
 				userId: 1,
-				cvReference: "CV-2026-001",
+				cvText: "CV-2026-001",
 			};
 
 			const existingApplication = {
 				applicationId: 1,
 				jobRoleId: 1,
 				userId: 1,
-				cvReference: "CV-2026-001",
+				cvText: "CV-2026-001",
 			};
 
 			mockDao.findById.mockResolvedValue(jobRole1);

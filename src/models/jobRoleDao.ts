@@ -34,7 +34,7 @@ function toApplicationDomain(row: any): JobRoleApplication {
         row.applicationId,
         row.jobRoleId,
         row.userId,
-        row.cvReference
+        row.cvText
     );
 }
 
@@ -81,7 +81,7 @@ export class JobRoleDao {
             data: {
                 jobRoleId: data.jobRoleId,
                 userId: data.userId,
-                cvReference: data.cvReference,
+                cvText: data.cvText,
             },
         });
         return toApplicationDomain(application);

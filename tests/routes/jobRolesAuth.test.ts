@@ -190,7 +190,7 @@ describe('POST /job-roles/:id/apply', () => {
 	it('should return 401 without bearer token', async () => {
 		const response = await request(app)
 			.post('/job-roles/1/apply')
-			.send({ cvReference: 'CV-2026-001' });
+			.send({ cvText: 'CV-2026-001' });
 
 		expect(response.status).toBe(401);
 		expect(response.body).toEqual({ message: 'Invalid token' });
@@ -206,7 +206,7 @@ describe('POST /job-roles/:id/apply', () => {
 		const response = await request(app)
 			.post('/job-roles/abc/apply')
 			.set('Authorization', `Bearer ${token}`)
-			.send({ cvReference: 'CV-2026-001' });
+			.send({ cvText: 'CV-2026-001' });
 
 		expect(response.status).toBe(400);
 		expect(response.body).toEqual({
@@ -216,7 +216,7 @@ describe('POST /job-roles/:id/apply', () => {
 		});
 	});
 
-	it('should return 400 when cv reference is empty', async () => {
+	it('should return 400 when cv text is empty', async () => {
 		const token = jwt.sign(
 			{ userId: 1, email: 'user@example.com', role: 'USER' },
 			process.env.JWT_SECRET as string,
@@ -226,13 +226,13 @@ describe('POST /job-roles/:id/apply', () => {
 		const response = await request(app)
 			.post('/job-roles/1/apply')
 			.set('Authorization', `Bearer ${token}`)
-			.send({ cvReference: '' });
+			.send({ cvText: '' });
 
 		expect(response.status).toBe(400);
 		expect(response.body).toEqual({
 			errors: expect.arrayContaining([
 				expect.objectContaining({
-					field: 'cvReference',
+					field: 'cvText',
 					message: expect.any(String),
 				}),
 			]),
@@ -250,13 +250,13 @@ describe('POST /job-roles/:id/apply', () => {
 			applicationId: 1,
 			jobRoleId: 1,
 			userId: 1,
-			cvReference: 'CV-2026-001',
+			cvText: 'CV-2026-001',
 		});
 
 		const response = await request(app)
 			.post('/job-roles/1/apply')
 			.set('Authorization', `Bearer ${token}`)
-			.send({ cvReference: 'CV-2026-001' });
+			.send({ cvText: 'CV-2026-001' });
 
 		expect(response.status).toBe(201);
 		expect(response.body).toSatisfy(
@@ -264,7 +264,7 @@ describe('POST /job-roles/:id/apply', () => {
 				value.applicationId === 1 &&
 				value.jobRoleId === 1 &&
 				value.userId === 1 &&
-				value.cvReference === 'CV-2026-001',
+				value.cvText === 'CV-2026-001',
 		);
 	});
 
@@ -282,7 +282,7 @@ describe('POST /job-roles/:id/apply', () => {
 		const response = await request(app)
 			.post('/job-roles/999/apply')
 			.set('Authorization', `Bearer ${token}`)
-			.send({ cvReference: 'CV-2026-001' });
+			.send({ cvText: 'CV-2026-001' });
 
 		expect(response.status).toBe(404);
 		expect(response.body).toEqual({ error: 'JobRole with id 999 not found' });
@@ -302,7 +302,7 @@ describe('POST /job-roles/:id/apply', () => {
 		const response = await request(app)
 			.post('/job-roles/1/apply')
 			.set('Authorization', `Bearer ${token}`)
-			.send({ cvReference: 'CV-2026-001' });
+			.send({ cvText: 'CV-2026-001' });
 
 		expect(response.status).toBe(409);
 		expect(response.body).toEqual({
@@ -321,13 +321,13 @@ describe('POST /job-roles/:id/apply', () => {
 			applicationId: 2,
 			jobRoleId: 1,
 			userId: 2,
-			cvReference: 'CV-2026-002',
+			cvText: 'CV-2026-002',
 		});
 
 		const response = await request(app)
 			.post('/job-roles/1/apply')
 			.set('Authorization', `Bearer ${token}`)
-			.send({ cvReference: 'CV-2026-002' });
+			.send({ cvText: 'CV-2026-002' });
 
 		expect(response.status).toBe(201);
 		expect(response.body).toSatisfy((value) => value.userId === 2);
