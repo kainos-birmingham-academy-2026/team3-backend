@@ -36,5 +36,23 @@ export class JobRolesController {
         }
     }
 
+    async createApplication(req: Request, res: Response) {
+        const idParam = req.params.id;
+        const jobRoleId = parseInt(Array.isArray(idParam) ? idParam[0] : idParam, 10);
+        //this is unnecessary due to validation middleware, but required for error handling 
 
+        
+        if (isNaN(jobRoleId)) {
+            return res.status(400).json({ error: 'Invalid job role ID' });
+        }
+        try {
+            const application = await this.service.createApplication(jobRoleId, req.body);
+            res.status(201).json(application);
+        } catch (error) {
+            if (error instanceof NotFoundError) {
+                return res.status(404).json({ error: error.message });
+            }
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
 }
