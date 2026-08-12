@@ -2,10 +2,10 @@ import { Router } from 'express';
 import { Request as R, Response as Res } from 'express';
 
 import { JobRolesController } from '../controllers/jobRolesController';
-import { IdParamSchema } from '../dtos/jobRoleDto';
+import { CreateJobRoleSchema, IdParamSchema } from '../dtos/jobRoleDto';
 import { allowRoles, USER_ROLES } from '../middleware/authorise';
 import { requireAuth } from '../middleware/requireAuth';
-import { validateParams } from '../middleware/validate';
+import { validateBody, validateParams } from '../middleware/validate';
 import { JobRolesService } from '../services/jobRolesService';
 
 const jobRolesRouter = Router();
@@ -125,24 +125,71 @@ jobRolesRouter.get(
  * /job-roles:
  *   post:
  *     tags: [Job Roles]
- *     summary: Create a job role (mock endpoint)
+ *     summary: Create a job role (mock endpoint for future implementation)
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             additionalProperties: false
+ *             required:
+ *               - roleName
+ *               - description
+ *               - responsibilities
+ *               - sharepointUrl
+ *               - numberOfOpenPositions
+ *               - capabilityId
+ *               - bandId
+ *               - locationId
+ *             properties:
+ *               roleName:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               responsibilities:
+ *                 type: string
+ *               sharepointUrl:
+ *                 type: string
+ *                 format: uri
+ *               numberOfOpenPositions:
+ *                 type: integer
+ *                 minimum: 1
+ *               closingDate:
+ *                 type: string
+ *                 format: date-time
+ *               capabilityId:
+ *                 type: integer
+ *                 minimum: 1
+ *               bandId:
+ *                 type: integer
+ *                 minimum: 1
+ *               locationId:
+ *                 type: integer
+ *                 minimum: 1
  *     responses:
  *       201:
- *         description: Mock create accepted
+ *         description: Mock create accepted with status set to OPEN
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               additionalProperties: false
- *               required: [message, payload]
+ *               required: [message, jobRoleDraft]
  *               properties:
  *                 message:
  *                   type: string
- *                   example: Mock create endpoint reached
- *                 payload:
+ *                   example: Mock create endpoint accepted
+ *                 jobRoleDraft:
  *                   type: object
+ *       400:
+ *         description: Request validation failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
  *       401:
  *         description: Missing or invalid token
  *         content:
@@ -166,6 +213,7 @@ jobRolesRouter.get(
 jobRolesRouter.post(
 	'/',
 	allowRoles([USER_ROLES.ADMIN]),
+	validateBody(CreateJobRoleSchema),
 	(req: R, res: Res) => {
 		controller.createMock(req, res);
 	},

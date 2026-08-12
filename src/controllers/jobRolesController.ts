@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import type { CreateJobRoleRequestDto } from '../dtos/jobRoleDto.js';
 import { NotFoundError } from '../errors/notFoundError.js';
 import { JobRolesService } from '../services/jobRolesService';
 
@@ -39,9 +40,14 @@ export class JobRolesController {
 
     async createMock(req: Request, res: Response) {
         try {
+            const payload = req.body as CreateJobRoleRequestDto;
+
             return res.status(201).json({
-                message: 'Mock create endpoint reached',
-                payload: req.body,
+                message: 'Mock create endpoint accepted',
+                jobRoleDraft: {
+                    ...payload,
+                    statusName: 'OPEN',
+                },
             });
         } catch {
             return res.status(500).json({ error: 'Internal Server Error' });

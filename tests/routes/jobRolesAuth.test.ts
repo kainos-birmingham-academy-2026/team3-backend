@@ -38,7 +38,7 @@ describe('GET /job-roles auth protection', () => {
 				bandName: 'Band 1',
 				locationName: 'Singapore',
 				closingDate: new Date('2026-08-01T00:00:00.000Z'),
-				status: 'OPEN',
+				statusName: 'OPEN',
 			},
 		];
 
@@ -50,7 +50,7 @@ describe('GET /job-roles auth protection', () => {
 				bandName: 'Band 1',
 				locationName: 'Singapore',
 				closingDate: '2026-08-01T00:00:00.000Z',
-				status: 'OPEN',
+				statusName: 'OPEN',
 			},
 		];
 
@@ -96,10 +96,21 @@ describe('GET /job-roles auth protection', () => {
 			{ expiresIn: '1h' },
 		);
 
+		const payload = {
+			roleName: 'Mock Role',
+			description: 'Mock role description',
+			responsibilities: 'Mock responsibilities',
+			sharepointUrl: 'https://example.com/roles/mock-role',
+			numberOfOpenPositions: 2,
+			capabilityId: 1,
+			bandId: 1,
+			locationId: 1,
+		};
+
 		const response = await request(app)
 			.post('/job-roles')
 			.set('Authorization', `Bearer ${token}`)
-			.send({ roleName: 'Mock Role' });
+			.send(payload);
 
 		expect(response.status).toBe(403);
 		expect(response.body).toEqual({ message: 'Forbidden' });
@@ -112,7 +123,16 @@ describe('GET /job-roles auth protection', () => {
 			{ expiresIn: '1h' },
 		);
 
-		const payload = { roleName: 'Mock Role' };
+		const payload = {
+			roleName: 'Mock Role',
+			description: 'Mock role description',
+			responsibilities: 'Mock responsibilities',
+			sharepointUrl: 'https://example.com/roles/mock-role',
+			numberOfOpenPositions: 2,
+			capabilityId: 1,
+			bandId: 1,
+			locationId: 1,
+		};
 
 		const response = await request(app)
 			.post('/job-roles')
@@ -121,8 +141,29 @@ describe('GET /job-roles auth protection', () => {
 
 		expect(response.status).toBe(201);
 		expect(response.body).toEqual({
-			message: 'Mock create endpoint reached',
-			payload,
+			message: 'Mock create endpoint accepted',
+			jobRoleDraft: {
+				...payload,
+				statusName: 'OPEN',
+			},
+		});
+	});
+
+	it('should return 400 when create payload is invalid', async () => {
+		const token = jwt.sign(
+			{ userId: 2, email: 'admin@example.com', role: 'ADMIN' },
+			process.env.JWT_SECRET as string,
+			{ expiresIn: '1h' },
+		);
+
+		const response = await request(app)
+			.post('/job-roles')
+			.set('Authorization', `Bearer ${token}`)
+			.send({ roleName: '' });
+
+		expect(response.status).toBe(400);
+		expect(response.body).toEqual({
+			errors: expect.any(Array),
 		});
 	});
 });
