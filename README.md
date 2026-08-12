@@ -10,6 +10,65 @@ An API framework built in Express + TypeScript.
 
 ## Getting Started
 
+### Docker development mode (recommended for full stack)
+
+Clone both repositories as sibling folders under the same parent directory:
+
+```text
+your-workspace/
+  team3-backend/
+  team3-frontend/
+```
+
+From the backend repository folder, start frontend, backend, and Postgres together:
+
+```bash
+docker compose -f docker-compose.dev.yml up --build
+```
+
+Services:
+
+- Frontend: `http://localhost:3000`
+- Backend: `http://localhost:4000`
+- Backend health: `http://localhost:4000/health`
+
+On backend container startup, the app runs Prisma generate, applies migrations, and runs the seed script automatically before starting the dev server.
+The seed script is idempotent for reference data (status, locations, capabilities, bands), so container restarts do not fail on duplicate unique values.
+
+Stop and remove containers:
+
+```bash
+docker compose -f docker-compose.dev.yml down
+```
+
+Reset database volume as well:
+
+```bash
+docker compose -f docker-compose.dev.yml down -v
+```
+
+If your network uses TLS inspection (for example Zscaler), export your corporate cert chain one time before starting Docker so Prisma downloads can be verified.
+
+From the backend repository folder:
+
+```bash
+security find-certificate -a -c "KAINOS-INSPECTION G2" -p /Library/Keychains/System.keychain > .certs/kainos-inspection-g2.crt
+security find-certificate -a -c "KAINOS-ROOT-CA G2" -p /Library/Keychains/System.keychain > .certs/kainos-root-ca-g2.crt
+security find-certificate -a -c "KAINOS-ZSCALER G2" -p /Library/Keychains/System.keychain > .certs/kainos-zscaler-g2.crt
+```
+
+Custom CA trust is now explicit and opt-in. The backend will only trust certificates listed in `CUSTOM_CA_CERTS` when `ENABLE_CUSTOM_CA=true`.
+
+Start with explicit certificates:
+
+```bash
+ENABLE_CUSTOM_CA=true \
+CUSTOM_CA_CERTS=kainos-inspection-g2.crt,kainos-root-ca-g2.crt,kainos-zscaler-g2.crt \
+docker compose -f docker-compose.dev.yml up --build
+```
+
+If you do not need custom corporate certs, run Docker Compose normally and no extra certs will be imported.
+
 ### 1. Install dependencies
 
 ```bash
@@ -120,6 +179,17 @@ npm start
 - `npm run test:watch` - Runs unit tests in watch mode.
 - `npm run test:coverage` - Generates coverage report.
 - `npm run seed` - Seeds the database.
+
+## Docker Startup Behavior
+
+When running with `docker compose -f docker-compose.dev.yml up --build`, the backend container startup script performs these steps:
+
+1. `npx prisma generate`
+2. `npx prisma migrate deploy`
+3. `npm run seed`
+4. `npm run dev`
+
+This ensures the database schema and seed data are in place automatically for local development.
 
 ## API Endpoints
 

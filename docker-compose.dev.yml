@@ -1,0 +1,67 @@
+name: team3-dev-stack
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: team3-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: jobRoles
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d jobRoles"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: team3-backend
+    working_dir: /app
+    environment:
+      DATABASE_URL: postgresql://postgres:password@db:5432/jobRoles?schema=public
+      JWT_SECRET: dev-local-jwt-secret-change-me
+      ENABLE_CUSTOM_CA: ${ENABLE_CUSTOM_CA:-false}
+      CUSTOM_CA_CERTS: ${CUSTOM_CA_CERTS:-}
+    ports:
+      - "4000:4000"
+    volumes:
+      - .:/app
+      - backend_node_modules:/app/node_modules
+      - ./.certs:/certs:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ../team3-frontend
+      dockerfile: Dockerfile.dev
+    container_name: team3-frontend
+    working_dir: /app
+    environment:
+      SESSION_SECRET: dev-session-secret-change-me
+      AUTH_LOGIN_PATH: /api/login
+      API_BASE_URL: http://backend:4000
+      NODE_ENV: development
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../team3-frontend:/app
+      - frontend_node_modules:/app/node_modules
+    depends_on:
+      backend:
+        condition: service_started
+    command: sh -c "npm install && npm run dev"
+
+volumes:
+  db_data:
+  backend_node_modules:
+  frontend_node_modules:

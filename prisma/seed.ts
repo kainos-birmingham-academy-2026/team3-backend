@@ -3,73 +3,117 @@ import { PrismaClient } from "../src/generated/prisma/client";
 import { StatusEnum } from "../src/generated/prisma/enums";
 import argon2 from "argon2";
 
-//status 
-enum Status {
-  OPEN = "OPEN",
-  CLOSED = "CLOSED",
-}
-
 const prisma = new PrismaClient();
 
 async function main() {
   // Statuses
   const [openStatus, closedStatus] = await Promise.all([
-    prisma.status.create({ data: { statusName: StatusEnum.OPEN } }),
-    prisma.status.create({ data: { statusName: StatusEnum.CLOSED } }),
+    prisma.status.upsert({
+      where: { statusName: StatusEnum.OPEN },
+      update: {},
+      create: { statusName: StatusEnum.OPEN },
+    }),
+    prisma.status.upsert({
+      where: { statusName: StatusEnum.CLOSED },
+      update: {},
+      create: { statusName: StatusEnum.CLOSED },
+    }),
   ]);
 
   // Locations
   const [belfast, glasgow, birmingham, london, manchester, edinburgh, remote] = await Promise.all([
-    prisma.location.create({
-      data: {
+    prisma.location.upsert({
+      where: { locationName: "Belfast" },
+      update: {
+        addressLine1: "10 Donegall Square South",
+        addressLine2: "Floor 2",
+        postcode: "BT1 5JD",
+      },
+      create: {
         locationName: "Belfast",
         addressLine1: "10 Donegall Square South",
         addressLine2: "Floor 2",
         postcode: "BT1 5JD",
       },
     }),
-    prisma.location.create({
-      data: {
+    prisma.location.upsert({
+      where: { locationName: "Glasgow" },
+      update: {
+        addressLine1: "110 Queen Street",
+        addressLine2: "Suite 4A",
+        postcode: "G1 3BX",
+      },
+      create: {
         locationName: "Glasgow",
         addressLine1: "110 Queen Street",
         addressLine2: "Suite 4A",
         postcode: "G1 3BX",
       },
     }),
-    prisma.location.create({
-      data: {
+    prisma.location.upsert({
+      where: { locationName: "Birmingham" },
+      update: {
+        addressLine1: "3 Brindleyplace",
+        addressLine2: "Unit 12",
+        postcode: "B1 2JB",
+      },
+      create: {
         locationName: "Birmingham",
         addressLine1: "3 Brindleyplace",
         addressLine2: "Unit 12",
         postcode: "B1 2JB",
       },
     }),
-    prisma.location.create({
-      data: {
+    prisma.location.upsert({
+      where: { locationName: "London" },
+      update: {
+        addressLine1: "25 Canada Square",
+        addressLine2: "Level 18",
+        postcode: "E14 5LQ",
+      },
+      create: {
         locationName: "London",
         addressLine1: "25 Canada Square",
         addressLine2: "Level 18",
         postcode: "E14 5LQ",
       },
     }),
-    prisma.location.create({
-      data: {
+    prisma.location.upsert({
+      where: { locationName: "Manchester" },
+      update: {
+        addressLine1: "1 Spinningfields",
+        addressLine2: "Suite 9",
+        postcode: "M3 3EB",
+      },
+      create: {
         locationName: "Manchester",
         addressLine1: "1 Spinningfields",
         addressLine2: "Suite 9",
         postcode: "M3 3EB",
       },
     }),
-    prisma.location.create({
-      data: {
+    prisma.location.upsert({
+      where: { locationName: "Edinburgh" },
+      update: {
+        addressLine1: "7 Castle Terrace",
+        addressLine2: null,
+        postcode: "EH1 2DP",
+      },
+      create: {
         locationName: "Edinburgh",
         addressLine1: "7 Castle Terrace",
         addressLine2: null,
         postcode: "EH1 2DP",
       },
     }),
-    prisma.location.create({
-      data: {
+    prisma.location.upsert({
+      where: { locationName: "Remote" },
+      update: {
+        addressLine1: "Remote Workforce Hub",
+        addressLine2: null,
+        postcode: "REMOTE",
+      },
+      create: {
         locationName: "Remote",
         addressLine1: "Remote Workforce Hub",
         addressLine2: null,
@@ -92,26 +136,49 @@ async function main() {
 
   // Capabilities
   const [engineering, data, cloud, security, delivery] = await Promise.all([
-    prisma.capability.create({ data: { capabilityName: "Software Engineering" } }),
-    prisma.capability.create({ data: { capabilityName: "Data & AI" } }),
-    prisma.capability.create({ data: { capabilityName: "Cloud & Infrastructure" } }),
-    prisma.capability.create({ data: { capabilityName: "Cyber Security" } }),
-    prisma.capability.create({ data: { capabilityName: "Delivery Management" } }),
+    prisma.capability.upsert({
+      where: { capabilityName: "Software Engineering" },
+      update: {},
+      create: { capabilityName: "Software Engineering" },
+    }),
+    prisma.capability.upsert({
+      where: { capabilityName: "Data & AI" },
+      update: {},
+      create: { capabilityName: "Data & AI" },
+    }),
+    prisma.capability.upsert({
+      where: { capabilityName: "Cloud & Infrastructure" },
+      update: {},
+      create: { capabilityName: "Cloud & Infrastructure" },
+    }),
+    prisma.capability.upsert({
+      where: { capabilityName: "Cyber Security" },
+      update: {},
+      create: { capabilityName: "Cyber Security" },
+    }),
+    prisma.capability.upsert({
+      where: { capabilityName: "Delivery Management" },
+      update: {},
+      create: { capabilityName: "Delivery Management" },
+    }),
   ]);
 
   // Bands
   const [trainee, associate, engineer, senior, lead, principal] = await Promise.all([
-    prisma.band.create({ data: { bandName: "Trainee" } }),
-    prisma.band.create({ data: { bandName: "Associate" } }),
-    prisma.band.create({ data: { bandName: "Engineer" } }),
-    prisma.band.create({ data: { bandName: "Senior Engineer" } }),
-    prisma.band.create({ data: { bandName: "Lead Engineer" } }),
-    prisma.band.create({ data: { bandName: "Principal Engineer" } }),
+    prisma.band.upsert({ where: { bandName: "Trainee" }, update: {}, create: { bandName: "Trainee" } }),
+    prisma.band.upsert({ where: { bandName: "Associate" }, update: {}, create: { bandName: "Associate" } }),
+    prisma.band.upsert({ where: { bandName: "Engineer" }, update: {}, create: { bandName: "Engineer" } }),
+    prisma.band.upsert({ where: { bandName: "Senior Engineer" }, update: {}, create: { bandName: "Senior Engineer" } }),
+    prisma.band.upsert({ where: { bandName: "Lead Engineer" }, update: {}, create: { bandName: "Lead Engineer" } }),
+    prisma.band.upsert({ where: { bandName: "Principal Engineer" }, update: {}, create: { bandName: "Principal Engineer" } }),
   ]);
 
-  // Job Roles
-  await prisma.jobRole.createMany({
-    data: [
+  const existingRoles = await prisma.jobRole.count();
+
+  // Job roles are seeded once to avoid duplicating records on each container restart.
+  if (existingRoles === 0) {
+    await prisma.jobRole.createMany({
+      data: [
       {
         roleName: "Software Engineer",
         description: "Build and maintain backend services and APIs.",
@@ -218,7 +285,7 @@ async function main() {
         capabilityId: security.capabilityId,
         bandId: senior.bandId,
         statusId: openStatus.statusId,
-        closingDate: new Date("2026-10-05"),
+        closingDate: null,
       },
       {
         roleName: "Delivery Manager",
@@ -232,8 +299,9 @@ async function main() {
         statusId: closedStatus.statusId,
         closingDate: new Date("2026-07-31"),
       },
-    ],
-  });
+      ],
+    });
+  }
 
   console.log("Seed complete.");
 }
