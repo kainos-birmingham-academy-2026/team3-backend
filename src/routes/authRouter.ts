@@ -48,6 +48,8 @@ const controller = new AuthController(new AuthService());
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 
+router.post("/login", validateBody(LoginSchema), controller.login.bind(controller));
+
 /**
  * @openapi
  * /api/register:
@@ -94,8 +96,6 @@ const controller = new AuthController(new AuthService());
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-
-router.post("/login", validateBody(LoginSchema), controller.login.bind(controller));
 router.post("/register", validateBody(RegisterSchema), controller.register.bind(controller));
 
 export default router;
