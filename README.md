@@ -22,9 +22,19 @@ your-workspace/
 
 From the backend repository folder, start frontend, backend, and Postgres together:
 
+On a fresh machine, generate Prisma Client first:
+
+```bash
+npx prisma generate
+```
+
+Then start the full Docker development stack:
+
 ```bash
 docker compose -f docker-compose.dev.yml up --build
 ```
+
+Troubleshooting: this first-run `npx prisma generate` step prevents Prisma query engine runtime mismatches (for example, macOS-generated client used inside Linux containers).
 
 Services:
 
