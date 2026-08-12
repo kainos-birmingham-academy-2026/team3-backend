@@ -129,6 +129,7 @@ jobRolesRouter.get(
  *   post:
  *     tags: [Job Roles]
  *     summary: Create a job role (mock endpoint for future implementation)
+ *     description: Admin-only endpoint. Creates a mock job role with status set to OPEN.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -136,57 +137,14 @@ jobRolesRouter.get(
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             additionalProperties: false
- *             required:
- *               - roleName
- *               - description
- *               - responsibilities
- *               - sharepointUrl
- *               - numberOfOpenPositions
- *               - capabilityId
- *               - bandId
- *               - locationId
- *             properties:
- *               roleName:
- *                 type: string
- *               description:
- *                 type: string
- *               responsibilities:
- *                 type: string
- *               sharepointUrl:
- *                 type: string
- *                 format: uri
- *               numberOfOpenPositions:
- *                 type: integer
- *                 minimum: 1
- *               closingDate:
- *                 type: string
- *                 format: date-time
- *               capabilityId:
- *                 type: integer
- *                 minimum: 1
- *               bandId:
- *                 type: integer
- *                 minimum: 1
- *               locationId:
- *                 type: integer
- *                 minimum: 1
+ *             $ref: '#/components/schemas/CreateJobRoleRequest'
  *     responses:
  *       201:
  *         description: Mock create accepted with status set to OPEN
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               additionalProperties: false
- *               required: [message, jobRoleDraft]
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Mock create endpoint accepted
- *                 jobRoleDraft:
- *                   type: object
+ *               $ref: '#/components/schemas/CreateJobRoleResponse'
  *       400:
  *         description: Request validation failed
  *         content:
@@ -212,7 +170,6 @@ jobRolesRouter.get(
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-
 jobRolesRouter.post(
 	'/',
 	allowRoles([USER_ROLES.ADMIN]),
@@ -222,6 +179,73 @@ jobRolesRouter.post(
 	},
 );
 
+/**
+ * @openapi
+ * /job-roles/{id}/apply:
+ *   post:
+ *     tags: [Job Roles]
+ *     summary: Apply for a job role
+ *     description: User or admin can apply for a job role. The authenticated user ID is extracted from the JWT token.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: Job role ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ApplicationRequest'
+ *     responses:
+ *       201:
+ *         description: Application created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/JobRoleApplicationResponse'
+ *       400:
+ *         description: Request validation failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *       401:
+ *         description: Missing or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/MessageErrorResponse'
+ *       403:
+ *         description: Forbidden for current role
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/MessageErrorResponse'
+ *       404:
+ *         description: Job role not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       409:
+ *         description: Conflict - application may already exist
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/MessageErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 jobRolesRouter.post(
 	'/:id/apply', 
 	allowRoles([USER_ROLES.ADMIN, USER_ROLES.USER]),

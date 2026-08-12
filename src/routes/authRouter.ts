@@ -70,13 +70,7 @@ router.post("/login", validateBody(LoginSchema), controller.login.bind(controlle
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               additionalProperties: false
- *               required: [message]
- *               properties:
- *                 message:
- *                   type: string
- *                   example: User registered
+ *               $ref: '#/components/schemas/RegisterResponse'
  *       400:
  *         description: Request validation failed
  *         content:
