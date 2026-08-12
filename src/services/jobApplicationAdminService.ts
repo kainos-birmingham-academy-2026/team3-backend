@@ -1,15 +1,20 @@
 import prisma from "../prismaClient";
 
 export class JobApplicationAdminService {
-  async findAll(jobRoleId: number) {
+  async findAllAdmin() {
     const applications = await prisma.application.findMany({
-      where: { jobRoleId },
       orderBy: { createdAt: "desc" },
       select: {
         applicationId: true,
         jobRoleId: true,
         cvReference: true,
+        createdAt: true,
         applicationStatus: true,
+        jobRole: {
+          select: {
+            roleName: true,
+          },
+        },
         user: {
           select: {
             id: true,
@@ -22,6 +27,57 @@ export class JobApplicationAdminService {
     return applications.map((application) => ({
       applicationId: application.applicationId,
       jobRoleId: application.jobRoleId,
+      applicant: application.user.email,
+      applicantName: application.user.email,
+      email: application.user.email,
+      appliedRole: application.jobRole.roleName,
+      roleName: application.jobRole.roleName,
+      applicationDate: application.createdAt,
+      createdAt: application.createdAt,
+      username: application.user.email,
+      cvUrl: application.cvReference,
+      status: application.applicationStatus,
+      actions:
+        application.applicationStatus === "IN_PROGRESS"
+          ? { canHire: true, canReject: true }
+          : { canHire: false, canReject: false },
+    }));
+  }
+
+  async findAll(jobRoleId: number) {
+    const applications = await prisma.application.findMany({
+      where: { jobRoleId },
+      orderBy: { createdAt: "desc" },
+      select: {
+        applicationId: true,
+        jobRoleId: true,
+        cvReference: true,
+        createdAt: true,
+        applicationStatus: true,
+        jobRole: {
+          select: {
+            roleName: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    return applications.map((application) => ({
+      applicationId: application.applicationId,
+      jobRoleId: application.jobRoleId,
+      applicant: application.user.email,
+      applicantName: application.user.email,
+      email: application.user.email,
+      appliedRole: application.jobRole.roleName,
+      roleName: application.jobRole.roleName,
+      applicationDate: application.createdAt,
+      createdAt: application.createdAt,
       username: application.user.email,
       cvUrl: application.cvReference,
       status: application.applicationStatus,

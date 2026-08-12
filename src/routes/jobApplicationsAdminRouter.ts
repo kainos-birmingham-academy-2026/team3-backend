@@ -24,6 +24,11 @@ const JobRoleAndApplicationIdParamSchema = z.object({
 jobApplicationsAdminRouter.use(requireAuth);
 jobApplicationsAdminRouter.use(allowRoles([USER_ROLES.ADMIN]));
 
+jobApplicationsAdminRouter.get(
+  "/",
+  controller.getAllAdmin.bind(controller),
+);
+
 jobApplicationsAdminRouter.get("/:jobRoleId/applications",validateParams(JobRoleIdParamSchema)
 ,controller.getAll.bind(controller),
 );

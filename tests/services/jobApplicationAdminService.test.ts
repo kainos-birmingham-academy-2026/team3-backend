@@ -32,7 +32,11 @@ describe("jobApplicationAdminService", () => {
         applicationId: 1,
         jobRoleId: 1,
         cvReference: "cv-1.pdf",
+        createdAt: new Date("2026-08-12T10:00:00.000Z"),
         applicationStatus: "IN_PROGRESS",
+        jobRole: {
+          roleName: "Software Engineer",
+        },
         user: {
           id: 10,
           email: "candidate@example.com",
@@ -47,6 +51,13 @@ describe("jobApplicationAdminService", () => {
       {
         applicationId: 1,
         jobRoleId: 1,
+        applicant: "candidate@example.com",
+        applicantName: "candidate@example.com",
+        email: "candidate@example.com",
+        appliedRole: "Software Engineer",
+        roleName: "Software Engineer",
+        applicationDate: new Date("2026-08-12T10:00:00.000Z"),
+        createdAt: new Date("2026-08-12T10:00:00.000Z"),
         username: "candidate@example.com",
         cvUrl: "cv-1.pdf",
         status: "IN_PROGRESS",
@@ -63,7 +74,13 @@ describe("jobApplicationAdminService", () => {
         applicationId: true,
         jobRoleId: true,
         cvReference: true,
+        createdAt: true,
         applicationStatus: true,
+        jobRole: {
+          select: {
+            roleName: true,
+          },
+        },
         user: {
           select: {
             id: true,
@@ -80,7 +97,11 @@ describe("jobApplicationAdminService", () => {
         applicationId: 2,
         jobRoleId: 1,
         cvReference: "cv-2.pdf",
+        createdAt: new Date("2026-08-12T10:00:00.000Z"),
         applicationStatus: "HIRED",
+        jobRole: {
+          roleName: "Software Engineer",
+        },
         user: {
           id: 11,
           email: "hired@example.com",

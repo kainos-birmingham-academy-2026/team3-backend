@@ -9,6 +9,15 @@ export class jobApplicationAdminController {
         }
 
 
+         async getAllAdmin(req: Request, res: Response) {
+                try {
+                    const jobApplications = await this.service.findAllAdmin();
+                    return res.status(200).send(jobApplications);
+                } catch {
+                    return res.status(500).json({ error: 'Internal Server Error' });
+                }
+            }
+
          async getAll(req: Request, res: Response) {
                 try {
                     const jobRoleId = Number(req.params.jobRoleId);
