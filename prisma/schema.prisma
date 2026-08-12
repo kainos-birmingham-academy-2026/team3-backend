@@ -46,6 +46,7 @@ model JobRole {
   band                  Band       @relation(fields: [bandId], references: [bandId], onDelete: Restrict, onUpdate: Cascade)
   location              Location   @relation(fields: [locationId], references: [locationId], onDelete: Restrict, onUpdate: Cascade)
   status                Status     @relation(fields: [statusId], references: [statusId], onDelete: Restrict, onUpdate: Cascade)
+  applications          Application[]
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
 }
@@ -90,5 +91,27 @@ model User {
   email        String   @unique
   passwordHash String
   role         UserRole @default(USER)
+  applications Application[]
   createdAt    DateTime @default(now())
 }
+
+model Application {
+  applicationId Int      @id @default(autoincrement())
+  cvReference   String   @db.VarChar(255)
+  jobRoleId     Int
+  userId        Int
+  jobRole       JobRole  @relation(fields: [jobRoleId], references: [jobRoleId], onDelete: Cascade, onUpdate: Cascade)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  applicationStatus ApplicationStatus @default(IN_PROGRESS)
+  @@unique([jobRoleId, userId])
+}
+
+ enum ApplicationStatus {
+  IN_PROGRESS
+  HIRED
+  REJECTED
+ }
+ 
+ 
