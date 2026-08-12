@@ -32,8 +32,27 @@ Services:
 - Backend: `http://localhost:4000`
 - Backend health: `http://localhost:4000/health`
 
+**Environment configuration:**
+
+The `.env.dev` file in the repository contains safe defaults for Docker Compose development. To use custom values:
+
+```bash
+# Override defaults by setting environment variables before running docker compose
+export DATABASE_URL="postgresql://user:pass@db:5432/custom-db?schema=public"
+export JWT_SECRET="your-custom-secret"
+docker compose -f docker-compose.dev.yml up --build
+```
+
+Or create a `.env.dev.local` file (git-ignored) for persistent overrides:
+
+```env
+DATABASE_URL="postgresql://custom:password@db:5432/jobRoles?schema=public"
+JWT_SECRET="my-custom-jwt-secret"
+SESSION_SECRET="my-custom-session-secret"
+```
+
 On backend container startup, the app applies migrations and runs the seed script automatically before starting the dev server.
-The seed script is idempotent for reference data (status, locations, capabilities, bands), so container restarts do not fail on duplicate unique values.
+The seed and all reference data (statuses, locations, capabilities, bands, job roles) are idempotent, so container restarts do not fail on duplicate values.
 
 Stop and remove containers:
 
@@ -168,10 +187,12 @@ When running with `docker compose -f docker-compose.dev.yml up --build`, the bac
 
 1. Creates `public.local_migrations` if it does not exist
 2. Applies SQL files from `prisma/migrations/*/migration.sql` once each (tracked in `public.local_migrations`)
-3. `npm run seed`
+3. `npm run seed` — Runs the seed script, which is fully idempotent:
+   - Reference data (statuses, locations, capabilities, bands) are upserted (updated if exists, created if new)
+   - Job roles are upserted (updated if exists, created if new), allowing changes to be re-seeded without manual DB reset
 4. `npm run dev`
 
-This ensures the database schema and seed data are in place automatically for local development.
+This ensures the database schema and seed data are in place automatically, and developers can update seed data and re-run `npm run seed` during development.
 
 ## API Endpoints
 

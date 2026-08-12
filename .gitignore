@@ -4,7 +4,9 @@ node_modules/
 # Environment files
 .env
 .env.*
+.env.*.local
 !.env.example
+!.env.dev
 
 # Local certificates and key material
 .certs/*.crt
@@ -33,6 +35,7 @@ pnpm-debug.log*
 dist/
 build/
 coverage/
+code_reviews/
  
 # Cache and temp files
 .cache/

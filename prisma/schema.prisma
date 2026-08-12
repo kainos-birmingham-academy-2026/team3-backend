@@ -28,7 +28,7 @@ enum StatusEnum {
 
 model JobRole {
   jobRoleId             Int        @id @default(autoincrement())
-  roleName              String     @db.VarChar(100)
+  roleName              String     @unique @db.VarChar(100)
   description           String
   responsibilities      String
   sharepointUrl         String     @db.VarChar(255)

@@ -173,13 +173,21 @@ async function main() {
     prisma.band.upsert({ where: { bandName: "Principal Engineer" }, update: {}, create: { bandName: "Principal Engineer" } }),
   ]);
 
-  const existingRoles = await prisma.jobRole.count();
-
-  // Job roles are seeded once to avoid duplicating records on each container restart.
-  if (existingRoles === 0) {
-    await prisma.jobRole.createMany({
-      data: [
-      {
+  // Job roles are seeded with upsert to ensure idempotency on container restarts.
+  await Promise.all([
+    prisma.jobRole.upsert({
+      where: { roleName: "Software Engineer" },
+      update: {
+        description: "Build and maintain backend services and APIs.",
+        responsibilities: "Deliver features, write tests, and support production services.",
+        numberOfOpenPositions: 3,
+        locationId: belfast.locationId,
+        capabilityId: engineering.capabilityId,
+        bandId: engineer.bandId,
+        statusId: openStatus.statusId,
+        closingDate: new Date("2026-09-30"),
+      },
+      create: {
         roleName: "Software Engineer",
         description: "Build and maintain backend services and APIs.",
         responsibilities: "Deliver features, write tests, and support production services.",
@@ -191,7 +199,20 @@ async function main() {
         statusId: openStatus.statusId,
         closingDate: new Date("2026-09-30"),
       },
-      {
+    }),
+    prisma.jobRole.upsert({
+      where: { roleName: "Senior Software Engineer" },
+      update: {
+        description: "Lead design and delivery of core platform components.",
+        responsibilities: "Mentor engineers, drive architecture decisions, and improve reliability.",
+        numberOfOpenPositions: 2,
+        locationId: glasgow.locationId,
+        capabilityId: engineering.capabilityId,
+        bandId: senior.bandId,
+        statusId: openStatus.statusId,
+        closingDate: new Date("2026-10-15"),
+      },
+      create: {
         roleName: "Senior Software Engineer",
         description: "Lead design and delivery of core platform components.",
         responsibilities: "Mentor engineers, drive architecture decisions, and improve reliability.",
@@ -203,7 +224,20 @@ async function main() {
         statusId: openStatus.statusId,
         closingDate: new Date("2026-10-15"),
       },
-      {
+    }),
+    prisma.jobRole.upsert({
+      where: { roleName: "Lead Software Engineer" },
+      update: {
+        description: "Own delivery across multiple teams and technical domains.",
+        responsibilities: "Set technical direction, coordinate delivery, and remove blockers.",
+        numberOfOpenPositions: 1,
+        locationId: birmingham.locationId,
+        capabilityId: engineering.capabilityId,
+        bandId: lead.bandId,
+        statusId: openStatus.statusId,
+        closingDate: new Date("2026-09-05"),
+      },
+      create: {
         roleName: "Lead Software Engineer",
         description: "Own delivery across multiple teams and technical domains.",
         responsibilities: "Set technical direction, coordinate delivery, and remove blockers.",
@@ -215,7 +249,20 @@ async function main() {
         statusId: openStatus.statusId,
         closingDate: new Date("2026-09-05"),
       },
-      {
+    }),
+    prisma.jobRole.upsert({
+      where: { roleName: "Trainee Software Engineer" },
+      update: {
+        description: "Entry role focused on learning modern software practices.",
+        responsibilities: "Pair program, complete training, and contribute to small features.",
+        numberOfOpenPositions: 4,
+        locationId: belfast.locationId,
+        capabilityId: engineering.capabilityId,
+        bandId: trainee.bandId,
+        statusId: openStatus.statusId,
+        closingDate: new Date("2026-08-31"),
+      },
+      create: {
         roleName: "Trainee Software Engineer",
         description: "Entry role focused on learning modern software practices.",
         responsibilities: "Pair program, complete training, and contribute to small features.",
@@ -227,7 +274,20 @@ async function main() {
         statusId: openStatus.statusId,
         closingDate: new Date("2026-08-31"),
       },
-      {
+    }),
+    prisma.jobRole.upsert({
+      where: { roleName: "Associate Software Engineer" },
+      update: {
+        description: "Develop application features under guidance.",
+        responsibilities: "Implement stories, fix bugs, and collaborate in code reviews.",
+        numberOfOpenPositions: 2,
+        locationId: london.locationId,
+        capabilityId: engineering.capabilityId,
+        bandId: associate.bandId,
+        statusId: openStatus.statusId,
+        closingDate: new Date("2026-11-01"),
+      },
+      create: {
         roleName: "Associate Software Engineer",
         description: "Develop application features under guidance.",
         responsibilities: "Implement stories, fix bugs, and collaborate in code reviews.",
@@ -239,7 +299,20 @@ async function main() {
         statusId: openStatus.statusId,
         closingDate: new Date("2026-11-01"),
       },
-      {
+    }),
+    prisma.jobRole.upsert({
+      where: { roleName: "Senior Cloud Engineer" },
+      update: {
+        description: "Design and operate scalable cloud infrastructure.",
+        responsibilities: "Automate deployments, improve observability, and optimize cloud cost.",
+        numberOfOpenPositions: 2,
+        locationId: glasgow.locationId,
+        capabilityId: cloud.capabilityId,
+        bandId: senior.bandId,
+        statusId: openStatus.statusId,
+        closingDate: new Date("2026-10-20"),
+      },
+      create: {
         roleName: "Senior Cloud Engineer",
         description: "Design and operate scalable cloud infrastructure.",
         responsibilities: "Automate deployments, improve observability, and optimize cloud cost.",
@@ -251,7 +324,20 @@ async function main() {
         statusId: openStatus.statusId,
         closingDate: new Date("2026-10-20"),
       },
-      {
+    }),
+    prisma.jobRole.upsert({
+      where: { roleName: "DevOps Engineer" },
+      update: {
+        description: "Improve CI/CD and infrastructure reliability.",
+        responsibilities: "Maintain pipelines, IaC, and environment standards.",
+        numberOfOpenPositions: 2,
+        locationId: birmingham.locationId,
+        capabilityId: cloud.capabilityId,
+        bandId: engineer.bandId,
+        statusId: openStatus.statusId,
+        closingDate: new Date("2026-08-20"),
+      },
+      create: {
         roleName: "DevOps Engineer",
         description: "Improve CI/CD and infrastructure reliability.",
         responsibilities: "Maintain pipelines, IaC, and environment standards.",
@@ -263,7 +349,20 @@ async function main() {
         statusId: openStatus.statusId,
         closingDate: new Date("2026-08-20"),
       },
-      {
+    }),
+    prisma.jobRole.upsert({
+      where: { roleName: "Cyber Security Engineer" },
+      update: {
+        description: "Implement security controls and secure SDLC practices.",
+        responsibilities: "Threat model systems, triage vulnerabilities, and support audits.",
+        numberOfOpenPositions: 1,
+        locationId: london.locationId,
+        capabilityId: security.capabilityId,
+        bandId: engineer.bandId,
+        statusId: openStatus.statusId,
+        closingDate: new Date("2026-09-25"),
+      },
+      create: {
         roleName: "Cyber Security Engineer",
         description: "Implement security controls and secure SDLC practices.",
         responsibilities: "Threat model systems, triage vulnerabilities, and support audits.",
@@ -275,7 +374,20 @@ async function main() {
         statusId: openStatus.statusId,
         closingDate: new Date("2026-09-25"),
       },
-      {
+    }),
+    prisma.jobRole.upsert({
+      where: { roleName: "Senior Cyber Security Engineer" },
+      update: {
+        description: "Lead security engineering across products and platforms.",
+        responsibilities: "Define controls, mentor teams, and guide incident readiness.",
+        numberOfOpenPositions: 1,
+        locationId: remote.locationId,
+        capabilityId: security.capabilityId,
+        bandId: senior.bandId,
+        statusId: openStatus.statusId,
+        closingDate: null,
+      },
+      create: {
         roleName: "Senior Cyber Security Engineer",
         description: "Lead security engineering across products and platforms.",
         responsibilities: "Define controls, mentor teams, and guide incident readiness.",
@@ -287,7 +399,20 @@ async function main() {
         statusId: openStatus.statusId,
         closingDate: null,
       },
-      {
+    }),
+    prisma.jobRole.upsert({
+      where: { roleName: "Delivery Manager" },
+      update: {
+        description: "Coordinate delivery plans and stakeholder communication.",
+        responsibilities: "Manage roadmap cadence, risks, and team dependencies.",
+        numberOfOpenPositions: 0,
+        locationId: belfast.locationId,
+        capabilityId: delivery.capabilityId,
+        bandId: principal.bandId,
+        statusId: closedStatus.statusId,
+        closingDate: new Date("2026-07-31"),
+      },
+      create: {
         roleName: "Delivery Manager",
         description: "Coordinate delivery plans and stakeholder communication.",
         responsibilities: "Manage roadmap cadence, risks, and team dependencies.",
@@ -299,9 +424,8 @@ async function main() {
         statusId: closedStatus.statusId,
         closingDate: new Date("2026-07-31"),
       },
-      ],
-    });
-  }
+    }),
+  ]);
 
   console.log("Seed complete.");
 }
