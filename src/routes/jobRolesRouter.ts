@@ -11,7 +11,7 @@ const controller = new JobRolesController(new JobRolesService());
 
 /**
  * @openapi
- * /job-roles:
+ * /job-roles-list:
  *   get:
  *     tags: [Job Roles]
  *     summary: Get all job roles
@@ -31,12 +31,25 @@ const controller = new JobRolesController(new JobRolesService());
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-jobRolesRouter.get('/job-roles', (req: R, res: Res) => {
+jobRolesRouter.get('/job-roles-list', (req: R, res: Res) => {
     controller.getAll(req, res);
 });
 
 jobRolesRouter.get('/job-roles/:id', validateParams(IdParamSchema), (req: R, res: Res) => {
     controller.getById(req, res);
 });
+
+jobRolesRouter.post('/job-roles/:id/apply', (req: R, res: Res) => {
+});
+
+//future endpoint urls for reference
+// jobRolesRouter.post('/job-roles/create', (req: R, res: Res) => {
+// });
+
+// jobRolesRouter.put('/job-roles/:id/update', (req: R, res: Res) => {
+// });
+
+// jobRolesRouter.delete('/job-roles/:id/delete', (req: R, res: Res) => {
+// });
 
 export default jobRolesRouter;

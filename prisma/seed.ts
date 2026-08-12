@@ -3,12 +3,6 @@ import { PrismaClient } from "../src/generated/prisma/client";
 import { StatusEnum } from "../src/generated/prisma/enums";
 import argon2 from "argon2";
 
-//status 
-enum Status {
-  OPEN = "OPEN",
-  CLOSED = "CLOSED",
-}
-
 const prisma = new PrismaClient();
 
 async function main() {
@@ -77,18 +71,6 @@ async function main() {
       },
     }),
   ]);
-  
-  // Create a test user
-	const passwordHash = await argon2.hash("password");
-
-	await prisma.user.upsert({
-		where: { email: "test@example.com" },
-		update: { passwordHash },
-		create: {
-			email: "test@example.com",
-			passwordHash,
-		},
-	});
 
   // Capabilities
   const [engineering, data, cloud, security, delivery] = await Promise.all([
@@ -108,6 +90,19 @@ async function main() {
     prisma.band.create({ data: { bandName: "Lead Engineer" } }),
     prisma.band.create({ data: { bandName: "Principal Engineer" } }),
   ]);
+
+  // Create a test user
+  const passwordHash = await argon2.hash("password");
+
+  // Test user 
+  await prisma.user.upsert({
+    where: { email: "test@example.com" },
+    update: { passwordHash },
+    create: {
+      email: "test@example.com",
+      passwordHash,
+    },
+  });
 
   // Job Roles
   await prisma.jobRole.createMany({
@@ -234,6 +229,38 @@ async function main() {
       },
     ],
   });
+
+  // Create test applications
+  const jobRoleIds = await prisma.jobRole.findMany({
+    select: { jobRoleId: true },
+  });
+
+  const testUserId = (await prisma.user.findUnique({
+    where: { email: "test@example.com" },
+    select: { id: true },
+  }))?.id;
+
+  if (testUserId && jobRoleIds.length > 0) {
+    await prisma.applications.createMany({
+      data: [
+        {
+          cvReference: "cv_ref_001",
+          jobRoleId: jobRoleIds[0].jobRoleId,
+          userId: testUserId,
+        },
+        {
+          cvReference: "cv_ref_002",
+          jobRoleId: jobRoleIds[1].jobRoleId,
+          userId: testUserId,
+        },
+        {
+          cvReference: "cv_ref_003",
+          jobRoleId: jobRoleIds[2].jobRoleId,
+          userId: testUserId,
+        },
+      ],
+    });
+  }
 
   console.log("Seed complete.");
 }

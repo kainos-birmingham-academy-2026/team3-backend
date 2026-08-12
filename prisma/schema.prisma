@@ -26,47 +26,54 @@ enum StatusEnum {
 }
 
 model JobRole {
-  jobRoleId             Int        @id @default(autoincrement())
-  roleName              String     @db.VarChar(100)
+  jobRoleId             Int            @id @default(autoincrement())
+  roleName              String         @db.VarChar(100)
   description           String
   responsibilities      String
-  sharepointUrl         String     @db.VarChar(255)
+  sharepointUrl         String         @db.VarChar(255)
   numberOfOpenPositions Int
   closingDate           DateTime?
-  capabilityId          Int
-  bandId                Int
-  locationId            Int
-  statusId              Int
-  capability            Capability @relation(fields: [capabilityId], references: [capabilityId], onDelete: Restrict, onUpdate: Cascade)
-  band                  Band       @relation(fields: [bandId], references: [bandId], onDelete: Restrict, onUpdate: Cascade)
-  location              Location   @relation(fields: [locationId], references: [locationId], onDelete: Restrict, onUpdate: Cascade)
-  status                Status     @relation(fields: [statusId], references: [statusId], onDelete: Restrict, onUpdate: Cascade)
-  createdAt             DateTime   @default(now())
-  updatedAt             DateTime   @updatedAt
+  applications          Applications[]
+
+  capabilityId Int
+  bandId       Int
+  locationId   Int
+  statusId     Int
+
+  capability Capability @relation(fields: [capabilityId], references: [capabilityId], onDelete: Restrict, onUpdate: Cascade)
+  band       Band       @relation(fields: [bandId], references: [bandId], onDelete: Restrict, onUpdate: Cascade)
+  location   Location   @relation(fields: [locationId], references: [locationId], onDelete: Restrict, onUpdate: Cascade)
+  status     Status     @relation(fields: [statusId], references: [statusId], onDelete: Restrict, onUpdate: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Capability {
   capabilityId   Int       @id @default(autoincrement())
   capabilityName String    @unique @db.VarChar(100)
   jobRoles       JobRole[]
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Band {
-  bandId    Int       @id @default(autoincrement())
-  bandName  String    @unique @db.VarChar(100)
-  jobRoles  JobRole[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  bandId   Int       @id @default(autoincrement())
+  bandName String    @unique @db.VarChar(100)
+  jobRoles JobRole[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Status {
   statusId   Int        @id @default(autoincrement())
   statusName StatusEnum @unique
   jobRoles   JobRole[]
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Location {
@@ -76,13 +83,31 @@ model Location {
   addressLine2 String?   @db.VarChar(255)
   postcode     String    @db.VarChar(20)
   jobRoles     JobRole[]
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  email        String   @unique
+  id           Int            @id @default(autoincrement())
+  email        String         @unique
   passwordHash String
-  createdAt    DateTime @default(now())
+  applications Applications[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Applications {
+  applicationId Int    @id @default(autoincrement())
+  cvReference   String @db.VarChar(255)
+
+  jobRoleId Int
+  userId    Int
+
+  jobRole JobRole @relation(fields: [jobRoleId], references: [jobRoleId], onDelete: Cascade, onUpdate: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
