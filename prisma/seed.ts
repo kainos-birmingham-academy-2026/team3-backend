@@ -254,7 +254,7 @@ async function main() {
   }))?.id;
 
   if (testUserId && jobRoleIds.length > 0) {
-    await prisma.applications.createMany({
+    await prisma.application.createMany({
       data: [
         {
           cvReference: "cv_ref_001",

@@ -7,8 +7,6 @@ export const USER_ROLES = {
 
 export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
 
-const FORBIDDEN_ERROR = "Forbidden";
-
 export const allowRoles = (allowedRoles: readonly UserRole[]): RequestHandler => {
 	return (req, res, next) => {
 		const authUser = res.locals.authUser as { role?: UserRole } | undefined;
@@ -18,9 +16,8 @@ export const allowRoles = (allowedRoles: readonly UserRole[]): RequestHandler =>
 		}
 
 		if (!allowedRoles.includes(authUser.role)) {
-			return res.status(403).json({ message: FORBIDDEN_ERROR });
+			return res.status(403).json({ message: "Forbidden" });
 		}
-
 		next();
 	};
 };

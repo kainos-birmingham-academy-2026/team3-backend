@@ -1,6 +1,9 @@
 -- CreateEnum
 CREATE TYPE "StatusEnum" AS ENUM ('OPEN', 'CLOSED');
 
+-- CreateEnum
+CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'USER');
+
 -- CreateTable
 CREATE TABLE "JobRole" (
     "jobRoleId" SERIAL NOT NULL,
@@ -68,6 +71,7 @@ CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
     "email" TEXT NOT NULL,
     "passwordHash" TEXT NOT NULL,
+    "role" "UserRole" NOT NULL DEFAULT 'USER',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -75,7 +79,7 @@ CREATE TABLE "User" (
 );
 
 -- CreateTable
-CREATE TABLE "Applications" (
+CREATE TABLE "Application" (
     "applicationId" SERIAL NOT NULL,
     "cvReference" VARCHAR(255) NOT NULL,
     "jobRoleId" INTEGER NOT NULL,
@@ -83,7 +87,7 @@ CREATE TABLE "Applications" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Applications_pkey" PRIMARY KEY ("applicationId")
+    CONSTRAINT "Application_pkey" PRIMARY KEY ("applicationId")
 );
 
 -- CreateIndex
@@ -114,7 +118,7 @@ ALTER TABLE "JobRole" ADD CONSTRAINT "JobRole_locationId_fkey" FOREIGN KEY ("loc
 ALTER TABLE "JobRole" ADD CONSTRAINT "JobRole_statusId_fkey" FOREIGN KEY ("statusId") REFERENCES "Status"("statusId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Applications" ADD CONSTRAINT "Applications_jobRoleId_fkey" FOREIGN KEY ("jobRoleId") REFERENCES "JobRole"("jobRoleId") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Application" ADD CONSTRAINT "Application_jobRoleId_fkey" FOREIGN KEY ("jobRoleId") REFERENCES "JobRole"("jobRoleId") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Applications" ADD CONSTRAINT "Applications_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Application" ADD CONSTRAINT "Application_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

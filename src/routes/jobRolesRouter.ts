@@ -1,12 +1,15 @@
 import { Router } from 'express';
 import { Request as R, Response as Res } from 'express';
 
+import { CreateJobRoleSchema, IdParamSchema, CreateApplicationSchema } from '../dtos/jobRoleDto';
+
 import { JobRolesController } from '../controllers/jobRolesController';
-import { CreateJobRoleSchema, IdParamSchema } from '../dtos/jobRoleDto';
+import { JobRolesService } from '../services/jobRolesService';
+
 import { allowRoles, USER_ROLES } from '../middleware/authorise';
 import { requireAuth } from '../middleware/requireAuth';
 import { validateBody, validateParams } from '../middleware/validate';
-import { JobRolesService } from '../services/jobRolesService';
+
 
 const jobRolesRouter = Router();
 const controller = new JobRolesController(new JobRolesService());
@@ -15,7 +18,7 @@ jobRolesRouter.use(requireAuth);
 
 /**
  * @openapi
- * /job-roles-list:
+ * /job-roles:
  *   get:
  *     tags: [Job Roles]
  *     summary: Get all job roles
@@ -50,7 +53,7 @@ jobRolesRouter.use(requireAuth);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 jobRolesRouter.get(
-	'/',
+	'',
 	allowRoles([USER_ROLES.ADMIN, USER_ROLES.USER]),
 	(req: R, res: Res) => {
 		controller.getAll(req, res);
@@ -218,5 +221,25 @@ jobRolesRouter.post(
 		controller.createMock(req, res);
 	},
 );
+
+jobRolesRouter.post(
+	'/:id/apply', 
+	allowRoles([USER_ROLES.ADMIN, USER_ROLES.USER]),
+	validateParams(IdParamSchema),
+	validateBody(CreateApplicationSchema),
+	(req: R, res: Res) => {
+		controller.createApplication(req, res);
+	},
+);
+
+//future endpoint urls for url reference exclude /job-roles/
+// jobRolesRouter.post('/job-roles/create', (req: R, res: Res) => {
+// });
+
+// jobRolesRouter.put('/job-roles/:id/update', (req: R, res: Res) => {
+// });
+
+// jobRolesRouter.delete('/job-roles/:id/delete', (req: R, res: Res) => {
+// });
 
 export default jobRolesRouter;

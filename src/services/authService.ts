@@ -2,17 +2,8 @@ import argon2 from "argon2";
 import jwt from "jsonwebtoken";
 import type { LoginRequestDto, RegisterRequestDto } from "../dtos/authDto.js";
 import prisma from "../prismaClient.js";
-
-const LOGIN_ERROR = "Invalid email or password";
-
-export class AuthError extends Error {
-	public constructor(
-		public readonly statusCode: number,
-		message: string,
-	) {
-		super(message);
-	}
-}
+import { AuthError, LOGIN_ERROR } from "../errors/authError.js";
+import { ConflictError } from "../errors/conflictError.js";
 
 export class AuthService {
 	public async register(input: RegisterRequestDto): Promise<void> {
@@ -21,7 +12,7 @@ export class AuthService {
 		});
 
 		if (existingUser) {
-			throw new AuthError(409, "Email already in use");
+			throw new ConflictError(409, "Email already in use");
 		}
 
 		const passwordHash = await argon2.hash(input.password, {

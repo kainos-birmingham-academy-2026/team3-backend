@@ -76,12 +76,12 @@ export class JobRoleDao {
         return application ? toApplicationDomain(application) : null;
     }
 
-    async createApplication(jobRoleId: number, applicationData: any): Promise<JobRoleApplication> {
+    async createApplication(data: any): Promise<JobRoleApplication> {
         const application = await prisma.application.create({
             data: {
-                jobRoleId,
-                userId: applicationData.userId,
-                cvReference: applicationData.cvReference,
+                jobRoleId: data.jobRoleId,
+                userId: data.userId,
+                cvReference: data.cvReference,
             },
         });
         return toApplicationDomain(application);
