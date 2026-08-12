@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { JobRolesController } from "../../src/controllers/jobRolesController.js";
-import { NotFoundError } from "error-lib";
+import { NotFoundError } from "../../src/errors/notFoundError.js";
+import type { JobRolesService } from "../../src/services/jobRolesService.js";
 import type { Request, Response } from "express";
 
 const CREATED_AT = new Date("2026-01-01T10:00:00.000Z");
@@ -143,6 +144,35 @@ describe("JobRolesController", () => {
 
 			expect(res.status).toHaveBeenCalledWith(500);
 			expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
+		});
+	});
+
+	describe("createMock", () => {
+		it("should return 201 and enforce OPEN status in draft response", async () => {
+			const req = {
+				body: {
+					roleName: "Software Engineer",
+					description: "Build and maintain software systems",
+					responsibilities: "Code development, testing, deployment",
+					sharepointUrl: "https://sharepoint.example.com/roles/1",
+					numberOfOpenPositions: 2,
+					capabilityId: 1,
+					bandId: 1,
+					locationId: 1,
+				},
+			};
+			const res = createMockResponse();
+
+			await controller.createMock(req as never, res as never);
+
+			expect(res.status).toHaveBeenCalledWith(201);
+			expect(res.json).toHaveBeenCalledWith({
+				message: "Mock create endpoint accepted",
+				jobRoleDraft: {
+					...req.body,
+					statusName: "OPEN",
+				},
+			});
 		});
 	});
 });

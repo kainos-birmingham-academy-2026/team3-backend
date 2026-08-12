@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { AuthController } from "../controllers/authController.js";
-import { LoginSchema } from "../dtos/authDto.js";
+import { LoginSchema, RegisterSchema } from "../dtos/authDto.js";
 import { validateBody } from "../middleware/validate";
 import { AuthService } from "../services/authService.js";
 
@@ -48,6 +48,54 @@ const controller = new AuthController(new AuthService());
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 
-router.post("/", validateBody(LoginSchema), controller.login.bind(controller));
+/**
+ * @openapi
+ * /api/register:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Register a new user account
+ *     description: Public endpoint. Creates a user with role USER.
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/LoginRequest'
+ *     responses:
+ *       201:
+ *         description: Registration successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               additionalProperties: false
+ *               required: [message]
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User registered
+ *       400:
+ *         description: Request validation failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *       409:
+ *         description: Email already in use
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/MessageErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+
+router.post("/login", validateBody(LoginSchema), controller.login.bind(controller));
+router.post("/register", validateBody(RegisterSchema), controller.register.bind(controller));
 
 export default router;

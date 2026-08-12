@@ -71,6 +71,22 @@ async function main() {
       },
     }),
   ]);
+  
+  // Create a test user
+	const passwordHash = await argon2.hash("password");
+
+	await prisma.user.upsert({
+		where: { email: "test@example.com" },
+    update: {
+      passwordHash,
+      role: "ADMIN",
+    },
+		create: {
+			email: "test@example.com",
+			passwordHash,
+      role: "ADMIN",
+		},
+	});
 
   // Capabilities
   const [engineering, data, cloud, security, delivery] = await Promise.all([
@@ -90,9 +106,6 @@ async function main() {
     prisma.band.create({ data: { bandName: "Lead Engineer" } }),
     prisma.band.create({ data: { bandName: "Principal Engineer" } }),
   ]);
-
-  // Create a test user
-  const passwordHash = await argon2.hash("password");
 
   // Test user 
   await prisma.user.upsert({

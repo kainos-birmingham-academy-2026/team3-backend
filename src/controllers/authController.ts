@@ -2,11 +2,25 @@ import type { Request, Response } from "express";
 import type {
 	LoginRequestDto,
 	LoginResponseDto,
+	RegisterRequestDto,
+	RegisterResponseDto,
 } from "../dtos/authDto.js";
 import { AuthError, type AuthService } from "../services/authService.js";
 
 export class AuthController {
 	public constructor(private readonly authService: AuthService) {}
+
+	public async register(req: Request, res: Response): Promise<Response> {
+		try {
+			await this.authService.register(req.body as RegisterRequestDto);
+
+			return res.status(201).json({
+				message: "User registered",
+			} satisfies RegisterResponseDto);
+		} catch (error) {
+			return this.handleError(error, res);
+		}
+	}
 
 	public async login(req: Request, res: Response): Promise<Response> {
 		try {

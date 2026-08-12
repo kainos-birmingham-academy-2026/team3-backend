@@ -139,6 +139,11 @@ Example response:
 
 Returns all job roles in the database (currently seeded with test data).
 
+Authentication:
+
+- Requires `Authorization: Bearer <jwt>`
+- Accepted roles: `ADMIN` and `USER`
+
 Example response:
 
 ```json
@@ -233,6 +238,46 @@ Seeded login user for local testing:
 - email: `test@example.com`
 - password: `password`
 
+### `POST /api/register`
+
+Registers a new user account.
+
+Request body:
+
+```json
+{
+  "email": "new.user@example.com",
+  "password": "Password123!"
+}
+```
+
+Validation rules:
+
+- Email must be valid
+- Password must be more than 8 characters
+- Password must include uppercase, lowercase, and special characters
+
+Success response (`201`):
+
+```json
+{
+  "message": "User registered"
+}
+```
+
+Conflict response (`409`) example:
+
+```json
+{
+  "message": "Email already in use"
+}
+```
+
+Role behaviour:
+
+- New registrations default to role `USER`
+- Passwords are salted and hashed with Argon2id before storage
+
 ## Quick Check
 
 After starting the app, you can verify endpoints with:
@@ -243,4 +288,7 @@ curl http://localhost:4000/health
 curl -X POST http://localhost:4000/api/login \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"password"}'
+curl -X POST http://localhost:4000/api/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"new.user@example.com","password":"Password123!"}'
 ```

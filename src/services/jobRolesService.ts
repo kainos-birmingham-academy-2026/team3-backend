@@ -3,7 +3,7 @@ import { JobRoleDao } from "../models/jobRoleDao.js";
 import type { JobRoleApplication } from "../models/jobRoleApplication.js";
 import { JobRoleMapper } from "../mappers/jobRoleMapper.js";
 import { JobRoleDetailedResponse } from "../models/JobRoleDetailedResponse.js";
-import { NotFoundError } from "error-lib";
+import { NotFoundError } from "../errors/notFoundError.js";
 
 export class JobRolesService {
     private jobRoleDao: JobRoleDao;

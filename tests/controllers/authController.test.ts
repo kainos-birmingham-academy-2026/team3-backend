@@ -8,6 +8,7 @@ import type { AuthService } from '../../src/services/authService.ts';
 describe('AuthController', () => {
 	let controller: AuthController;
 	let mockLogin: Mock;
+	let mockRegister: Mock;
 	let mockService: AuthService;
 	let mockRequest: Partial<Request>;
 	let mockResponse: Partial<Response>;
@@ -18,9 +19,11 @@ describe('AuthController', () => {
 		statusSpy = vi.fn().mockReturnThis();
 		jsonSpy = vi.fn().mockReturnThis();
 		mockLogin = vi.fn();
+		mockRegister = vi.fn();
 
 		mockService = {
 			login: mockLogin,
+			register: mockRegister,
 		} as unknown as AuthService;
 
 		mockRequest = {
@@ -36,6 +39,25 @@ describe('AuthController', () => {
 		};
 
 		controller = new AuthController(mockService);
+	});
+
+	it('should return 201 when register succeeds', async () => {
+		mockRegister.mockResolvedValueOnce(undefined);
+
+		await controller.register(mockRequest as Request, mockResponse as Response);
+
+		expect(mockRegister).toHaveBeenCalledWith(mockRequest.body);
+		expect(statusSpy).toHaveBeenCalledWith(201);
+		expect(jsonSpy).toHaveBeenCalledWith({ message: 'User registered' });
+	});
+
+	it('should return 409 when register fails with duplicate email', async () => {
+		mockRegister.mockRejectedValueOnce(new AuthError(409, 'Email already in use'));
+
+		await controller.register(mockRequest as Request, mockResponse as Response);
+
+		expect(statusSpy).toHaveBeenCalledWith(409);
+		expect(jsonSpy).toHaveBeenCalledWith({ message: 'Email already in use' });
 	});
 
 	afterEach(() => {
