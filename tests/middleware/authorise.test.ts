@@ -46,4 +46,38 @@ describe('allowRoles middleware', () => {
 		expect(response.status).toBe(403);
 		expect(response.body).toEqual({ message: 'Forbidden' });
 	});
+
+	it('should return 401 when auth user is missing', async () => {
+		const app = express();
+
+		app.get('/admin-only', allowRoles([USER_ROLES.ADMIN]), (_req, res) => {
+			res.status(200).json({ ok: true });
+		});
+
+		const response = await request(app).get('/admin-only');
+
+		expect(response.status).toBe(401);
+		expect(response.body).toEqual({ message: 'Invalid token' });
+	});
+
+	it('should return 401 when auth user role is missing', async () => {
+		const app = express();
+
+		app.get(
+			'/admin-only',
+			(_req, res, next) => {
+				res.locals.authUser = {};
+				next();
+			},
+			allowRoles([USER_ROLES.ADMIN]),
+			(_req, res) => {
+				res.status(200).json({ ok: true });
+			},
+		);
+
+		const response = await request(app).get('/admin-only');
+
+		expect(response.status).toBe(401);
+		expect(response.body).toEqual({ message: 'Invalid token' });
+	});
 });
