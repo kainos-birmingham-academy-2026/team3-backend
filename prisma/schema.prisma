@@ -25,15 +25,11 @@ enum StatusEnum {
   CLOSED
 }
 
-<<<<<<< HEAD
-=======
 enum UserRole {
   ADMIN
   USER
 }
 
-
->>>>>>> c4817ca (implemented role-based route protection)
 model JobRole {
   jobRoleId             Int        @id @default(autoincrement())
   roleName              String     @db.VarChar(100)

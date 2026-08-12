@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { JobRolesController } from "../../src/controllers/jobRolesController.js";
-import { NotFoundError } from "error-lib";
+import { NotFoundError } from "../../src/errors/notFoundError.js";
+import type { JobRolesService } from "../../src/services/jobRolesService.js";
 import type { Request, Response } from "express";
 
 const CREATED_AT = new Date("2026-01-01T10:00:00.000Z");
