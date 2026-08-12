@@ -49,6 +49,8 @@ docker compose -f docker-compose.dev.yml down -v
 
 Dependencies are installed at image build time for both backend and frontend containers, so startup does not perform `npm install`.
 
+Docker Compose mounts source/config files only in development and does not mount `node_modules` from the host. This avoids cross-platform native module issues (for example macOS modules inside Linux containers).
+
 ### 1. Install dependencies
 
 ```bash
@@ -164,9 +166,10 @@ npm start
 
 When running with `docker compose -f docker-compose.dev.yml up --build`, the backend container startup script performs these steps:
 
-1. `npx prisma migrate deploy`
-2. `npm run seed`
-3. `npm run dev`
+1. Creates `public.local_migrations` if it does not exist
+2. Applies SQL files from `prisma/migrations/*/migration.sql` once each (tracked in `public.local_migrations`)
+3. `npm run seed`
+4. `npm run dev`
 
 This ensures the database schema and seed data are in place automatically for local development.
 
