@@ -89,4 +89,18 @@ describe('validate middleware', () => {
 			]),
 		});
 	});
+
+	it('should parse and replace request params with schema output', () => {
+		const schema = z.object({ id: z.coerce.number().int().positive() });
+		const req = {
+			params: { id: '42' },
+		};
+		const middleware = validateParams(schema);
+
+		middleware(req as any, res as any, nextSpy as any);
+
+		expect(nextSpy).toHaveBeenCalledTimes(1);
+		expect(statusSpy).not.toHaveBeenCalled();
+		expect(req.params).toEqual({ id: 42 });
+	});
 });

@@ -26,7 +26,7 @@ vi.mock("../../src/mappers/jobRoleMapper.js", () => ({
 
 import { JobRolesService } from "../../src/services/jobRolesService.js";
 import { JobRole } from "../../src/models/jobRole.js";
-import { NotFoundError } from "error-lib";
+import { NotFoundError } from "../../src/errors/notFoundError.js";
 
 const jobRole1 = new JobRole(
 	1,
