@@ -7,7 +7,7 @@ import { JobRolesService } from '../../src/services/jobRolesService.ts';
 import { NotFoundError } from 'error-lib';
 import { ConflictError } from '../../src/errors/conflictError.js';
 
-describe('GET /job-roles auth protection', () => {
+	describe('Job role route auth protection', () => {
 	let originalJwtSecret: string | undefined;
 
 	beforeEach(() => {
@@ -110,7 +110,7 @@ describe('GET /job-roles auth protection', () => {
 		};
 
 		const response = await request(app)
-			.post('/job-roles')
+			.post('/job-roles/create')
 			.set('Authorization', `Bearer ${token}`)
 			.send(payload);
 
@@ -135,19 +135,27 @@ describe('GET /job-roles auth protection', () => {
 			bandId: 1,
 			locationId: 1,
 		};
+		const createdJobRole: JobRoleResponse = {
+			jobRoleId: 1,
+			roleName: 'Mock Role',
+			capabilityName: 'Software',
+			bandName: 'Band 1',
+			locationName: 'Birmingham',
+			closingDate: null,
+			statusName: 'OPEN',
+		};
+
+		vi.spyOn(JobRolesService.prototype, 'createJobRole').mockResolvedValueOnce(createdJobRole);
 
 		const response = await request(app)
-			.post('/job-roles')
+			.post('/job-roles/create')
 			.set('Authorization', `Bearer ${token}`)
 			.send(payload);
 
 		expect(response.status).toBe(201);
 		expect(response.body).toEqual({
-			message: 'Mock create endpoint accepted',
-			jobRoleDraft: {
-				...payload,
-				statusName: 'OPEN',
-			},
+			...createdJobRole,
+			closingDate: null,
 		});
 	});
 
@@ -159,7 +167,7 @@ describe('GET /job-roles auth protection', () => {
 		);
 
 		const response = await request(app)
-			.post('/job-roles')
+			.post('/job-roles/create')
 			.set('Authorization', `Bearer ${token}`)
 			.send({ roleName: '' });
 

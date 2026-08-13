@@ -13,6 +13,7 @@ const createMockResponse = () => {
 		status: vi.fn(),
 		send: vi.fn(),
 		json: vi.fn(),
+		locals: {} as Record<string, unknown>,
 	};
 
 	res.status.mockReturnValue(res);
@@ -26,6 +27,7 @@ describe("JobRolesController", () => {
 	const mockService = {
 		findAll: vi.fn(),
 		findById: vi.fn(),
+		createJobRole: vi.fn(),
 		createApplication: vi.fn(),
 	} as unknown as JobRolesService;
 
@@ -149,8 +151,66 @@ describe("JobRolesController", () => {
 		});
 	});
 
-	describe("createMock", () => {
-		it("should return 201 and enforce OPEN status in draft response", async () => {
+	describe("createJobRole", () => {
+		it("should return 201 with the created job role", async () => {
+			const req = {
+				body: {
+					roleName: "Software Engineer",
+					description: "Build and maintain software systems",
+					responsibilities: "Code development, testing, deployment",
+					sharepointUrl: "https://sharepoint.example.com/roles/1",
+					numberOfOpenPositions: 2,
+					capabilityId: 1,
+					bandId: 1,
+					locationId: 1,
+				},
+			};
+			const res = createMockResponse();
+			const createdJobRole = {
+				jobRoleId: 1,
+				roleName: "Software Engineer",
+				closingDate: new Date("2026-12-31"),
+				capabilityName: "Software Engineering",
+				bandName: "Engineer",
+				locationName: "Birmingham",
+				statusName: "OPEN",
+			};
+
+			vi.mocked(mockService.createJobRole).mockResolvedValue(createdJobRole);
+
+			await controller.createJobRole(req as never, res as never);
+
+			expect(res.status).toHaveBeenCalledWith(201);
+			expect(res.json).toHaveBeenCalledWith(createdJobRole);
+			expect(mockService.createJobRole).toHaveBeenCalledWith(req.body);
+		});
+
+		it("should return 400 when the closing date is in the past", async () => {
+			const req = {
+				body: {
+					roleName: "Software Engineer",
+					description: "Build and maintain software systems",
+					responsibilities: "Code development, testing, deployment",
+					sharepointUrl: "https://sharepoint.example.com/roles/1",
+					numberOfOpenPositions: 2,
+					closingDate: new Date("2020-01-01"),
+					capabilityId: 1,
+					bandId: 1,
+					locationId: 1,
+				},
+			};
+			const res = createMockResponse();
+
+			await controller.createJobRole(req as never, res as never);
+
+			expect(res.status).toHaveBeenCalledWith(400);
+			expect(res.json).toHaveBeenCalledWith({
+				error: "Closing date cannot be in the past",
+			});
+			expect(mockService.createJobRole).not.toHaveBeenCalled();
+		});
+
+		it("should return 500 when the service throws", async () => {
 			const req = {
 				body: {
 					roleName: "Software Engineer",
@@ -165,16 +225,12 @@ describe("JobRolesController", () => {
 			};
 			const res = createMockResponse();
 
-			await controller.createMock(req as never, res as never);
+			vi.mocked(mockService.createJobRole).mockRejectedValue(new Error("Database error"));
 
-			expect(res.status).toHaveBeenCalledWith(201);
-			expect(res.json).toHaveBeenCalledWith({
-				message: "Mock create endpoint accepted",
-				jobRoleDraft: {
-					...req.body,
-					statusName: "OPEN",
-				},
-			});
+			await controller.createJobRole(req as never, res as never);
+
+			expect(res.status).toHaveBeenCalledWith(500);
+			expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
 		});
 	});
 

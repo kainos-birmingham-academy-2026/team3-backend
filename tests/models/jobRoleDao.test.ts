@@ -5,6 +5,11 @@ vi.mock("../../src/prismaClient.js", () => ({
 		jobRole: {
 			findMany: vi.fn(),
 			findUnique: vi.fn(),
+			create: vi.fn(),
+		},
+		application: {
+			findFirst: vi.fn(),
+			create: vi.fn(),
 		},
 	},
 }));
@@ -142,6 +147,106 @@ describe("JobRoleDao", () => {
 			const result = await dao.findById(999);
 
 			expect(result).toBeNull();
+		});
+	});
+
+	describe("createJobRole", () => {
+		it("should create a job role with OPEN status and return a domain object", async () => {
+			const mockJobRole = mockJobRoleRow();
+			const createData = {
+				roleName: "Software Engineer",
+				description: "Build and maintain software systems",
+				responsibilities: "Code development, testing, deployment",
+				sharepointUrl: "https://sharepoint.example.com/roles/1",
+				numberOfOpenPositions: 2,
+				closingDate: new Date("2026-12-31"),
+				capabilityId: 1,
+				bandId: 1,
+				locationId: 1,
+			};
+
+			vi.mocked(prisma.jobRole.create as any).mockResolvedValue(mockJobRole);
+
+			const result = await dao.createJobRole(createData);
+
+			expect(prisma.jobRole.create).toHaveBeenCalledWith({
+				data: {
+					...createData,
+					statusId: 1,
+				},
+				relationLoadStrategy: "join",
+				include: {
+					status: true,
+					location: true,
+					capability: true,
+					band: true,
+				},
+			});
+			expect(result.jobRoleId).toBe(1);
+			expect(result.statusName).toBe("OPEN");
+		});
+
+		it("should propagate database errors", async () => {
+			vi.mocked(prisma.jobRole.create as any).mockRejectedValue(new Error("Create failed"));
+
+			await expect(dao.createJobRole({ roleName: "Role" })).rejects.toThrow("Create failed");
+		});
+	});
+
+	describe("findApplicationByUserIdAndJobRoleId", () => {
+		it("should return an application when one exists", async () => {
+			const application = {
+				applicationId: 1,
+				jobRoleId: 2,
+				userId: 3,
+				cvText: "CV-2026-001",
+			};
+			vi.mocked(prisma.application.findFirst as any).mockResolvedValue(application);
+
+			const result = await dao.findApplicationByUserIdAndJobRoleId(3, 2);
+
+			expect(prisma.application.findFirst).toHaveBeenCalledWith({
+				where: { userId: 3, jobRoleId: 2 },
+			});
+			expect(result).toEqual(application);
+		});
+
+		it("should return null when no application exists", async () => {
+			vi.mocked(prisma.application.findFirst as any).mockResolvedValue(null);
+
+			const result = await dao.findApplicationByUserIdAndJobRoleId(3, 999);
+
+			expect(result).toBeNull();
+		});
+	});
+
+	describe("createApplication", () => {
+		it("should create and return an application domain object", async () => {
+			const applicationData = {
+				jobRoleId: 2,
+				userId: 3,
+				cvText: "CV-2026-001",
+			};
+			vi.mocked(prisma.application.create as any).mockResolvedValue({
+				applicationId: 1,
+				...applicationData,
+			});
+
+			const result = await dao.createApplication(applicationData);
+
+			expect(prisma.application.create).toHaveBeenCalledWith({
+				data: applicationData,
+			});
+			expect(result.applicationId).toBe(1);
+			expect(result.jobRoleId).toBe(2);
+			expect(result.userId).toBe(3);
+			expect(result.cvText).toBe("CV-2026-001");
+		});
+
+		it("should propagate database errors", async () => {
+			vi.mocked(prisma.application.create as any).mockRejectedValue(new Error("Create failed"));
+
+			await expect(dao.createApplication({})).rejects.toThrow("Create failed");
 		});
 	});
 });
