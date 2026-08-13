@@ -125,11 +125,11 @@ jobRolesRouter.get(
 
 /**
  * @openapi
- * /job-roles:
+ * /job-roles/create:
  *   post:
  *     tags: [Job Roles]
- *     summary: Create a job role (mock endpoint for future implementation)
- *     description: Admin-only endpoint. Creates a mock job role with status set to OPEN.
+ *     summary: Create a job role
+ *     description: Admin-only endpoint. Creates a new job role.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -144,7 +144,7 @@ jobRolesRouter.get(
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/CreateJobRoleResponse'
+ *              $ref: '#/components/schemas/JobRoleSummary'
  *       400:
  *         description: Request validation failed
  *         content:
@@ -171,11 +171,11 @@ jobRolesRouter.get(
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 jobRolesRouter.post(
-	'/',
+	'/create',
 	allowRoles([USER_ROLES.ADMIN]),
 	validateBody(CreateJobRoleSchema),
 	(req: R, res: Res) => {
-		controller.createMock(req, res);
+		controller.createJobRole(req, res);
 	},
 );
 

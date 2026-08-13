@@ -1,7 +1,9 @@
 import { JobRole } from "./jobRole.js";
 import prisma from "../prismaClient.js";
 import type { Prisma } from "../generated/prisma/client.js";
+
 import { JobRoleApplication } from "./jobRoleApplication.js";
+import { CreateJobRoleRequestDto, CreateApplicationRequestDto } from "../dtos/jobRoleDto.js";
 
 
 type JobRoleRow = Prisma.JobRoleGetPayload<{
@@ -66,6 +68,31 @@ export class JobRoleDao {
         return row ? toJobRoleDomain(row) : null;
     }
 
+    async createJobRole(data: CreateJobRoleRequestDto): Promise<JobRole> {
+        const row = await prisma.jobRole.create({
+            data: {
+                roleName: data.roleName,
+                description: data.description,
+                responsibilities: data.responsibilities,
+                sharepointUrl: data.sharepointUrl,
+                numberOfOpenPositions: data.numberOfOpenPositions,
+                closingDate: data.closingDate,
+                capabilityId: data.capabilityId,
+                bandId: data.bandId,
+                locationId: data.locationId,
+                statusId: 1, // Assuming 1 is the ID for OPEN status can be changed in future 
+            },
+            relationLoadStrategy: "join",
+            include: {
+                status: true,
+                capability: true,
+                band: true,
+                location: true, 
+            },
+        });
+        return toJobRoleDomain(row);
+    }
+
     async findApplicationByUserIdAndJobRoleId(userId: number, jobRoleId: number): Promise<JobRoleApplication | null> {
         const application = await prisma.application.findFirst({
             where: {
@@ -76,11 +103,11 @@ export class JobRoleDao {
         return application ? toApplicationDomain(application) : null;
     }
 
-    async createApplication(data: any): Promise<JobRoleApplication> {
+    async createApplication(jobRoleId: number, userId: number, data: CreateApplicationRequestDto): Promise<JobRoleApplication> {
         const application = await prisma.application.create({
             data: {
-                jobRoleId: data.jobRoleId,
-                userId: data.userId,
+                jobRoleId: jobRoleId,
+                userId: userId,
                 cvText: data.cvText,
             },
         });

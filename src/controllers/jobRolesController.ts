@@ -48,11 +48,9 @@ export class JobRolesController {
         if (!userId) {
             return res.status(401).json({ error: TOKEN_ERROR });
         }
-        req.body.userId = userId; // Attach the authenticated user's ID to the request body
-        req.body.jobRoleId = jobRoleId; // Attach the job role ID to the request body
 
         try {
-            const application = await this.service.createApplication(req.body);
+            const application = await this.service.createApplication(jobRoleId, userId, req.body);
             res.status(201).json(application);
         } catch (error) {
             if (error instanceof NotFoundError) {
@@ -64,20 +62,20 @@ export class JobRolesController {
             res.status(500).json({ error: 'Internal Server Error' });
         }
     }
-    
-    async createMock(req: Request, res: Response) {
-        try {
-            const payload = req.body as CreateJobRoleRequestDto;
 
-            return res.status(201).json({
-                message: 'Mock create endpoint accepted',
-                jobRoleDraft: {
-                    ...payload,
-                    statusName: 'OPEN',
-                },
-            });
-        } catch {
+    async createJobRole(req: Request, res: Response) {
+        const payload = req.body as CreateJobRoleRequestDto;
+        //nothing to attach to payload so can define type as dto
+        if(payload.closingDate && payload.closingDate < new Date()) {
+            return res.status(400).json({ error: 'Closing date cannot be in the past' });
+        }
+
+        try {
+            const jobRole = await this.service.createJobRole(payload);
+            return res.status(201).json(jobRole);
+        } catch (error) {
             return res.status(500).json({ error: 'Internal Server Error' });
         }
     }
+    
 }
