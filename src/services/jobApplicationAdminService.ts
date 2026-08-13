@@ -1,29 +1,44 @@
 import prisma from "../prismaClient";
 
-export class JobApplicationAdminService {
-  async findAllAdmin() {
-    const applications = await prisma.application.findMany({
-      orderBy: { createdAt: "desc" },
-      select: {
-        applicationId: true,
-        jobRoleId: true,
-        cvText: true,
-        createdAt: true,
-        applicationStatus: true,
-        jobRole: {
-          select: {
-            roleName: true,
-          },
-        },
-        user: {
-          select: {
-            id: true,
-            email: true,
-          },
-        },
-      },
-    });
+const HIRE_STATUSES = ["HIRED", "APPROVED"] as const;
+const REJECT_STATUSES = ["REJECTED", "REJECT"] as const;
 
+type ApplicationListItem = {
+  applicationId: number;
+  jobRoleId: number;
+  cvText: string;
+  createdAt: Date;
+  applicationStatus: "IN_PROGRESS" | "HIRED" | "REJECTED";
+  jobRole: {
+    roleName: string;
+  };
+  user: {
+    id: number;
+    email: string;
+  };
+};
+
+export class JobApplicationAdminService {
+  private readonly applicationListSelect = {
+    applicationId: true,
+    jobRoleId: true,
+    cvText: true,
+    createdAt: true,
+    applicationStatus: true,
+    jobRole: {
+      select: {
+        roleName: true,
+      },
+    },
+    user: {
+      select: {
+        id: true,
+        email: true,
+      },
+    },
+  } as const;
+
+  private mapApplications(applications: ApplicationListItem[]) {
     return applications.map((application) => ({
       applicationId: application.applicationId,
       jobRoleId: application.jobRoleId,
@@ -36,58 +51,31 @@ export class JobApplicationAdminService {
       createdAt: application.createdAt,
       username: application.user.email,
       cvText: application.cvText,
-      cvUrl: application.cvText,
       status: application.applicationStatus,
       actions:
         application.applicationStatus === "IN_PROGRESS"
           ? { canHire: true, canReject: true }
-          : { canHire: false, canReject: false },
+          : undefined,
     }));
+  }
+
+  async findAllAdmin() {
+    const applications = await prisma.application.findMany({
+      orderBy: { createdAt: "desc" },
+      select: this.applicationListSelect,
+    });
+
+    return this.mapApplications(applications);
   }
 
   async findAll(jobRoleId: number) {
     const applications = await prisma.application.findMany({
       where: { jobRoleId },
       orderBy: { createdAt: "desc" },
-      select: {
-        applicationId: true,
-        jobRoleId: true,
-        cvText: true,
-        createdAt: true,
-        applicationStatus: true,
-        jobRole: {
-          select: {
-            roleName: true,
-          },
-        },
-        user: {
-          select: {
-            id: true,
-            email: true,
-          },
-        },
-      },
+      select: this.applicationListSelect,
     });
 
-    return applications.map((application) => ({
-      applicationId: application.applicationId,
-      jobRoleId: application.jobRoleId,
-      applicant: application.user.email,
-      applicantName: application.user.email,
-      email: application.user.email,
-      appliedRole: application.jobRole.roleName,
-      roleName: application.jobRole.roleName,
-      applicationDate: application.createdAt,
-      createdAt: application.createdAt,
-      username: application.user.email,
-      cvText: application.cvText,
-      cvUrl: application.cvText,
-      status: application.applicationStatus,
-      actions:
-        application.applicationStatus === "IN_PROGRESS"
-          ? { canHire: true, canReject: true }
-          : { canHire: false, canReject: false },
-    }));
+    return this.mapApplications(applications);
   }
 
   async hireApplicant(jobRoleId: number, applicationId: number) {
@@ -120,10 +108,14 @@ export class JobApplicationAdminService {
         throw new Error("No open positions remaining for this role");
       }
 
-      await tx.jobRole.update({
-        where: { jobRoleId },
+      const updatedRole = await tx.jobRole.updateMany({
+        where: { jobRoleId, numberOfOpenPositions: { gt: 0 } },
         data: { numberOfOpenPositions: { decrement: 1 } },
       });
+
+      if (updatedRole.count === 0) {
+        throw new Error("No open positions remaining for this role");
+      }
 
       const updatedApplication = await tx.application.update({
         where: { applicationId },
@@ -135,6 +127,13 @@ export class JobApplicationAdminService {
             },
           },
         },
+      });
+
+      console.info("Admin action: application hired", {
+        applicationId: updatedApplication.applicationId,
+        jobRoleId,
+        status: updatedApplication.applicationStatus,
+        applicant: updatedApplication.user.email,
       });
 
       return {
@@ -193,6 +192,13 @@ export class JobApplicationAdminService {
       },
     });
 
+    console.info("Admin action: application rejected", {
+      applicationId: updatedApplication.applicationId,
+      jobRoleId,
+      status: updatedApplication.applicationStatus,
+      applicant: updatedApplication.user.email,
+    });
+
     return {
       message: "Applicant rejected",
       application: {
@@ -219,23 +225,11 @@ export class JobApplicationAdminService {
   async updateApplicationStatusById(applicationId: number, status: string) {
     const normalisedStatus = status.trim().toUpperCase();
 
-    if (
-      normalisedStatus === "HIRED" ||
-      normalisedStatus === "HIRE" ||
-      normalisedStatus === "APPROVED" ||
-      normalisedStatus === "APPROVE" ||
-      normalisedStatus === "ACCEPTED" ||
-      normalisedStatus === "ACCEPT"
-    ) {
+    if (HIRE_STATUSES.includes(normalisedStatus as (typeof HIRE_STATUSES)[number])) {
       return this.hireApplicantById(applicationId);
     }
 
-    if (
-      normalisedStatus === "REJECTED" ||
-      normalisedStatus === "REJECT" ||
-      normalisedStatus === "DECLINED" ||
-      normalisedStatus === "DECLINE"
-    ) {
+    if (REJECT_STATUSES.includes(normalisedStatus as (typeof REJECT_STATUSES)[number])) {
       return this.rejectApplicantById(applicationId);
     }
 
