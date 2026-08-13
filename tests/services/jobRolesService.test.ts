@@ -140,9 +140,9 @@ describe("JobRolesService", () => {
 
 	describe("createApplication", () => {
 		it("should return application data when application is created successfully", async () => {
+			const jobRoleId = 1;
+			const userId = 1;
 			const applicationData = {
-				jobRoleId: 1,
-				userId: 1,
 				cvText: "CV-2026-001",
 			};
 
@@ -155,7 +155,7 @@ describe("JobRolesService", () => {
 				cvText: "CV-2026-001",
 			});
 
-			const result = await service.createApplication(applicationData);
+			const result = await service.createApplication(jobRoleId, userId, applicationData);
 
 			expect(result).toSatisfy(
 				(value) =>
@@ -166,20 +166,20 @@ describe("JobRolesService", () => {
 			);
 			expect(mockDao.findById).toHaveBeenCalledWith(1);
 			expect(mockDao.findApplicationByUserIdAndJobRoleId).toHaveBeenCalledWith(1, 1);
-			expect(mockDao.createApplication).toHaveBeenCalledWith(applicationData);
+			expect(mockDao.createApplication).toHaveBeenCalledWith(jobRoleId, userId, applicationData);
 		});
 
 		it("should throw NotFoundError when job role does not exist", async () => {
+			const jobRoleId = 999;
+			const userId = 1;
 			const applicationData = {
-				jobRoleId: 999,
-				userId: 1,
 				cvText: "CV-2026-001",
 			};
 
 			mockDao.findById.mockResolvedValue(null);
 
-			await expect(service.createApplication(applicationData)).rejects.toThrow(NotFoundError);
-			await expect(service.createApplication(applicationData)).rejects.toThrow(
+			await expect(service.createApplication(jobRoleId, userId, applicationData)).rejects.toThrow(NotFoundError);
+			await expect(service.createApplication(jobRoleId, userId, applicationData)).rejects.toThrow(
 				"JobRole with id 999 not found",
 			);
 
@@ -187,9 +187,9 @@ describe("JobRolesService", () => {
 		});
 
 		it("should throw ConflictError when user has already applied", async () => {
+			const jobRoleId = 1;
+			const userId = 1;
 			const applicationData = {
-				jobRoleId: 1,
-				userId: 1,
 				cvText: "CV-2026-001",
 			};
 
@@ -203,8 +203,8 @@ describe("JobRolesService", () => {
 			mockDao.findById.mockResolvedValue(jobRole1);
 			mockDao.findApplicationByUserIdAndJobRoleId.mockResolvedValue(existingApplication);
 
-			await expect(service.createApplication(applicationData)).rejects.toThrow(ConflictError);
-			await expect(service.createApplication(applicationData)).rejects.toThrow(
+			await expect(service.createApplication(jobRoleId, userId, applicationData)).rejects.toThrow(ConflictError);
+			await expect(service.createApplication(jobRoleId, userId, applicationData)).rejects.toThrow(
 				"User with id 1 has already applied for JobRole with id 1",
 			);
 

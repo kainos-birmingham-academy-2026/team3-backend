@@ -222,20 +222,20 @@ describe("JobRoleDao", () => {
 
 	describe("createApplication", () => {
 		it("should create and return an application domain object", async () => {
-			const applicationData = {
-				jobRoleId: 2,
-				userId: 3,
-				cvText: "CV-2026-001",
-			};
+			const jobRoleId = 2;
+			const userId = 3;
+			const applicationData = { cvText: "CV-2026-001" };
 			vi.mocked(prisma.application.create as any).mockResolvedValue({
 				applicationId: 1,
+				jobRoleId,
+				userId,
 				...applicationData,
 			});
 
-			const result = await dao.createApplication(applicationData);
+			const result = await dao.createApplication(jobRoleId, userId, applicationData);
 
 			expect(prisma.application.create).toHaveBeenCalledWith({
-				data: applicationData,
+				data: { jobRoleId, userId, ...applicationData },
 			});
 			expect(result.applicationId).toBe(1);
 			expect(result.jobRoleId).toBe(2);
@@ -246,7 +246,7 @@ describe("JobRoleDao", () => {
 		it("should propagate database errors", async () => {
 			vi.mocked(prisma.application.create as any).mockRejectedValue(new Error("Create failed"));
 
-			await expect(dao.createApplication({})).rejects.toThrow("Create failed");
+			await expect(dao.createApplication(2, 3, { cvText: "CV-2026-001" })).rejects.toThrow("Create failed");
 		});
 	});
 });
