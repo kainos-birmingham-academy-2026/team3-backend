@@ -14,16 +14,12 @@ import { validateBody, validateParams } from '../middleware/validate';
 const jobRolesRouter = Router();
 const controller = new JobRolesController(new JobRolesService());
 
-jobRolesRouter.use(requireAuth);
-
 /**
  * @openapi
  * /job-roles:
  *   get:
  *     tags: [Job Roles]
  *     summary: Get all job roles
- *     security:
- *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: List of job role summaries
@@ -33,18 +29,6 @@ jobRolesRouter.use(requireAuth);
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/JobRoleSummary'
- *       401:
- *         description: Missing or invalid token
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/MessageErrorResponse'
- *       403:
- *         description: Forbidden for current role
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/MessageErrorResponse'
  *       500:
  *         description: Internal server error
  *         content:
@@ -54,7 +38,6 @@ jobRolesRouter.use(requireAuth);
  */
 jobRolesRouter.get(
 	'',
-	allowRoles([USER_ROLES.ADMIN, USER_ROLES.USER]),
 	(req: R, res: Res) => {
 		controller.getAll(req, res);
 	},
@@ -66,8 +49,6 @@ jobRolesRouter.get(
  *   get:
  *     tags: [Job Roles]
  *     summary: Get job role details by ID
- *     security:
- *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -89,18 +70,6 @@ jobRolesRouter.get(
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ValidationErrorResponse'
- *       401:
- *         description: Missing or invalid token
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/MessageErrorResponse'
- *       403:
- *         description: Forbidden for current role
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/MessageErrorResponse'
  *       404:
  *         description: Job role not found
  *         content:
@@ -116,7 +85,6 @@ jobRolesRouter.get(
  */
 jobRolesRouter.get(
 	'/:id',
-	allowRoles([USER_ROLES.ADMIN, USER_ROLES.USER]),
 	validateParams(IdParamSchema),
 	(req: R, res: Res) => {
 		controller.getById(req, res);
@@ -172,6 +140,7 @@ jobRolesRouter.get(
  */
 jobRolesRouter.post(
 	'/create',
+	requireAuth,
 	allowRoles([USER_ROLES.ADMIN]),
 	validateBody(CreateJobRoleSchema),
 	(req: R, res: Res) => {
@@ -248,6 +217,7 @@ jobRolesRouter.post(
  */
 jobRolesRouter.post(
 	'/:id/apply', 
+	requireAuth,
 	allowRoles([USER_ROLES.ADMIN, USER_ROLES.USER]),
 	validateParams(IdParamSchema),
 	validateBody(CreateApplicationSchema),

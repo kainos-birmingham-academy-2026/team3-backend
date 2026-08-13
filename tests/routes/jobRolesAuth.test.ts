@@ -7,7 +7,7 @@ import { JobRolesService } from '../../src/services/jobRolesService.ts';
 import { NotFoundError } from 'error-lib';
 import { ConflictError } from '../../src/errors/conflictError.js';
 
-	describe('Job role route auth protection', () => {
+describe('Job role route auth protection', () => {
 	let originalJwtSecret: string | undefined;
 
 	beforeEach(() => {
@@ -24,11 +24,38 @@ import { ConflictError } from '../../src/errors/conflictError.js';
 		}
 	});
 
-	it('should return 401 without bearer token', async () => {
+	it('should return 200 without bearer token on list endpoint', async () => {
+		vi.spyOn(JobRolesService.prototype, 'findAll').mockResolvedValueOnce([]);
+
 		const response = await request(app).get('/job-roles');
 
-		expect(response.status).toBe(401);
-		expect(response.body).toEqual({ message: 'Invalid token' });
+		expect(response.status).toBe(200);
+		expect(response.body).toEqual([]);
+	});
+
+	it('should return 200 without bearer token on detail endpoint', async () => {
+		vi.spyOn(JobRolesService.prototype, 'findById').mockResolvedValueOnce({
+			jobRoleId: 1,
+			roleName: 'Engineer',
+			capabilityName: 'Software',
+			bandName: 'Band 1',
+			locationName: 'Singapore',
+			closingDate: new Date('2026-08-01T00:00:00.000Z'),
+			statusName: 'OPEN',
+			description: 'Role description',
+			responsibilities: 'Role responsibilities',
+			sharepointUrl: 'https://example.com/spec',
+			numberOfOpenPositions: 2,
+			addressLine1: '123 Street',
+			addressLine2: 'Unit 1',
+			postcode: 'S1 1AA',
+		});
+
+		const response = await request(app).get('/job-roles/1');
+
+		expect(response.status).toBe(200);
+		expect(response.body.jobRoleId).toBe(1);
+		expect(response.body.roleName).toBe('Engineer');
 	});
 
 	it('should return 200 with user token on list endpoint', async () => {
