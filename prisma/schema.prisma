@@ -106,13 +106,17 @@ model User {
 
 model Application {
   applicationId Int    @id @default(autoincrement())
-  cvText   String @db.Text //CV stored as text in database can hold up to 1GB of text data, which is more than enough for a CV
+  cvText   String @db.Text 
+  //CV stored as text in database can hold up to 1GB of text data, which is more than enough for a CV
 
   jobRoleId Int
   userId    Int
 
   jobRole JobRole @relation(fields: [jobRoleId], references: [jobRoleId], onDelete: Cascade, onUpdate: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([jobRoleId, userId]) 
+  // Ensure a user can only apply once to a specific job role
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
