@@ -78,20 +78,4 @@ export class JobRolesController {
         }
     }
     
-    // is this still required?
-    // async createMock(req: Request, res: Response) {
-    //     try {
-    //         const payload = req.body as CreateJobRoleRequestDto;
-
-    //         return res.status(201).json({
-    //             message: 'Mock create endpoint accepted',
-    //             jobRoleDraft: {
-    //                 ...payload,
-    //                 statusName: 'OPEN',
-    //             },
-    //         });
-    //     } catch {
-    //         return res.status(500).json({ error: 'Internal Server Error' });
-    //     }
-    // }
 }
