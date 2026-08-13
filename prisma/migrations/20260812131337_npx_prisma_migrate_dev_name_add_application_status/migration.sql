@@ -1,0 +1,3 @@
+-- No-op migration.
+-- The Application table and its constraints are already created in
+-- 20260812131336_init/migration.sql.

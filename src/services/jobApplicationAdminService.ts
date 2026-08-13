@@ -1,14 +1,13 @@
 import prisma from "../prismaClient";
 
 export class JobApplicationAdminService {
-<<<<<<< HEAD
   async findAllAdmin() {
     const applications = await prisma.application.findMany({
       orderBy: { createdAt: "desc" },
       select: {
         applicationId: true,
         jobRoleId: true,
-          cvText: true,
+        cvText: true,
         createdAt: true,
         applicationStatus: true,
         jobRole: {
@@ -36,8 +35,8 @@ export class JobApplicationAdminService {
       applicationDate: application.createdAt,
       createdAt: application.createdAt,
       username: application.user.email,
-        cvText: application.cvText,
-        cvUrl: application.cvText,
+      cvText: application.cvText,
+      cvUrl: application.cvText,
       status: application.applicationStatus,
       actions:
         application.applicationStatus === "IN_PROGRESS"
@@ -46,8 +45,6 @@ export class JobApplicationAdminService {
     }));
   }
 
-=======
->>>>>>> fbeb111 (backend for US051 - assess role applications)
   async findAll(jobRoleId: number) {
     const applications = await prisma.application.findMany({
       where: { jobRoleId },
@@ -55,8 +52,7 @@ export class JobApplicationAdminService {
       select: {
         applicationId: true,
         jobRoleId: true,
-        cvReference: true,
-<<<<<<< HEAD
+        cvText: true,
         createdAt: true,
         applicationStatus: true,
         jobRole: {
@@ -64,9 +60,6 @@ export class JobApplicationAdminService {
             roleName: true,
           },
         },
-=======
-        applicationStatus: true,
->>>>>>> fbeb111 (backend for US051 - assess role applications)
         user: {
           select: {
             id: true,
@@ -79,7 +72,6 @@ export class JobApplicationAdminService {
     return applications.map((application) => ({
       applicationId: application.applicationId,
       jobRoleId: application.jobRoleId,
-<<<<<<< HEAD
       applicant: application.user.email,
       applicantName: application.user.email,
       email: application.user.email,
@@ -87,10 +79,9 @@ export class JobApplicationAdminService {
       roleName: application.jobRole.roleName,
       applicationDate: application.createdAt,
       createdAt: application.createdAt,
-=======
->>>>>>> fbeb111 (backend for US051 - assess role applications)
       username: application.user.email,
-      cvUrl: application.cvReference,
+      cvText: application.cvText,
+      cvUrl: application.cvText,
       status: application.applicationStatus,
       actions:
         application.applicationStatus === "IN_PROGRESS"
@@ -153,11 +144,10 @@ export class JobApplicationAdminService {
           username: updatedApplication.user.email,
           status: updatedApplication.applicationStatus,
         },
-              cvText: true,
+      };
     });
   }
 
-<<<<<<< HEAD
   async hireApplicantById(applicationId: number) {
     const application = await prisma.application.findUnique({
       where: { applicationId },
@@ -171,11 +161,8 @@ export class JobApplicationAdminService {
     return this.hireApplicant(application.jobRoleId, applicationId);
   }
 
-=======
->>>>>>> fbeb111 (backend for US051 - assess role applications)
   async rejectApplicant(jobRoleId: number, applicationId: number) {
-            cvText: application.cvText,
-            cvUrl: application.cvText,
+    const application = await prisma.application.findFirst({
       where: { applicationId, jobRoleId },
       include: {
         user: {
@@ -215,7 +202,6 @@ export class JobApplicationAdminService {
       },
     };
   }
-<<<<<<< HEAD
 
   async rejectApplicantById(applicationId: number) {
     const application = await prisma.application.findUnique({
@@ -230,10 +216,7 @@ export class JobApplicationAdminService {
     return this.rejectApplicant(application.jobRoleId, applicationId);
   }
 
-  async updateApplicationStatusById(
-    applicationId: number,
-    status: string,
-  ) {
+  async updateApplicationStatusById(applicationId: number, status: string) {
     const normalisedStatus = status.trim().toUpperCase();
 
     if (
@@ -258,9 +241,4 @@ export class JobApplicationAdminService {
 
     throw new Error("Unsupported application status");
   }
-=======
->>>>>>> fbeb111 (backend for US051 - assess role applications)
 }
-
-
-

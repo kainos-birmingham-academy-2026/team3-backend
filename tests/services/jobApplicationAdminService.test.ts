@@ -31,7 +31,7 @@ describe("jobApplicationAdminService", () => {
       {
         applicationId: 1,
         jobRoleId: 1,
-        cvReference: "cv-1.pdf",
+        cvText: "cv-1.pdf",
         createdAt: new Date("2026-08-12T10:00:00.000Z"),
         applicationStatus: "IN_PROGRESS",
         jobRole: {
@@ -59,6 +59,7 @@ describe("jobApplicationAdminService", () => {
         applicationDate: new Date("2026-08-12T10:00:00.000Z"),
         createdAt: new Date("2026-08-12T10:00:00.000Z"),
         username: "candidate@example.com",
+        cvText: "cv-1.pdf",
         cvUrl: "cv-1.pdf",
         status: "IN_PROGRESS",
         actions: {
@@ -73,7 +74,7 @@ describe("jobApplicationAdminService", () => {
       select: {
         applicationId: true,
         jobRoleId: true,
-        cvReference: true,
+        cvText: true,
         createdAt: true,
         applicationStatus: true,
         jobRole: {
@@ -96,7 +97,7 @@ describe("jobApplicationAdminService", () => {
       {
         applicationId: 2,
         jobRoleId: 1,
-        cvReference: "cv-2.pdf",
+        cvText: "cv-2.pdf",
         createdAt: new Date("2026-08-12T10:00:00.000Z"),
         applicationStatus: "HIRED",
         jobRole: {
