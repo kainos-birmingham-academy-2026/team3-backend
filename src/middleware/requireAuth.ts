@@ -1,8 +1,8 @@
 import type { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
 import { USER_ROLES, type UserRole } from "./authorise.js";
+import { TOKEN_ERROR } from "../errors/authError.js";
 
-const TOKEN_ERROR = "Invalid token";
 
 interface AuthTokenPayload {
 	userId: number;

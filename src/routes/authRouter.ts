@@ -48,6 +48,8 @@ const controller = new AuthController(new AuthService());
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 
+router.post("/login", validateBody(LoginSchema), controller.login.bind(controller));
+
 /**
  * @openapi
  * /api/register:
@@ -68,13 +70,7 @@ const controller = new AuthController(new AuthService());
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               additionalProperties: false
- *               required: [message]
- *               properties:
- *                 message:
- *                   type: string
- *                   example: User registered
+ *               $ref: '#/components/schemas/RegisterResponse'
  *       400:
  *         description: Request validation failed
  *         content:
@@ -94,8 +90,6 @@ const controller = new AuthController(new AuthService());
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-
-router.post("/login", validateBody(LoginSchema), controller.login.bind(controller));
 router.post("/register", validateBody(RegisterSchema), controller.register.bind(controller));
 
 export default router;

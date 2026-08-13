@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { JobRolesController } from "../../src/controllers/jobRolesController.js";
-import { NotFoundError } from "../../src/errors/notFoundError.js";
+import { NotFoundError } from "error-lib";
+import { ConflictError } from "../../src/errors/conflictError.js";
 import type { JobRolesService } from "../../src/services/jobRolesService.js";
 import type { Request, Response } from "express";
 
@@ -25,6 +26,7 @@ describe("JobRolesController", () => {
 	const mockService = {
 		findAll: vi.fn(),
 		findById: vi.fn(),
+		createApplication: vi.fn(),
 	} as unknown as JobRolesService;
 
 	let controller: JobRolesController;
@@ -173,6 +175,106 @@ describe("JobRolesController", () => {
 					statusName: "OPEN",
 				},
 			});
+		});
+	});
+
+	describe("createApplication", () => {
+		it("should return 201 with application data when application is created successfully", async () => {
+			const req = {
+				params: { id: "1" },
+				body: { cvText: "CV-2026-001" },
+			};
+			const res = createMockResponse();
+			res.locals = { authUser: { userId: 1 } };
+
+			vi.mocked(mockService.createApplication).mockResolvedValue({
+				applicationId: 1,
+				jobRoleId: 1,
+				userId: 1,
+				cvText: "CV-2026-001",
+			});
+
+			await controller.createApplication(req as never, res as never);
+
+			expect(res.status).toHaveBeenCalledWith(201);
+			const [payload] = vi.mocked(res.json).mock.calls.at(-1) ?? [];
+			expect(payload).toSatisfy(
+				(value) =>
+					value.applicationId === 1 &&
+					value.jobRoleId === 1 &&
+					value.userId === 1 &&
+					value.cvText === "CV-2026-001",
+			);
+		});
+
+		it("should return 404 when job role does not exist", async () => {
+			const req = {
+				params: { id: "999" },
+				body: { cvText: "CV-2026-001" },
+			};
+			const res = createMockResponse();
+			res.locals = { authUser: { userId: 1 } };
+
+			vi.mocked(mockService.createApplication).mockRejectedValue(
+				new NotFoundError("JobRole with id 999 not found"),
+			);
+
+			await controller.createApplication(req as never, res as never);
+
+			expect(res.status).toHaveBeenCalledWith(404);
+			expect(res.json).toHaveBeenCalledWith({
+				error: "JobRole with id 999 not found",
+			});
+		});
+
+		it("should return 409 when user has already applied for the job role", async () => {
+			const req = {
+				params: { id: "1" },
+				body: { cvText: "CV-2026-001" },
+			};
+			const res = createMockResponse();
+			res.locals = { authUser: { userId: 1 } };
+
+			vi.mocked(mockService.createApplication).mockRejectedValue(
+				new ConflictError(409, "User with id 1 has already applied for JobRole with id 1"),
+			);
+
+			await controller.createApplication(req as never, res as never);
+
+			expect(res.status).toHaveBeenCalledWith(409);
+			expect(res.json).toHaveBeenCalledWith({
+				error: "User with id 1 has already applied for JobRole with id 1",
+			});
+		});
+
+		it("should return 401 when user is not authenticated", async () => {
+			const req = {
+				params: { id: "1" },
+				body: { cvText: "CV-2026-001" },
+			};
+			const res = createMockResponse();
+			res.locals = { authUser: undefined };
+
+			await controller.createApplication(req as never, res as never);
+
+			expect(res.status).toHaveBeenCalledWith(401);
+			expect(res.json).toHaveBeenCalledWith({ error: "Invalid token" });
+		});
+
+		it("should return 500 when an unexpected error occurs", async () => {
+			const req = {
+				params: { id: "1" },
+				body: { cvText: "CV-2026-001" },
+			};
+			const res = createMockResponse();
+			res.locals = { authUser: { userId: 1 } };
+
+			vi.mocked(mockService.createApplication).mockRejectedValue(new Error("Database error"));
+
+			await controller.createApplication(req as never, res as never);
+
+			expect(res.status).toHaveBeenCalledWith(500);
+			expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
 		});
 	});
 });

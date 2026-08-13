@@ -1,11 +1,28 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import app from '../../src/index.ts';
-import { AuthError, AuthService } from '../../src/services/authService.ts';
+
+const { serviceMock } = vi.hoisted(() => ({
+	serviceMock: {
+		login: vi.fn(),
+		register: vi.fn(),
+	},
+}));
+
+vi.mock('../../src/services/authService.js', () => ({
+	AuthService: class AuthService {
+		login = serviceMock.login;
+		register = serviceMock.register;
+	},
+}));
+
+// Import error classes from source - don't mock them
+import { AuthError } from '../../src/errors/authError.ts';
+import { ConflictError } from '../../src/errors/conflictError.ts';
 
 describe('POST /api/register', () => {
-	afterEach(() => {
-		vi.restoreAllMocks();
+	beforeEach(() => {
+		vi.resetAllMocks();
 	});
 
 	it('should return 400 for invalid email format', async () => {
@@ -37,7 +54,7 @@ describe('POST /api/register', () => {
 	});
 
 	it('should return 201 when registration succeeds', async () => {
-		vi.spyOn(AuthService.prototype, 'register').mockResolvedValueOnce(undefined);
+		serviceMock.register.mockResolvedValueOnce(undefined);
 
 		const response = await request(app).post('/api/register').send({
 			email: 'new@example.com',
@@ -49,8 +66,8 @@ describe('POST /api/register', () => {
 	});
 
 	it('should return 409 when email already exists', async () => {
-		vi.spyOn(AuthService.prototype, 'register').mockRejectedValueOnce(
-			new AuthError(409, 'Email already in use'),
+		serviceMock.register.mockRejectedValueOnce(
+			new ConflictError(409, 'Email already in use'),
 		);
 
 		const response = await request(app).post('/api/register').send({
@@ -64,12 +81,8 @@ describe('POST /api/register', () => {
 });
 
 describe('POST /api/login', () => {
-	afterEach(() => {
-		vi.restoreAllMocks();
-	});
-
 	beforeEach(() => {
-		vi.restoreAllMocks();
+		vi.resetAllMocks();
 	});
 
 	it('should return 400 for invalid email format', async () => {
@@ -100,7 +113,7 @@ describe('POST /api/login', () => {
 	});
 
 	it('should return 401 when service rejects with auth error', async () => {
-		vi.spyOn(AuthService.prototype, 'login').mockRejectedValueOnce(
+		serviceMock.login.mockRejectedValueOnce(
 			new AuthError(401, 'Invalid email or password'),
 		);
 
@@ -114,7 +127,7 @@ describe('POST /api/login', () => {
 	});
 
 	it('should return token for valid credentials', async () => {
-		vi.spyOn(AuthService.prototype, 'login').mockResolvedValueOnce('mock-jwt-token');
+		serviceMock.login.mockResolvedValueOnce('mock-jwt-token');
 
 		const response = await request(app).post('/api/login').send({
 			email: 'user@example.com',

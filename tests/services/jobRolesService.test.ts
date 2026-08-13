@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mockDao = {
 	findAll: vi.fn(),
 	findById: vi.fn(),
+	createApplication: vi.fn(),
+	findApplicationByUserIdAndJobRoleId: vi.fn(),
 };
 
 const mockMapper = {
@@ -14,6 +16,8 @@ vi.mock("../../src/models/jobRoleDao.js", () => ({
 	JobRoleDao: class {
 		findAll = mockDao.findAll;
 		findById = mockDao.findById;
+		createApplication = mockDao.createApplication;
+		findApplicationByUserIdAndJobRoleId = mockDao.findApplicationByUserIdAndJobRoleId;
 	},
 }));
 
@@ -26,7 +30,8 @@ vi.mock("../../src/mappers/jobRoleMapper.js", () => ({
 
 import { JobRolesService } from "../../src/services/jobRolesService.js";
 import { JobRole } from "../../src/models/jobRole.js";
-import { NotFoundError } from "../../src/errors/notFoundError.js";
+import { NotFoundError } from "error-lib";
+import { ConflictError } from "../../src/errors/conflictError.js";
 
 const jobRole1 = new JobRole(
 	1,
@@ -130,6 +135,80 @@ describe("JobRolesService", () => {
 			mockDao.findById.mockResolvedValue(null);
 
 			await expect(service.findById(999)).rejects.toThrow(NotFoundError);
+		});
+	});
+
+	describe("createApplication", () => {
+		it("should return application data when application is created successfully", async () => {
+			const applicationData = {
+				jobRoleId: 1,
+				userId: 1,
+				cvText: "CV-2026-001",
+			};
+
+			mockDao.findById.mockResolvedValue(jobRole1);
+			mockDao.findApplicationByUserIdAndJobRoleId.mockResolvedValue(null);
+			mockDao.createApplication.mockResolvedValue({
+				applicationId: 1,
+				jobRoleId: 1,
+				userId: 1,
+				cvText: "CV-2026-001",
+			});
+
+			const result = await service.createApplication(applicationData);
+
+			expect(result).toSatisfy(
+				(value) =>
+					value.applicationId === 1 &&
+					value.jobRoleId === 1 &&
+					value.userId === 1 &&
+					value.cvText === "CV-2026-001",
+			);
+			expect(mockDao.findById).toHaveBeenCalledWith(1);
+			expect(mockDao.findApplicationByUserIdAndJobRoleId).toHaveBeenCalledWith(1, 1);
+			expect(mockDao.createApplication).toHaveBeenCalledWith(applicationData);
+		});
+
+		it("should throw NotFoundError when job role does not exist", async () => {
+			const applicationData = {
+				jobRoleId: 999,
+				userId: 1,
+				cvText: "CV-2026-001",
+			};
+
+			mockDao.findById.mockResolvedValue(null);
+
+			await expect(service.createApplication(applicationData)).rejects.toThrow(NotFoundError);
+			await expect(service.createApplication(applicationData)).rejects.toThrow(
+				"JobRole with id 999 not found",
+			);
+
+			expect(mockDao.createApplication).not.toHaveBeenCalled();
+		});
+
+		it("should throw ConflictError when user has already applied", async () => {
+			const applicationData = {
+				jobRoleId: 1,
+				userId: 1,
+				cvText: "CV-2026-001",
+			};
+
+			const existingApplication = {
+				applicationId: 1,
+				jobRoleId: 1,
+				userId: 1,
+				cvText: "CV-2026-001",
+			};
+
+			mockDao.findById.mockResolvedValue(jobRole1);
+			mockDao.findApplicationByUserIdAndJobRoleId.mockResolvedValue(existingApplication);
+
+			await expect(service.createApplication(applicationData)).rejects.toThrow(ConflictError);
+			await expect(service.createApplication(applicationData)).rejects.toThrow(
+				"User with id 1 has already applied for JobRole with id 1",
+			);
+
+			expect(mockDao.createApplication).not.toHaveBeenCalled();
 		});
 	});
 });

@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import type { CreateJobRoleRequestDto } from '../dtos/jobRoleDto.js';
-import { NotFoundError } from '../errors/notFoundError.js';
+import { NotFoundError } from 'error-lib';
 import { JobRolesService } from '../services/jobRolesService';
+import { TOKEN_ERROR } from '../errors/authError.js';
+import { ConflictError } from '../errors/conflictError.js';
 
 export class JobRolesController {
     private service: JobRolesService;
@@ -38,6 +40,31 @@ export class JobRolesController {
         }
     }
 
+    async createApplication(req: Request, res: Response) {
+        const idParam = req.params.id;
+        const jobRoleId = parseInt(Array.isArray(idParam) ? idParam[0] : idParam, 10);
+        //this is unnecessary due to validation middleware, but required for error handling 
+        const userId = res.locals.authUser?.userId;
+        if (!userId) {
+            return res.status(401).json({ error: TOKEN_ERROR });
+        }
+        req.body.userId = userId; // Attach the authenticated user's ID to the request body
+        req.body.jobRoleId = jobRoleId; // Attach the job role ID to the request body
+
+        try {
+            const application = await this.service.createApplication(req.body);
+            res.status(201).json(application);
+        } catch (error) {
+            if (error instanceof NotFoundError) {
+                return res.status(404).json({ error: error.message });
+            }
+            if (error instanceof ConflictError) {
+                return res.status(error.statusCode).json({ error: error.message });
+            }
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
+    
     async createMock(req: Request, res: Response) {
         try {
             const payload = req.body as CreateJobRoleRequestDto;

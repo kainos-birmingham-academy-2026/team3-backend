@@ -1,13 +1,14 @@
 import { JobRole } from "./jobRole.js";
 import prisma from "../prismaClient.js";
 import type { Prisma } from "../generated/prisma/client.js";
+import { JobRoleApplication } from "./jobRoleApplication.js";
 
 
 type JobRoleRow = Prisma.JobRoleGetPayload<{
     include: { status: true; capability: true; band: true, location: true; };
 }>;
 
-function toDomain(row: JobRoleRow): JobRole {
+function toJobRoleDomain(row: JobRoleRow): JobRole {
     return new JobRole(
         row.jobRoleId,
         row.roleName,
@@ -28,6 +29,15 @@ function toDomain(row: JobRoleRow): JobRole {
     );
 }
 
+function toApplicationDomain(row: any): JobRoleApplication {
+    return new JobRoleApplication(
+        row.applicationId,
+        row.jobRoleId,
+        row.userId,
+        row.cvText
+    );
+}
+
 export class JobRoleDao {
     async findAll(): Promise<JobRole[]> {
         const rows = await prisma.jobRole.findMany({
@@ -39,7 +49,7 @@ export class JobRoleDao {
                 location: true, 
             },
         });
-        return rows.map(toDomain);
+        return rows.map(toJobRoleDomain);
     }
 
     async findById(jobRoleId: number): Promise<JobRole | null> {
@@ -53,6 +63,28 @@ export class JobRoleDao {
                 location: true, 
             },
         });
-        return row ? toDomain(row) : null;
+        return row ? toJobRoleDomain(row) : null;
+    }
+
+    async findApplicationByUserIdAndJobRoleId(userId: number, jobRoleId: number): Promise<JobRoleApplication | null> {
+        const application = await prisma.application.findFirst({
+            where: {
+                userId,
+                jobRoleId,
+            },
+        });
+        return application ? toApplicationDomain(application) : null;
+    }
+
+    async createApplication(data: any): Promise<JobRoleApplication> {
+        const application = await prisma.application.create({
+            data: {
+                jobRoleId: data.jobRoleId,
+                userId: data.userId,
+                cvText: data.cvText,
+            },
+        });
+        return toApplicationDomain(application);
+
     }
 }

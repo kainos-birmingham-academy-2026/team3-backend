@@ -1,4 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { AuthService } from '../../src/services/authService.ts';
+import { AuthError } from '../../src/errors/authError.ts';
+import { ConflictError } from '../../src/errors/conflictError.ts';
 
 const { mockFindUnique, mockCreate, mockHash, mockVerify, mockSign } = vi.hoisted(() => {
 	return {
@@ -39,8 +42,6 @@ vi.mock('jsonwebtoken', () => {
 	};
 });
 
-import { AuthError, AuthService } from '../../src/services/authService.ts';
-
 describe('AuthService', () => {
 	let service: AuthService;
 	let originalJwtSecret: string | undefined;
@@ -60,114 +61,118 @@ describe('AuthService', () => {
 		}
 	});
 
-	it('should return token for valid credentials', async () => {
-		mockFindUnique.mockResolvedValueOnce({
-			id: 12,
-			email: 'user@example.com',
-			passwordHash: 'stored-hash',
-			role: 'ADMIN',
-		});
-		mockVerify.mockResolvedValueOnce(true);
-		mockSign.mockReturnValueOnce('signed-jwt-token');
+	describe('login', () => {
+		it('should return token for valid credentials', async () => {
+			mockFindUnique.mockResolvedValueOnce({
+				id: 12,
+				email: 'user@example.com',
+				passwordHash: 'stored-hash',
+				role: 'ADMIN',
+			});
+			mockVerify.mockResolvedValueOnce(true);
+			mockSign.mockReturnValueOnce('signed-jwt-token');
 
-		const result = await service.login({
-			email: 'user@example.com',
-			password: 'password123',
+			const result = await service.login({
+				email: 'user@example.com',
+				password: 'password123',
+			});
+
+			expect(result).toBe('signed-jwt-token');
+			expect(mockFindUnique).toHaveBeenCalledWith({
+				where: { email: 'user@example.com' },
+			});
+			expect(mockVerify).toHaveBeenCalledWith('stored-hash', 'password123');
+			expect(mockSign).toHaveBeenCalledWith(
+				{ userId: 12, email: 'user@example.com', role: 'ADMIN' },
+				'test-secret',
+				{ expiresIn: '1h' },
+			);
 		});
 
-		expect(result).toBe('signed-jwt-token');
-		expect(mockFindUnique).toHaveBeenCalledWith({
-			where: { email: 'user@example.com' },
-		});
-		expect(mockVerify).toHaveBeenCalledWith('stored-hash', 'password123');
-		expect(mockSign).toHaveBeenCalledWith(
-			{ userId: 12, email: 'user@example.com', role: 'ADMIN' },
-			'test-secret',
-			{ expiresIn: '1h' },
-		);
-	});
+		it('should throw 401 when user does not exist', async () => {
+			mockFindUnique.mockResolvedValueOnce(null);
 
-	it('should register a new user role account', async () => {
-		mockFindUnique.mockResolvedValueOnce(null);
-		mockHash.mockResolvedValueOnce('hashed-password');
-		mockCreate.mockResolvedValueOnce({});
+			await expect(
+				service.login({ email: 'missing@example.com', password: 'irrelevant' }),
+			).rejects.toThrow('Invalid email or password');
 
-		await expect(
-			service.register({ email: 'new@example.com', password: 'password123' }),
-		).resolves.toBeUndefined();
+			expect(mockVerify).not.toHaveBeenCalled();
+			expect(mockSign).not.toHaveBeenCalled();
+		});
 
-		expect(mockFindUnique).toHaveBeenCalledWith({
-			where: { email: 'new@example.com' },
-		});
-		expect(mockHash).toHaveBeenCalledWith('password123', {
-			type: 'argon2id',
-		});
-		expect(mockCreate).toHaveBeenCalledWith({
-			data: {
-				email: 'new@example.com',
-				passwordHash: 'hashed-password',
+		it('should throw 401 when password is invalid', async () => {
+			mockFindUnique.mockResolvedValueOnce({
+				id: 99,
+				email: 'user@example.com',
+				passwordHash: 'stored-hash',
 				role: 'USER',
-			},
+			});
+			mockVerify.mockResolvedValueOnce(false);
+
+			await expect(
+				service.login({ email: 'user@example.com', password: 'wrong' }),
+			).rejects.toThrow('Invalid email or password');
+
+			expect(mockSign).not.toHaveBeenCalled();
+		});
+
+		it('should throw when JWT_SECRET is missing', async () => {
+			mockFindUnique.mockResolvedValueOnce({
+				id: 99,
+				email: 'user@example.com',
+				passwordHash: 'stored-hash',
+				role: 'USER',
+			});
+			mockVerify.mockResolvedValueOnce(true);
+			delete process.env.JWT_SECRET;
+
+			await expect(
+				service.login({ email: 'user@example.com', password: 'password123' }),
+			).rejects.toThrow('JWT_SECRET is not configured');
+
+			expect(mockSign).not.toHaveBeenCalled();
 		});
 	});
 
-	it('should throw 409 when email is already in use', async () => {
-		mockFindUnique.mockResolvedValueOnce({
-			id: 20,
-			email: 'existing@example.com',
-			passwordHash: 'stored-hash',
-			role: 'USER',
+	describe('register', () => {
+		it('should register a new user with USER role', async () => {
+			mockFindUnique.mockResolvedValueOnce(null);
+			mockHash.mockResolvedValueOnce('hashed-password');
+			mockCreate.mockResolvedValueOnce({});
+
+			await expect(
+				service.register({ email: 'new@example.com', password: 'password123' }),
+			).resolves.toBeUndefined();
+
+			expect(mockFindUnique).toHaveBeenCalledWith({
+				where: { email: 'new@example.com' },
+			});
+			expect(mockHash).toHaveBeenCalledWith('password123', {
+				type: 'argon2id',
+			});
+			expect(mockCreate).toHaveBeenCalledWith({
+				data: {
+					email: 'new@example.com',
+					passwordHash: 'hashed-password',
+					role: 'USER',
+				},
+			});
 		});
 
-		await expect(
-			service.register({ email: 'existing@example.com', password: 'password123' }),
-		).rejects.toEqual(new AuthError(409, 'Email already in use'));
+		it('should throw ConflictError when email is already in use', async () => {
+			mockFindUnique.mockResolvedValueOnce({
+				id: 20,
+				email: 'existing@example.com',
+				passwordHash: 'stored-hash',
+				role: 'USER',
+			});
 
-		expect(mockHash).not.toHaveBeenCalled();
-		expect(mockCreate).not.toHaveBeenCalled();
-	});
+			await expect(
+				service.register({ email: 'existing@example.com', password: 'password123' }),
+			).rejects.toThrow('Email already in use');
 
-	it('should throw 401 when user does not exist', async () => {
-		mockFindUnique.mockResolvedValueOnce(null);
-
-		await expect(
-			service.login({ email: 'missing@example.com', password: 'irrelevant' }),
-		).rejects.toEqual(new AuthError(401, 'Invalid email or password'));
-
-		expect(mockVerify).not.toHaveBeenCalled();
-		expect(mockSign).not.toHaveBeenCalled();
-	});
-
-	it('should throw 401 when password is invalid', async () => {
-		mockFindUnique.mockResolvedValueOnce({
-			id: 99,
-			email: 'user@example.com',
-			passwordHash: 'stored-hash',
-			role: 'USER',
+			expect(mockHash).not.toHaveBeenCalled();
+			expect(mockCreate).not.toHaveBeenCalled();
 		});
-		mockVerify.mockResolvedValueOnce(false);
-
-		await expect(
-			service.login({ email: 'user@example.com', password: 'wrong' }),
-		).rejects.toEqual(new AuthError(401, 'Invalid email or password'));
-
-		expect(mockSign).not.toHaveBeenCalled();
-	});
-
-	it('should throw when JWT_SECRET is missing', async () => {
-		mockFindUnique.mockResolvedValueOnce({
-			id: 99,
-			email: 'user@example.com',
-			passwordHash: 'stored-hash',
-			role: 'USER',
-		});
-		mockVerify.mockResolvedValueOnce(true);
-		delete process.env.JWT_SECRET;
-
-		await expect(
-			service.login({ email: 'user@example.com', password: 'password123' }),
-		).rejects.toThrow('JWT_SECRET is not configured');
-
-		expect(mockSign).not.toHaveBeenCalled();
 	});
 });
