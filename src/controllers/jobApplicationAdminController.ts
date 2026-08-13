@@ -2,7 +2,7 @@ import { JobApplicationAdminService } from '../services/jobApplicationAdminServi
 import { Request, Response } from 'express';
 
 export class JobApplicationAdminController {
-    private service: JobApplicationAdminService;
+    private readonly service: JobApplicationAdminService;
 
     constructor(service: JobApplicationAdminService) {
             this.service = service;
