@@ -173,6 +173,18 @@ Example response:
 }
 ```
 
+### `GET /teapot`
+
+Returns a fun 418 I'm a teapot response. This endpoint demonstrates the HTTP 418 status code (RFC 2324).
+
+Example response (`418`):
+
+```json
+{
+  "message": "I'm a teapot"
+}
+```
+
 ### `POST /api/login`
 
 Authenticates a user with email and password and returns a JWT token.
