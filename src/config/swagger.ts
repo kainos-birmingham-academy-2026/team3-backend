@@ -58,8 +58,7 @@ const options: swaggerJsdoc.Options = {
                         closingDate: {
                             type: "string",
                             format: "date-time",
-                            nullable: true,
-                            example: "2026-09-01T00:00:00.000Z",
+                            example: "2026-09-00",
                         },
                         capabilityName: { type: "string", example: "Engineering" },
                         bandName: { type: "string", example: "Band 2" },
@@ -118,10 +117,11 @@ const options: swaggerJsdoc.Options = {
                 ValidationErrorItem: {
                     type: "object",
                     additionalProperties: false,
-                    required: ["field", "message"],
+                    required: ["field", "message", "code"],
                     properties: {
                         field: { type: "string", example: "id" },
                         message: { type: "string", example: "ID must be a positive number" },
+                        code: { type: "string", example: "invalid_type" },
                     },
                 },
                 ValidationErrorResponse: {

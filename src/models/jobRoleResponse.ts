@@ -1,5 +1,6 @@
 
 export class JobRoleResponse {
+    //in swager titled JobRoleSummary
     public readonly jobRoleId: number;
     public readonly roleName: string;
     public readonly closingDate: Date | null;

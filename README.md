@@ -151,29 +151,11 @@ Example response:
   {
     "jobRoleId": 1,
     "roleName": "Software Engineer",
-    "location": "Belfast",
-    "capabilityId": 1,
-    "bandId": 3,
     "closingDate": "2026-09-30T00:00:00.000Z",
-    "status": "open"
-  },
-  {
-    "jobRoleId": 2,
-    "roleName": "Senior Software Engineer",
-    "location": "Glasgow",
-    "capabilityId": 1,
-    "bandId": 4,
-    "closingDate": "2026-10-15T00:00:00.000Z",
-    "status": "open"
-  },
-  {
-    "jobRoleId": 3,
-    "roleName": "Lead Software Engineer",
-    "location": "Birmingham",
-    "capabilityId": 1,
-    "bandId": 5,
-    "closingDate": "2026-09-05T00:00:00.000Z",
-    "status": "open"
+    "capabilityName": "Software Engineering",
+    "bandName": "Band 3",
+    "locationName": "Belfast",
+    "statusName": "OPEN"
   }
 ]
 ```
@@ -219,7 +201,8 @@ Validation error (`400`) example:
   "errors": [
     {
       "field": "email",
-      "message": "Invalid email address"
+      "message": "Invalid email address",
+      "code": "too_small"
     }
   ]
 }
@@ -278,6 +261,87 @@ Role behaviour:
 - New registrations default to role `USER`
 - Passwords are salted and hashed with Argon2id before storage
 
+
+### `POST /job-roles/create`
+
+Creates a new job role.
+
+Authentication:
+
+- Requires `Authorization: Bearer <jwt>`
+- Admin role required
+
+Request body:
+
+```json
+{
+  "roleName": "Software Engineer",
+  "description": "Develops and maintains software applications.",
+  "responsibilities": "Design, implement, test, and maintain software.",
+  "sharepointUrl": "https://example.sharepoint.com/sites/jobs/software-engineer",
+  "numberOfOpenPositions": 2,
+  "closingDate": "2026-12-31",
+  "capabilityId": 1,
+  "bandId": 3,
+  "locationId": 1
+}
+
+```
+
+Validation rules:
+
+- `roleName`, `description`, and `responsibilities` must be non-empty strings
+- `sharepointUrl` must be a valid URL
+- `numberOfOpenPositions`, `capabilityId`, `bandId`, and `locationId` must be positive integers
+- `closingDate` is optional, but must be a valid date that is not in the past
+
+Success response (201):
+
+```json
+{
+  "jobRoleId": 1,
+  "roleName": "Software Engineer",
+  "closingDate": "2026-12-31T00:00:00.000Z",
+  "capabilityName": "Software Engineering",
+  "bandName": "Band 3",
+  "locationName": "Belfast",
+  "statusName": "OPEN"
+}
+```
+
+Validation error (400):
+
+```json
+{
+  "errors": [
+    {
+      "field": "roleName",
+      "message": "Role name is required",
+      "code": "too_small"
+    }
+  ]
+}
+```
+
+Authentication error (401):
+
+```json
+{
+  "error": "Token error"
+}
+```
+
+
+Authorisation error (403):
+
+```json
+{
+  "message": "Forbidden"
+}
+```
+
+
+
 ### `POST /job-roles/:id/apply`
 
 Allows an authenticated user to apply for a specific job role with their CV.
@@ -291,7 +355,7 @@ Request body:
 
 ```json
 {
-  "cvText": "Lorem ipsum dolor sit amet. Qui repellendus exercitationem sed reiciendis quia est voluptate autem ut ratione consequatur est eligendi nisi rem aliquid illum et dolorem autem. Id error voluptas non fuga doloribus ut iure velit ut voluptas laboriosam. Qui quae possimus ut Quis blanditiis ut modi molestiae in natus voluptate et quisquam distinctio sed molestias molestiae eum ratione ipsam.\n\nVel saepe delectus ad expedita quia sed laborum laborum et quasi sunt.Vel error odio et consequuntur sunt qui unde quaerat sed provident iusto et blanditiis cupiditate sed quae iusto et architecto molestiae.\n\nId minima harum nam incidunt delectus non eligendi modi ut molestiae rerum ut placeat autem nam ipsam doloremque 33 perspiciatis distinctio.Ut optio dicta in laboriosam vitae hic officia molestiae a dolores eveniet id fugiat dolorem ut magni earum? Est laboriosam voluptatibus et rerum cupiditate aut rerum ullam non distinctio facere ut veritatis voluptatem et alias facere.In iure nihil est autem molestiae est asperiores excepturi.",
+  "cvText": "Lorem ipsum dolor sit amet. Qui repellendus exercitationem sed reiciendis quia est voluptate autem ut ratione consequatur est eligendi nisi rem aliquid illum et dolorem autem. Id error voluptas non fuga doloribus ut iure velit ut voluptas laboriosam. Qui quae possimus ut Quis blanditiis ut modi molestiae in natus voluptate et quisquam distinctio sed molestias molestiae eum ratione ipsam.\n\nVel saepe delectus ad expedita quia sed laborum laborum et quasi sunt.Vel error odio et consequuntur sunt qui unde quaerat sed provident iusto et blanditiis cupiditate sed quae iusto et architecto molestiae.\n\nId minima harum nam incidunt delectus non eligendi modi ut molestiae rerum ut placeat autem nam ipsam doloremque 33 perspiciatis distinctio.Ut optio dicta in laboriosam vitae hic officia molestiae a dolores eveniet id fugiat dolorem ut magni earum? Est laboriosam voluptatibus et rerum cupiditate aut rerum ullam non distinctio facere ut veritatis voluptatem et alias facere.In iure nihil est autem molestiae est asperiores excepturi."
           
 }
 ```
@@ -356,6 +420,20 @@ curl -X POST http://localhost:4000/api/register \
 curl -X POST http://localhost:4000/job-roles/1/apply \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <jwt-token>" \
-  -d '{"cvText":"Lorem ipsum dolor sit amet. Qui repellendus exercitationem sed reiciendis quia est voluptate autem ut ratione consequatur est eligendi nisi rem aliquid illum et dolorem autem. Id error voluptas non fuga doloribus ut iure velit ut voluptas laboriosam. Qui quae possimus ut Quis blanditiis ut modi molestiae in natus voluptate et quisquam distinctio sed molestias molestiae eum ratione ipsam.\n\nVel saepe delectus ad expedita quia sed laborum laborum et quasi sunt.Vel error odio et consequuntur sunt qui unde quaerat sed provident iusto et blanditiis cupiditate sed quae iusto et architecto molestiae.\n\nId minima harum nam incidunt delectus non eligendi modi ut molestiae rerum ut placeat autem nam ipsam doloremque 33 perspiciatis distinctio.Ut optio dicta in laboriosam vitae hic officia molestiae a dolores eveniet id fugiat dolorem ut magni earum? Est laboriosam voluptatibus et rerum cupiditate aut rerum ullam non distinctio facere ut veritatis voluptatem et alias facere.In iure nihil est autem molestiae est asperiores excepturi.",
-          "}'
+  -d '{"cvText":"Lorem ipsum dolor sit amet. Qui repellendus exercitationem sed reiciendis..."}'
+curl -X POST http://localhost:4000/job-roles/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <admin-jwt-token>" \
+  -d '{
+    "roleName": "Software Engineer",
+    "description": "Develops and maintains software applications.",
+    "responsibilities": "Design, implement, test, and maintain software.",
+    "sharepointUrl": "https://example.sharepoint.com/sites/jobs/software-engineer",
+    "numberOfOpenPositions": 2,
+    "closingDate": "2026-12-31",
+    "capabilityId": 1,
+    "bandId": 3,
+    "locationId": 1
+  }'
+          
 ```
