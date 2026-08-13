@@ -5,10 +5,12 @@ import type {
 	RegisterRequestDto,
 	RegisterResponseDto,
 } from "../dtos/authDto.js";
-import { AuthError, type AuthService } from "../services/authService.js";
+import { AuthService } from "../services/authService.js";
+import { AuthError } from "../errors/authError.js";
+import { ConflictError } from "../errors/conflictError.js";
 
 export class AuthController {
-	public constructor(private readonly authService: AuthService) {}
+	public constructor(private readonly authService: AuthService) { }
 
 	public async register(req: Request, res: Response): Promise<Response> {
 		try {
@@ -32,8 +34,12 @@ export class AuthController {
 		}
 	}
 
-	private handleError(error: unknown, res: Response): Response {
+	private handleError(error: any, res: Response): Response {
 		if (error instanceof AuthError) {
+			return res.status(error.statusCode).json({ message: error.message });
+		}
+
+		if (error instanceof ConflictError) {
 			return res.status(error.statusCode).json({ message: error.message });
 		}
 

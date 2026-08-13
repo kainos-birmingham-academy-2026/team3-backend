@@ -3,12 +3,6 @@ import { PrismaClient } from "../src/generated/prisma/client";
 import { StatusEnum } from "../src/generated/prisma/enums";
 import argon2 from "argon2";
 
-//status 
-enum Status {
-  OPEN = "OPEN",
-  CLOSED = "CLOSED",
-}
-
 const prisma = new PrismaClient();
 
 async function main() {
@@ -112,6 +106,16 @@ async function main() {
     prisma.band.create({ data: { bandName: "Lead Engineer" } }),
     prisma.band.create({ data: { bandName: "Principal Engineer" } }),
   ]);
+
+  // Test user 
+  await prisma.user.upsert({
+    where: { email: "test@example.com" },
+    update: { passwordHash },
+    create: {
+      email: "test@example.com",
+      passwordHash,
+    },
+  });
 
   // Job Roles
   await prisma.jobRole.createMany({
@@ -238,6 +242,38 @@ async function main() {
       },
     ],
   });
+
+  // Create test applications
+  const jobRoleIds = await prisma.jobRole.findMany({
+    select: { jobRoleId: true },
+  });
+
+  const testUserId = (await prisma.user.findUnique({
+    where: { email: "test@example.com" },
+    select: { id: true },
+  }))?.id;
+
+  if (testUserId && jobRoleIds.length > 0) {
+    await prisma.application.createMany({
+      data: [
+        {
+          cvText: "Lorem ipsum dolor sit amet. Qui repellendus exercitationem sed reiciendis quia est voluptate autem ut ratione consequatur est eligendi nisi rem aliquid illum et dolorem autem. Id error voluptas non fuga doloribus ut iure velit ut voluptas laboriosam. Qui quae possimus ut Quis blanditiis ut modi molestiae in natus voluptate et quisquam distinctio sed molestias molestiae eum ratione ipsam.\n\nVel saepe delectus ad expedita quia sed laborum laborum et quasi sunt.Vel error odio et consequuntur sunt qui unde quaerat sed provident iusto et blanditiis cupiditate sed quae iusto et architecto molestiae.\n\nId minima harum nam incidunt delectus non eligendi modi ut molestiae rerum ut placeat autem nam ipsam doloremque 33 perspiciatis distinctio.Ut optio dicta in laboriosam vitae hic officia molestiae a dolores eveniet id fugiat dolorem ut magni earum? Est laboriosam voluptatibus et rerum cupiditate aut rerum ullam non distinctio facere ut veritatis voluptatem et alias facere.In iure nihil est autem molestiae est asperiores excepturi.",
+          jobRoleId: jobRoleIds[0].jobRoleId,
+          userId: testUserId,
+        },
+        {
+          cvText: "Lorem ipsum dolor sit amet. Qui repellendus exercitationem sed reiciendis quia est voluptate autem ut ratione consequatur est eligendi nisi rem aliquid illum et dolorem autem. Id error voluptas non fuga doloribus ut iure velit ut voluptas laboriosam. Qui quae possimus ut Quis blanditiis ut modi molestiae in natus voluptate et quisquam distinctio sed molestias molestiae eum ratione ipsam.\n\nVel saepe delectus ad expedita quia sed laborum laborum et quasi sunt.Vel error odio et consequuntur sunt qui unde quaerat sed provident iusto et blanditiis cupiditate sed quae iusto et architecto molestiae.\n\nId minima harum nam incidunt delectus non eligendi modi ut molestiae rerum ut placeat autem nam ipsam doloremque 33 perspiciatis distinctio.Ut optio dicta in laboriosam vitae hic officia molestiae a dolores eveniet id fugiat dolorem ut magni earum? Est laboriosam voluptatibus et rerum cupiditate aut rerum ullam non distinctio facere ut veritatis voluptatem et alias facere.In iure nihil est autem molestiae est asperiores excepturi.",
+          jobRoleId: jobRoleIds[1].jobRoleId,
+          userId: testUserId,
+        },
+        {
+          cvText: "Lorem ipsum dolor sit amet. Qui repellendus exercitationem sed reiciendis quia est voluptate autem ut ratione consequatur est eligendi nisi rem aliquid illum et dolorem autem. Id error voluptas non fuga doloribus ut iure velit ut voluptas laboriosam. Qui quae possimus ut Quis blanditiis ut modi molestiae in natus voluptate et quisquam distinctio sed molestias molestiae eum ratione ipsam.\n\nVel saepe delectus ad expedita quia sed laborum laborum et quasi sunt.Vel error odio et consequuntur sunt qui unde quaerat sed provident iusto et blanditiis cupiditate sed quae iusto et architecto molestiae.\n\nId minima harum nam incidunt delectus non eligendi modi ut molestiae rerum ut placeat autem nam ipsam doloremque 33 perspiciatis distinctio.Ut optio dicta in laboriosam vitae hic officia molestiae a dolores eveniet id fugiat dolorem ut magni earum? Est laboriosam voluptatibus et rerum cupiditate aut rerum ullam non distinctio facere ut veritatis voluptatem et alias facere.In iure nihil est autem molestiae est asperiores excepturi.",
+          jobRoleId: jobRoleIds[2].jobRoleId,
+          userId: testUserId,
+        },
+      ],
+    });
+  }
 
   console.log("Seed complete.");
 }

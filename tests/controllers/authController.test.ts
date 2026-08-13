@@ -1,100 +1,146 @@
-import type { Request, Response } from 'express';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import type { Mock } from 'vitest';
-import { AuthController } from '../../src/controllers/authController.ts';
-import { AuthError } from '../../src/services/authService.ts';
-import type { AuthService } from '../../src/services/authService.ts';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { AuthController } from '../../src/controllers/authController.js';
+import { AuthError } from '../../src/errors/authError.js';
+import { ConflictError } from '../../src/errors/conflictError.js';
+import type { AuthService } from '../../src/services/authService.js';
+
+const createMockResponse = () => {
+	const res = {
+		status: vi.fn(),
+		json: vi.fn(),
+		send: vi.fn(),
+	};
+
+	res.status.mockReturnValue(res);
+	res.json.mockReturnValue(res);
+	res.send.mockReturnValue(res);
+
+	return res;
+};
 
 describe('AuthController', () => {
+	const mockService = {
+		login: vi.fn(),
+		register: vi.fn(),
+	} as unknown as AuthService;
+
 	let controller: AuthController;
-	let mockLogin: Mock;
-	let mockRegister: Mock;
-	let mockService: AuthService;
-	let mockRequest: Partial<Request>;
-	let mockResponse: Partial<Response>;
-	let statusSpy: Mock;
-	let jsonSpy: Mock;
 
 	beforeEach(() => {
-		statusSpy = vi.fn().mockReturnThis();
-		jsonSpy = vi.fn().mockReturnThis();
-		mockLogin = vi.fn();
-		mockRegister = vi.fn();
-
-		mockService = {
-			login: mockLogin,
-			register: mockRegister,
-		} as unknown as AuthService;
-
-		mockRequest = {
-			body: {
-				email: 'user@example.com',
-				password: 'password123',
-			},
-		};
-
-		mockResponse = {
-			status: statusSpy as any,
-			json: jsonSpy as any,
-		};
-
+		vi.resetAllMocks();
 		controller = new AuthController(mockService);
 	});
 
-	it('should return 201 when register succeeds', async () => {
-		mockRegister.mockResolvedValueOnce(undefined);
+	describe('register', () => {
+		it('should return 201 when register succeeds', async () => {
+			const req = {
+				body: {
+					email: 'new@example.com',
+					password: 'Password123!',
+				},
+			};
+			const res = createMockResponse();
 
-		await controller.register(mockRequest as Request, mockResponse as Response);
+			vi.mocked(mockService.register).mockResolvedValue(undefined);
 
-		expect(mockRegister).toHaveBeenCalledWith(mockRequest.body);
-		expect(statusSpy).toHaveBeenCalledWith(201);
-		expect(jsonSpy).toHaveBeenCalledWith({ message: 'User registered' });
-	});
+			await controller.register(req as never, res as never);
 
-	it('should return 409 when register fails with duplicate email', async () => {
-		mockRegister.mockRejectedValueOnce(new AuthError(409, 'Email already in use'));
+			expect(res.status).toHaveBeenCalledWith(201);
+			expect(res.json).toHaveBeenCalledWith({ message: 'User registered' });
+		});
 
-		await controller.register(mockRequest as Request, mockResponse as Response);
+		it('should return 409 when email already exists', async () => {
+			const req = {
+				body: {
+					email: 'existing@example.com',
+					password: 'Password123!',
+				},
+			};
+			const res = createMockResponse();
 
-		expect(statusSpy).toHaveBeenCalledWith(409);
-		expect(jsonSpy).toHaveBeenCalledWith({ message: 'Email already in use' });
-	});
+			vi.mocked(mockService.register).mockRejectedValue(
+				new ConflictError(409, 'Email already in use'),
+			);
 
-	afterEach(() => {
-		vi.clearAllMocks();
-	});
+			await controller.register(req as never, res as never);
 
-	it('should return 200 with token when login succeeds', async () => {
-		mockLogin.mockResolvedValueOnce('jwt-token');
+			expect(res.status).toHaveBeenCalledWith(409);
+			expect(res.json).toHaveBeenCalledWith({ message: 'Email already in use' });
+		});
 
-		await controller.login(mockRequest as Request, mockResponse as Response);
+		it('should return 500 for unexpected errors', async () => {
+			const req = {
+				body: {
+					email: 'user@example.com',
+					password: 'Password123!',
+				},
+			};
+			const res = createMockResponse();
 
-		expect(mockLogin).toHaveBeenCalledWith(mockRequest.body);
-		expect(statusSpy).toHaveBeenCalledWith(200);
-		expect(jsonSpy).toHaveBeenCalledWith({ token: 'jwt-token' });
-	});
+			vi.mocked(mockService.register).mockRejectedValue(new Error('Database error'));
 
-	it('should return auth error status and message for AuthError', async () => {
-		mockLogin.mockRejectedValueOnce(
-			new AuthError(401, 'Invalid email or password'),
-		);
+			await controller.register(req as never, res as never);
 
-		await controller.login(mockRequest as Request, mockResponse as Response);
-
-		expect(statusSpy).toHaveBeenCalledWith(401);
-		expect(jsonSpy).toHaveBeenCalledWith({
-			message: 'Invalid email or password',
+			expect(res.status).toHaveBeenCalledWith(500);
+			expect(res.json).toHaveBeenCalledWith({ error: 'Internal server error' });
 		});
 	});
 
-	it('should return 500 for unexpected errors', async () => {
-		mockLogin.mockRejectedValueOnce(new Error('Unexpected failure'));
+	describe('login', () => {
+		it('should return 200 with token when login succeeds', async () => {
+			const req = {
+				body: {
+					email: 'user@example.com',
+					password: 'password123',
+				},
+			};
+			const res = createMockResponse();
 
-		await controller.login(mockRequest as Request, mockResponse as Response);
+			vi.mocked(mockService.login).mockResolvedValue('jwt-token');
 
-		expect(statusSpy).toHaveBeenCalledWith(500);
-		expect(jsonSpy).toHaveBeenCalledWith({
-			error: 'Internal server error',
+			await controller.login(req as never, res as never);
+
+			expect(res.status).toHaveBeenCalledWith(200);
+			const [payload] = vi.mocked(res.json).mock.calls.at(-1) ?? [];
+			expect(payload).toSatisfy((value) => value.token === 'jwt-token');
+		});
+
+		it('should return 401 when credentials are invalid', async () => {
+			const req = {
+				body: {
+					email: 'user@example.com',
+					password: 'wrong-password',
+				},
+			};
+			const res = createMockResponse();
+
+			vi.mocked(mockService.login).mockRejectedValue(
+				new AuthError(401, 'Invalid email or password'),
+			);
+
+			await controller.login(req as never, res as never);
+
+			expect(res.status).toHaveBeenCalledWith(401);
+			expect(res.json).toHaveBeenCalledWith({
+				message: 'Invalid email or password',
+			});
+		});
+
+		it('should return 500 for unexpected errors', async () => {
+			const req = {
+				body: {
+					email: 'user@example.com',
+					password: 'password123',
+				},
+			};
+			const res = createMockResponse();
+
+			vi.mocked(mockService.login).mockRejectedValue(new Error('Database error'));
+
+			await controller.login(req as never, res as never);
+
+			expect(res.status).toHaveBeenCalledWith(500);
+			expect(res.json).toHaveBeenCalledWith({ error: 'Internal server error' });
 		});
 	});
 });

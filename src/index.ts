@@ -62,6 +62,7 @@ app.get("/health", (req, res) => {
   res.json({ status: "UP", timestamp: new Date().toISOString() });
 });
 
+
 const isMainModule = process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1];
 
 if (isMainModule) {
