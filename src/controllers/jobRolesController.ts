@@ -77,5 +77,54 @@ export class JobRolesController {
             return res.status(500).json({ error: 'Internal Server Error' });
         }
     }
+
+    //get status, band, capability, location for job role creation form
+    async getStatus(req: Request, res: Response) {
+        try {
+            const status = await this.service.getStatus();
+            return res.status(200).json(status);
+        } catch (error) {
+            if (error instanceof NotFoundError) {
+                return res.status(404).json({ error: error.message });
+            }
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
+
+    async getBands(req: Request, res: Response) {
+        try {
+            const bands = await this.service.getBands();
+            return res.status(200).json(bands);
+        } catch (error) {
+            if (error instanceof NotFoundError) {
+                return res.status(404).json({ error: error.message });
+            }
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
+
+    async getCapabilities(req: Request, res: Response) {
+        try {
+            const capabilities = await this.service.getCapabilities();
+            return res.status(200).json(capabilities);
+        } catch (error) {
+            if (error instanceof NotFoundError) {
+                return res.status(404).json({ error: error.message });
+            }
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
+
+    async getLocations(req: Request, res: Response) {
+        try {
+            const locations = await this.service.getLocations();
+            return res.status(200).json(locations);
+        } catch (error) {
+            if (error instanceof NotFoundError) {
+                return res.status(404).json({ error: error.message });
+            }
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
     
 }

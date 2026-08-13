@@ -114,4 +114,33 @@ export class JobRoleDao {
         return toApplicationDomain(application);
 
     }
+
+
+
+    //get status, band, capability, location for job role creation form
+    async getStatus(): Promise<any[]> {
+        const rows = await prisma.status.findMany();
+        return rows.map(row => ({ statusId: row.statusId, statusName: row.statusName }));
+    }
+
+    async getBands(): Promise<any[]> {
+        const rows = await prisma.band.findMany();
+        return rows.map(row => ({ bandId: row.bandId, bandName: row.bandName }));
+    }
+
+    async getCapabilities(): Promise<any[]> {
+        const rows = await prisma.capability.findMany();
+        return rows.map(row => ({ capabilityId: row.capabilityId, capabilityName: row.capabilityName }));
+    }
+
+    async getLocations(): Promise<any[]> {
+        const rows = await prisma.location.findMany();
+        return rows.map(row => ({
+            locationId: row.locationId,
+            locationName: row.locationName,
+            addressLine1: row.addressLine1,
+            addressLine2: row.addressLine2,
+            postcode: row.postcode
+        }));
+    }
 }

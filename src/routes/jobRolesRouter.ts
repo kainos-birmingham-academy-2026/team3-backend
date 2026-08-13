@@ -14,6 +14,35 @@ import { validateBody, validateParams } from '../middleware/validate';
 const jobRolesRouter = Router();
 const controller = new JobRolesController(new JobRolesService());
 
+//get status, band, capability, location for job role creation form
+jobRolesRouter.get(
+	'/statuses',
+	(req: R, res: Res) => {
+		controller.getStatus(req, res);
+	},
+);
+
+jobRolesRouter.get(
+	'/bands',
+	(req: R, res: Res) => {
+		controller.getBands(req, res);
+	},
+);
+
+jobRolesRouter.get(
+	'/capabilities',
+	(req: R, res: Res) => {
+		controller.getCapabilities(req, res);
+	},
+);
+
+jobRolesRouter.get(
+	'/locations',
+	(req: R, res: Res) => {
+		controller.getLocations(req, res);
+	},
+);
+
 /**
  * @openapi
  * /job-roles:
@@ -216,7 +245,7 @@ jobRolesRouter.post(
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 jobRolesRouter.post(
-	'/:id/apply', 
+	'/:id/apply',
 	requireAuth,
 	allowRoles([USER_ROLES.ADMIN, USER_ROLES.USER]),
 	validateParams(IdParamSchema),
@@ -225,6 +254,8 @@ jobRolesRouter.post(
 		controller.createApplication(req, res);
 	},
 );
+
+
 
 //future endpoint urls for url reference exclude /job-roles/
 // jobRolesRouter.post('/job-roles/create', (req: R, res: Res) => {
