@@ -3,6 +3,7 @@ import prisma from "../prismaClient.js";
 import type { Prisma } from "../generated/prisma/client.js";
 
 import { JobRoleApplication } from "./jobRoleApplication.js";
+import { CreateJobRoleRequestDto, CreateApplicationRequestDto } from "../dtos/jobRoleDto.js";
 
 
 type JobRoleRow = Prisma.JobRoleGetPayload<{
@@ -67,7 +68,7 @@ export class JobRoleDao {
         return row ? toJobRoleDomain(row) : null;
     }
 
-    async createJobRole(data: any): Promise<JobRole> {
+    async createJobRole(data: CreateJobRoleRequestDto): Promise<JobRole> {
         const row = await prisma.jobRole.create({
             data: {
                 roleName: data.roleName,
@@ -79,7 +80,7 @@ export class JobRoleDao {
                 capabilityId: data.capabilityId,
                 bandId: data.bandId,
                 locationId: data.locationId,
-                statusId: 1, // Assuming 1 is the ID for OPEN status
+                statusId: 1, // Assuming 1 is the ID for OPEN status can be changed in future 
             },
             relationLoadStrategy: "join",
             include: {
@@ -102,11 +103,11 @@ export class JobRoleDao {
         return application ? toApplicationDomain(application) : null;
     }
 
-    async createApplication(data: any): Promise<JobRoleApplication> {
+    async createApplication(jobRoleId: number, userId: number, data: CreateApplicationRequestDto): Promise<JobRoleApplication> {
         const application = await prisma.application.create({
             data: {
-                jobRoleId: data.jobRoleId,
-                userId: data.userId,
+                jobRoleId: jobRoleId,
+                userId: userId,
                 cvText: data.cvText,
             },
         });

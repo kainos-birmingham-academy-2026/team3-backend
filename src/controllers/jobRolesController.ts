@@ -48,11 +48,9 @@ export class JobRolesController {
         if (!userId) {
             return res.status(401).json({ error: TOKEN_ERROR });
         }
-        req.body.userId = userId; // Attach the authenticated user's ID to the request body
-        req.body.jobRoleId = jobRoleId; // Attach the job role ID to the request body
 
         try {
-            const application = await this.service.createApplication(req.body);
+            const application = await this.service.createApplication(jobRoleId, userId, req.body);
             res.status(201).json(application);
         } catch (error) {
             if (error instanceof NotFoundError) {

@@ -58,7 +58,7 @@ const options: swaggerJsdoc.Options = {
                         closingDate: {
                             type: "string",
                             format: "date-time",
-                            example: "2026-09-00",
+                            example: "2026-09-01",
                         },
                         capabilityName: { type: "string", example: "Engineering" },
                         bandName: { type: "string", example: "Band 2" },

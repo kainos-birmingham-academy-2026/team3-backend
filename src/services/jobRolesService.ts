@@ -5,6 +5,7 @@ import { JobRoleMapper } from "../mappers/jobRoleMapper.js";
 import { JobRoleDetailedResponse } from "../models/JobRoleDetailedResponse.js";
 import { NotFoundError } from "error-lib";
 import { ConflictError } from "../errors/conflictError.js";
+import { CreateApplicationRequestDto } from "../dtos/jobRoleDto.js";
 
 export class JobRolesService {
     private jobRoleDao: JobRoleDao;
@@ -33,16 +34,16 @@ export class JobRolesService {
         return this.jobRoleMapper.jobRoleToResponse(jobRole);
     }
 
-    async createApplication(data: any): Promise<JobRoleApplication> {
-        const jobRole = await this.jobRoleDao.findById(data.jobRoleId);
+    async createApplication(jobRoleId: number, userId: number, data: CreateApplicationRequestDto): Promise<JobRoleApplication> {
+        const jobRole = await this.jobRoleDao.findById(jobRoleId);
         if (!jobRole) {
-            throw new NotFoundError(`JobRole with id ${data.jobRoleId} not found`);
+            throw new NotFoundError(`JobRole with id ${jobRoleId} not found`);
         }
-        const existingApplication = await this.jobRoleDao.findApplicationByUserIdAndJobRoleId(data.userId, data.jobRoleId);
+        const existingApplication = await this.jobRoleDao.findApplicationByUserIdAndJobRoleId(userId, jobRoleId);
         if (existingApplication) {
-            throw new ConflictError(409, `User with id ${data.userId} has already applied for JobRole with id ${data.jobRoleId}`);
+            throw new ConflictError(409, `User with id ${userId} has already applied for JobRole with id ${jobRoleId}`);
         }
-        return await this.jobRoleDao.createApplication(data);
+        return await this.jobRoleDao.createApplication(jobRoleId, userId, data);
     }
 
 }
