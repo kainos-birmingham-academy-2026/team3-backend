@@ -3,6 +3,7 @@ import express from "express";
 import jobRolesRouter from "./routes/jobRolesRouter";
 import jobApplicationRouter from "./routes/jobApplicationsAdminRouter"
 import authRouter from "./routes/authRouter";
+import teapotRouter from "./routes/teapotRouter";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
 
@@ -19,6 +20,7 @@ app.get("/docs.json", (_req, res) => {
 app.use("/job-roles", jobRolesRouter);
 app.use("/api", authRouter);
 app.use("/job-applications/admin", jobApplicationRouter);
+app.use("/teapot", teapotRouter);
 
 // Root endpoint
 
