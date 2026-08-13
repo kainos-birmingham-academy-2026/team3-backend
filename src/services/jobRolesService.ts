@@ -28,6 +28,11 @@ export class JobRolesService {
         return this.jobRoleMapper.jobRoleToDetailedResponse(jobRole);
     }
 
+    async createJobRole(data: any): Promise<JobRoleResponse> {
+        const jobRole = await this.jobRoleDao.createJobRole(data);
+        return this.jobRoleMapper.jobRoleToResponse(jobRole);
+    }
+
     async createApplication(data: any): Promise<JobRoleApplication> {
         const jobRole = await this.jobRoleDao.findById(data.jobRoleId);
         if (!jobRole) {

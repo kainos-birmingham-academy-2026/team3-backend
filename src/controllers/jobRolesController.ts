@@ -64,20 +64,36 @@ export class JobRolesController {
             res.status(500).json({ error: 'Internal Server Error' });
         }
     }
-    
-    async createMock(req: Request, res: Response) {
-        try {
-            const payload = req.body as CreateJobRoleRequestDto;
 
-            return res.status(201).json({
-                message: 'Mock create endpoint accepted',
-                jobRoleDraft: {
-                    ...payload,
-                    statusName: 'OPEN',
-                },
-            });
-        } catch {
+    async createJobRole(req: Request, res: Response) {
+        const payload = req.body as CreateJobRoleRequestDto;
+        //nothing to attach to payload so can define type as dto
+        if(payload.closingDate && payload.closingDate < new Date()) {
+            return res.status(400).json({ error: 'Closing date cannot be in the past' });
+        }
+
+        try {
+            const jobRole = await this.service.createJobRole(payload);
+            return res.status(201).json(jobRole);
+        } catch (error) {
             return res.status(500).json({ error: 'Internal Server Error' });
         }
     }
+    
+    // is this still required?
+    // async createMock(req: Request, res: Response) {
+    //     try {
+    //         const payload = req.body as CreateJobRoleRequestDto;
+
+    //         return res.status(201).json({
+    //             message: 'Mock create endpoint accepted',
+    //             jobRoleDraft: {
+    //                 ...payload,
+    //                 statusName: 'OPEN',
+    //             },
+    //         });
+    //     } catch {
+    //         return res.status(500).json({ error: 'Internal Server Error' });
+    //     }
+    // }
 }

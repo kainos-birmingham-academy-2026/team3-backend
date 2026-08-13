@@ -278,7 +278,7 @@ Role behaviour:
 - New registrations default to role `USER`
 - Passwords are salted and hashed with Argon2id before storage
 
-### `POST /api/job-roles/:id/apply`
+### `POST /job-roles/:id/apply`
 
 Allows an authenticated user to apply for a specific job role with their CV.
 
@@ -353,7 +353,7 @@ curl -X POST http://localhost:4000/api/login \
 curl -X POST http://localhost:4000/api/register \
   -H "Content-Type: application/json" \
   -d '{"email":"new.user@example.com","password":"Password123!"}'
-curl -X POST http://localhost:4000/api/job-roles/1/apply \
+curl -X POST http://localhost:4000/job-roles/1/apply \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <jwt-token>" \
   -d '{"cvText":"Lorem ipsum dolor sit amet. Qui repellendus exercitationem sed reiciendis quia est voluptate autem ut ratione consequatur est eligendi nisi rem aliquid illum et dolorem autem. Id error voluptas non fuga doloribus ut iure velit ut voluptas laboriosam. Qui quae possimus ut Quis blanditiis ut modi molestiae in natus voluptate et quisquam distinctio sed molestias molestiae eum ratione ipsam.\n\nVel saepe delectus ad expedita quia sed laborum laborum et quasi sunt.Vel error odio et consequuntur sunt qui unde quaerat sed provident iusto et blanditiis cupiditate sed quae iusto et architecto molestiae.\n\nId minima harum nam incidunt delectus non eligendi modi ut molestiae rerum ut placeat autem nam ipsam doloremque 33 perspiciatis distinctio.Ut optio dicta in laboriosam vitae hic officia molestiae a dolores eveniet id fugiat dolorem ut magni earum? Est laboriosam voluptatibus et rerum cupiditate aut rerum ullam non distinctio facere ut veritatis voluptatem et alias facere.In iure nihil est autem molestiae est asperiores excepturi.",

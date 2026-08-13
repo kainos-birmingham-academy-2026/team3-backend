@@ -1,6 +1,7 @@
 import { JobRole } from "./jobRole.js";
 import prisma from "../prismaClient.js";
 import type { Prisma } from "../generated/prisma/client.js";
+
 import { JobRoleApplication } from "./jobRoleApplication.js";
 
 
@@ -64,6 +65,31 @@ export class JobRoleDao {
             },
         });
         return row ? toJobRoleDomain(row) : null;
+    }
+
+    async createJobRole(data: any): Promise<JobRole> {
+        const row = await prisma.jobRole.create({
+            data: {
+                roleName: data.roleName,
+                description: data.description,
+                responsibilities: data.responsibilities,
+                sharepointUrl: data.sharepointUrl,
+                numberOfOpenPositions: data.numberOfOpenPositions,
+                closingDate: data.closingDate,
+                capabilityId: data.capabilityId,
+                bandId: data.bandId,
+                locationId: data.locationId,
+                statusId: 1, // Assuming 1 is the ID for OPEN status
+            },
+            relationLoadStrategy: "join",
+            include: {
+                status: true,
+                capability: true,
+                band: true,
+                location: true, 
+            },
+        });
+        return toJobRoleDomain(row);
     }
 
     async findApplicationByUserIdAndJobRoleId(userId: number, jobRoleId: number): Promise<JobRoleApplication | null> {

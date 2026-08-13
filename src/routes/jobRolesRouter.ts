@@ -171,11 +171,11 @@ jobRolesRouter.get(
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 jobRolesRouter.post(
-	'/',
+	'/create',
 	allowRoles([USER_ROLES.ADMIN]),
 	validateBody(CreateJobRoleSchema),
 	(req: R, res: Res) => {
-		controller.createMock(req, res);
+		controller.createJobRole(req, res);
 	},
 );
 

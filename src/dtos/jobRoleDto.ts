@@ -16,7 +16,15 @@ export const CreateJobRoleSchema = z.object({
 		.number("Number of open positions must be a number")
 		.int("Number of open positions must be an integer")
 		.min(1, "Number of open positions must be at least 1"),
-	closingDate: z.coerce.date().optional(),
+	closingDate: z.string()
+		.refine((val) => !Number.isNaN(Date.parse(val)), {
+			message: "Closing date must be a valid date (e.g. ISO 8601 format)",
+		})
+		.transform((val) => new Date(val))
+		.refine((date) => date >= new Date(), {
+			message: "Closing date cannot be in the past",
+		})
+		.optional(),
 	capabilityId: z.coerce
 		.number("Capability ID must be a number")
 		.int("Capability ID must be an integer")
