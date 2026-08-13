@@ -116,4 +116,24 @@ describe("jobApplicationAdminService", () => {
       canReject: false,
     });
   });
+
+  it("should map APPROVED status to hire flow", async () => {
+    const hireSpy = vi
+      .spyOn(service, "hireApplicantById")
+      .mockResolvedValueOnce({ message: "Applicant hired" } as never);
+
+    await service.updateApplicationStatusById(9, "APPROVED");
+
+    expect(hireSpy).toHaveBeenCalledWith(9);
+  });
+
+  it("should map REJECT alias to reject flow", async () => {
+    const rejectSpy = vi
+      .spyOn(service, "rejectApplicantById")
+      .mockResolvedValueOnce({ message: "Applicant rejected" } as never);
+
+    await service.updateApplicationStatusById(10, "REJECT");
+
+    expect(rejectSpy).toHaveBeenCalledWith(10);
+  });
 });

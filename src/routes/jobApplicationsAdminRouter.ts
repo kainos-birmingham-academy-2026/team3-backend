@@ -21,6 +21,10 @@ const JobRoleAndApplicationIdParamSchema = z.object({
   applicationId: z.coerce.number().int().positive(),
 });
 
+const ApplicationIdParamSchema = z.object({
+  applicationId: z.coerce.number().int().positive(),
+});
+
 jobApplicationsAdminRouter.use(requireAuth);
 jobApplicationsAdminRouter.use(allowRoles([USER_ROLES.ADMIN]));
 
@@ -43,6 +47,54 @@ jobApplicationsAdminRouter.patch(
   "/:jobRoleId/applications/:applicationId/reject",
   validateParams(JobRoleAndApplicationIdParamSchema),
   controller.reject.bind(controller),
+);
+
+jobApplicationsAdminRouter.post(
+  "/:applicationId/reject",
+  validateParams(ApplicationIdParamSchema),
+  controller.rejectById.bind(controller),
+);
+
+jobApplicationsAdminRouter.post(
+  "/:applicationId/hire",
+  validateParams(ApplicationIdParamSchema),
+  controller.hireById.bind(controller),
+);
+
+jobApplicationsAdminRouter.post(
+  "/:applicationId/approve",
+  validateParams(ApplicationIdParamSchema),
+  controller.hireById.bind(controller),
+);
+
+jobApplicationsAdminRouter.patch(
+  "/:applicationId/approve",
+  validateParams(ApplicationIdParamSchema),
+  controller.hireById.bind(controller),
+);
+
+jobApplicationsAdminRouter.patch(
+  "/:applicationId/status",
+  validateParams(ApplicationIdParamSchema),
+  controller.updateStatus.bind(controller),
+);
+
+jobApplicationsAdminRouter.put(
+  "/:applicationId/status",
+  validateParams(ApplicationIdParamSchema),
+  controller.updateStatus.bind(controller),
+);
+
+jobApplicationsAdminRouter.post(
+  "/:applicationId/status",
+  validateParams(ApplicationIdParamSchema),
+  controller.updateStatus.bind(controller),
+);
+
+jobApplicationsAdminRouter.patch(
+  "/:applicationId",
+  validateParams(ApplicationIdParamSchema),
+  controller.updateStatus.bind(controller),
 );
 
 export default jobApplicationsAdminRouter;

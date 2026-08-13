@@ -146,6 +146,19 @@ export class JobApplicationAdminService {
     });
   }
 
+  async hireApplicantById(applicationId: number) {
+    const application = await prisma.application.findUnique({
+      where: { applicationId },
+      select: { jobRoleId: true },
+    });
+
+    if (!application) {
+      throw new Error("Application not found");
+    }
+
+    return this.hireApplicant(application.jobRoleId, applicationId);
+  }
+
   async rejectApplicant(jobRoleId: number, applicationId: number) {
     const application = await prisma.application.findFirst({
       where: { applicationId, jobRoleId },
@@ -186,6 +199,48 @@ export class JobApplicationAdminService {
         status: updatedApplication.applicationStatus,
       },
     };
+  }
+
+  async rejectApplicantById(applicationId: number) {
+    const application = await prisma.application.findUnique({
+      where: { applicationId },
+      select: { jobRoleId: true },
+    });
+
+    if (!application) {
+      throw new Error("Application not found");
+    }
+
+    return this.rejectApplicant(application.jobRoleId, applicationId);
+  }
+
+  async updateApplicationStatusById(
+    applicationId: number,
+    status: string,
+  ) {
+    const normalisedStatus = status.trim().toUpperCase();
+
+    if (
+      normalisedStatus === "HIRED" ||
+      normalisedStatus === "HIRE" ||
+      normalisedStatus === "APPROVED" ||
+      normalisedStatus === "APPROVE" ||
+      normalisedStatus === "ACCEPTED" ||
+      normalisedStatus === "ACCEPT"
+    ) {
+      return this.hireApplicantById(applicationId);
+    }
+
+    if (
+      normalisedStatus === "REJECTED" ||
+      normalisedStatus === "REJECT" ||
+      normalisedStatus === "DECLINED" ||
+      normalisedStatus === "DECLINE"
+    ) {
+      return this.rejectApplicantById(applicationId);
+    }
+
+    throw new Error("Unsupported application status");
   }
 }
 
