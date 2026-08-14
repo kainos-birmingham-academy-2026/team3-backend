@@ -16,6 +16,146 @@ const controller = new JobRolesController(new JobRolesService());
 
 /**
  * @openapi
+ * /job-roles/statuses:
+ *   get:
+ *     tags: [Job Roles]
+ *     summary: Get available job role statuses
+ *     responses:
+ *       200:
+ *         description: List of statuses
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/StatusResponse'
+ *       404:
+ *         description: No statuses found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+jobRolesRouter.get(
+	'/statuses',
+	(req: R, res: Res) => {
+		controller.getStatus(req, res);
+	},
+);
+
+/**
+ * @openapi
+ * /job-roles/bands:
+ *   get:
+ *     tags: [Job Roles]
+ *     summary: Get available job role bands
+ *     responses:
+ *       200:
+ *         description: List of bands
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/BandResponse'
+ *       404:
+ *         description: No bands found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+jobRolesRouter.get(
+	'/bands',
+	(req: R, res: Res) => {
+		controller.getBands(req, res);
+	},
+);
+
+/**
+ * @openapi
+ * /job-roles/capabilities:
+ *   get:
+ *     tags: [Job Roles]
+ *     summary: Get available job role capabilities
+ *     responses:
+ *       200:
+ *         description: List of capabilities
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/CapabilityResponse'
+ *       404:
+ *         description: No capabilities found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+jobRolesRouter.get(
+	'/capabilities',
+	(req: R, res: Res) => {
+		controller.getCapabilities(req, res);
+	},
+);
+
+/**
+ * @openapi
+ * /job-roles/locations:
+ *   get:
+ *     tags: [Job Roles]
+ *     summary: Get available job role locations
+ *     responses:
+ *       200:
+ *         description: List of locations
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/LocationResponse'
+ *       404:
+ *         description: No locations found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+jobRolesRouter.get(
+	'/locations',
+	(req: R, res: Res) => {
+		controller.getLocations(req, res);
+	},
+);
+
+/**
+ * @openapi
  * /job-roles:
  *   get:
  *     tags: [Job Roles]
@@ -216,7 +356,7 @@ jobRolesRouter.post(
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 jobRolesRouter.post(
-	'/:id/apply', 
+	'/:id/apply',
 	requireAuth,
 	allowRoles([USER_ROLES.ADMIN, USER_ROLES.USER]),
 	validateParams(IdParamSchema),
@@ -225,6 +365,8 @@ jobRolesRouter.post(
 		controller.createApplication(req, res);
 	},
 );
+
+
 
 //future endpoint urls for url reference exclude /job-roles/
 // jobRolesRouter.post('/job-roles/create', (req: R, res: Res) => {

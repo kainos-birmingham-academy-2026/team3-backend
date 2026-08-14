@@ -16,27 +16,42 @@ export const CreateJobRoleSchema = z.object({
 		.number("Number of open positions must be a number")
 		.int("Number of open positions must be an integer")
 		.min(1, "Number of open positions must be at least 1"),
-	closingDate: z.string()
-		.refine((val) => !Number.isNaN(Date.parse(val)), {
-			message: "Closing date must be a valid date (e.g. ISO 8601 format)",
+	closingDate: z.preprocess(
+		(value) => value === "" ? undefined : value,
+		z.string()
+			.refine((val) => !Number.isNaN(Date.parse(val)), {
+				message: "Closing date must be a valid date (e.g. ISO 8601 format)",
+			})
+			.transform((val) => new Date(val))
+			.refine((date) => date >= new Date(), {
+				message: "Closing date cannot be in the past",
+			})
+			.optional(),
+	),
+	capabilityId: z.preprocess(
+		(value) => value === "" ? undefined : value,
+		z.coerce.number({
+			message: "Capability cannot be blank",
 		})
-		.transform((val) => new Date(val))
-		.refine((date) => date >= new Date(), {
-			message: "Closing date cannot be in the past",
+			.int()
+			.positive(),
+	),
+	bandId: z.preprocess(
+		(value) => value === "" ? undefined : value,
+		z.coerce.number({
+			message: "Band cannot be blank",
 		})
-		.optional(),
-	capabilityId: z.coerce
-		.number("Capability ID must be a number")
-		.int("Capability ID must be an integer")
-		.positive("Capability ID must be a positive number"),
-	bandId: z.coerce
-		.number("Band ID must be a number")
-		.int("Band ID must be an integer")
-		.positive("Band ID must be a positive number"),
-	locationId: z.coerce
-		.number("Location ID must be a number")
-		.int("Location ID must be an integer")
-		.positive("Location ID must be a positive number"),
+			.int()
+			.positive(),
+	),
+	locationId: z.preprocess(
+		(value) => value === "" ? undefined : value,
+		z.coerce.number({
+			error: "Location cannot be blank",
+		})
+			.int("Location ID must be an integer")
+			.positive("Location ID must be a positive number"),
+	),
 });
 
 export type IdParamDto = z.infer<typeof IdParamSchema>;

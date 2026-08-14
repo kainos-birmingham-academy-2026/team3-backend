@@ -5,11 +5,19 @@ const mockDao = {
 	findById: vi.fn(),
 	createApplication: vi.fn(),
 	findApplicationByUserIdAndJobRoleId: vi.fn(),
+	getStatus: vi.fn(),
+	getBands: vi.fn(),
+	getCapabilities: vi.fn(),
+	getLocations: vi.fn(),
 };
 
 const mockMapper = {
 	jobRoleToResponse: vi.fn(),
 	jobRoleToDetailedResponse: vi.fn(),
+	statusToResponse: vi.fn(),
+	bandToResponse: vi.fn(),
+	capabilityToResponse: vi.fn(),
+	locationToResponse: vi.fn(),
 };
 
 vi.mock("../../src/models/jobRoleDao.js", () => ({
@@ -18,6 +26,10 @@ vi.mock("../../src/models/jobRoleDao.js", () => ({
 		findById = mockDao.findById;
 		createApplication = mockDao.createApplication;
 		findApplicationByUserIdAndJobRoleId = mockDao.findApplicationByUserIdAndJobRoleId;
+		getStatus = mockDao.getStatus;
+		getBands = mockDao.getBands;
+		getCapabilities = mockDao.getCapabilities;
+		getLocations = mockDao.getLocations;
 	},
 }));
 
@@ -25,6 +37,10 @@ vi.mock("../../src/mappers/jobRoleMapper.js", () => ({
 	JobRoleMapper: class {
 		jobRoleToResponse = mockMapper.jobRoleToResponse;
 		jobRoleToDetailedResponse = mockMapper.jobRoleToDetailedResponse;
+		statusToResponse = mockMapper.statusToResponse;
+		bandToResponse = mockMapper.bandToResponse;
+		capabilityToResponse = mockMapper.capabilityToResponse;
+		locationToResponse = mockMapper.locationToResponse;
 	},
 }));
 
@@ -209,6 +225,67 @@ describe("JobRolesService", () => {
 			);
 
 			expect(mockDao.createApplication).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("lookup methods", () => {
+		it("should return mapped statuses", async () => {
+			const statuses = [{ statusId: 1, statusName: "OPEN" }];
+			mockDao.getStatus.mockResolvedValue(statuses);
+			mockMapper.statusToResponse.mockReturnValue(statuses);
+
+			const result = await service.getStatus();
+
+			expect(result).toEqual(statuses);
+			expect(mockDao.getStatus).toHaveBeenCalledTimes(1);
+		});
+
+		it("should throw NotFoundError when no statuses exist", async () => {
+			mockDao.getStatus.mockResolvedValue([]);
+
+			await expect(service.getStatus()).rejects.toThrow("No status found");
+		});
+
+		it("should return mapped bands", async () => {
+			const bands = [{ bandId: 2, bandName: "Engineer" }];
+			mockDao.getBands.mockResolvedValue(bands);
+			mockMapper.bandToResponse.mockReturnValue(bands);
+
+			expect(await service.getBands()).toEqual(bands);
+		});
+
+		it("should throw NotFoundError when no bands exist", async () => {
+			mockDao.getBands.mockResolvedValue([]);
+
+			await expect(service.getBands()).rejects.toThrow("No bands found");
+		});
+
+		it("should return mapped capabilities", async () => {
+			const capabilities = [{ capabilityId: 3, capabilityName: "Software" }];
+			mockDao.getCapabilities.mockResolvedValue(capabilities);
+			mockMapper.capabilityToResponse.mockReturnValue(capabilities);
+
+			expect(await service.getCapabilities()).toEqual(capabilities);
+		});
+
+		it("should throw NotFoundError when no capabilities exist", async () => {
+			mockDao.getCapabilities.mockResolvedValue([]);
+
+			await expect(service.getCapabilities()).rejects.toThrow("No capabilities found");
+		});
+
+		it("should return mapped locations", async () => {
+			const locations = [{ locationId: 4, locationName: "Birmingham" }];
+			mockDao.getLocations.mockResolvedValue(locations);
+			mockMapper.locationToResponse.mockReturnValue(locations);
+
+			expect(await service.getLocations()).toEqual(locations);
+		});
+
+		it("should throw NotFoundError when no locations exist", async () => {
+			mockDao.getLocations.mockResolvedValue([]);
+
+			await expect(service.getLocations()).rejects.toThrow("No locations found");
 		});
 	});
 });

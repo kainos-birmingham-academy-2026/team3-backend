@@ -255,6 +255,42 @@ const options: swaggerJsdoc.Options = {
                         cvText: { type: "string", example: "I have 5 years of software engineering experience..." },
                     },
                 },
+                StatusResponse: {
+                    type: "object",
+                    additionalProperties: false,
+                    required: ["statusId", "statusName"],
+                    properties: {
+                        statusId: { type: "integer", minimum: 1, example: 1 },
+                        statusName: { type: "string", enum: ["OPEN", "CLOSED"], example: "OPEN" },
+                    },
+                },
+                BandResponse: {
+                    type: "object",
+                    additionalProperties: false,
+                    required: ["bandId", "bandName"],
+                    properties: {
+                        bandId: { type: "integer", minimum: 1, example: 3 },
+                        bandName: { type: "string", example: "Engineer" },
+                    },
+                },
+                CapabilityResponse: {
+                    type: "object",
+                    additionalProperties: false,
+                    required: ["capabilityId", "capabilityName"],
+                    properties: {
+                        capabilityId: { type: "integer", minimum: 1, example: 1 },
+                        capabilityName: { type: "string", example: "Software Engineering" },
+                    },
+                },
+                LocationResponse: {
+                    type: "object",
+                    additionalProperties: false,
+                    required: ["locationId", "locationName"],
+                    properties: {
+                        locationId: { type: "integer", minimum: 1, example: 1 },
+                        locationName: { type: "string", example: "Belfast" },
+                    },
+                },
             },
         },
     },

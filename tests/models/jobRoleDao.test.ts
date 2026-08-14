@@ -11,6 +11,10 @@ vi.mock("../../src/prismaClient.js", () => ({
 			findFirst: vi.fn(),
 			create: vi.fn(),
 		},
+		status: { findMany: vi.fn() },
+		band: { findMany: vi.fn() },
+		capability: { findMany: vi.fn() },
+		location: { findMany: vi.fn() },
 	},
 }));
 
@@ -247,6 +251,68 @@ describe("JobRoleDao", () => {
 			vi.mocked(prisma.application.create as any).mockRejectedValue(new Error("Create failed"));
 
 			await expect(dao.createApplication(2, 3, { cvText: "CV-2026-001" })).rejects.toThrow("Create failed");
+		});
+	});
+
+	describe("lookup methods", () => {
+		it("should return status lookup values", async () => {
+			vi.mocked(prisma.status.findMany as any).mockResolvedValue([
+				{ statusId: 1, statusName: "OPEN", createdAt: new Date(), updatedAt: new Date() },
+			]);
+
+			const result = await dao.getStatus();
+
+			expect(prisma.status.findMany).toHaveBeenCalledWith();
+			expect(result).toEqual([{ statusId: 1, statusName: "OPEN" }]);
+		});
+
+		it("should return band lookup values", async () => {
+			vi.mocked(prisma.band.findMany as any).mockResolvedValue([
+				{ bandId: 2, bandName: "Engineer", createdAt: new Date(), updatedAt: new Date() },
+			]);
+
+			const result = await dao.getBands();
+
+			expect(prisma.band.findMany).toHaveBeenCalledWith();
+			expect(result).toEqual([{ bandId: 2, bandName: "Engineer" }]);
+		});
+
+		it("should return capability lookup values", async () => {
+			vi.mocked(prisma.capability.findMany as any).mockResolvedValue([
+				{ capabilityId: 3, capabilityName: "Software", createdAt: new Date(), updatedAt: new Date() },
+			]);
+
+			const result = await dao.getCapabilities();
+
+			expect(prisma.capability.findMany).toHaveBeenCalledWith();
+			expect(result).toEqual([{ capabilityId: 3, capabilityName: "Software" }]);
+		});
+
+		it("should return location lookup values", async () => {
+			vi.mocked(prisma.location.findMany as any).mockResolvedValue([
+				{
+					locationId: 4,
+					locationName: "Birmingham",
+					addressLine1: "123 Street",
+					addressLine2: null,
+					postcode: "B1 1AA",
+					createdAt: new Date(),
+					updatedAt: new Date(),
+				},
+			]);
+
+			const result = await dao.getLocations();
+
+			expect(prisma.location.findMany).toHaveBeenCalledWith();
+			expect(result).toEqual([
+				{
+					locationId: 4,
+					locationName: "Birmingham",
+					addressLine1: "123 Street",
+					addressLine2: null,
+					postcode: "B1 1AA",
+				},
+			]);
 		});
 	});
 });
