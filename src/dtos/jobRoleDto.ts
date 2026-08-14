@@ -46,7 +46,7 @@ export const CreateJobRoleSchema = z.object({
 	),
 	locationId: z.preprocess(
 		(value) => value === "" ? undefined : value,
-		z.number({
+		z.coerce.number({
 			error: "Location cannot be blank",
 		})
 			.int("Location ID must be an integer")
