@@ -139,10 +139,7 @@ Example response:
 
 Returns all job roles in the database (currently seeded with test data).
 
-Authentication:
-
-- Requires `Authorization: Bearer <jwt>`
-- Accepted roles: `ADMIN` and `USER`
+This endpoint is public and does not require authentication.
 
 Example response:
 
@@ -207,6 +204,46 @@ Validation error (`400`) example:
   ]
 }
 ```
+
+### `GET /job-roles/{id}`
+
+Returns the full details for a job role. This endpoint is public and does not require authentication.
+
+Path parameters:
+
+- `id` - A positive integer job role ID
+
+Example response (`200`):
+
+```json
+{
+  "jobRoleId": 1,
+  "roleName": "Software Engineer",
+  "description": "Build and maintain backend services and APIs.",
+  "responsibilities": "Deliver features, write tests, and support production services.",
+  "sharepointUrl": "https://sharepoint.example.com/job-roles/software-engineer",
+  "numberOfOpenPositions": 3,
+  "closingDate": "2026-09-30T00:00:00.000Z",
+  "capabilityName": "Software Engineering",
+  "bandName": "Engineer",
+  "locationName": "Belfast",
+  "statusName": "OPEN",
+  "addressLine1": "10 Donegall Square South",
+  "addressLine2": "Floor 2",
+  "postcode": "BT1 5JD"
+}
+```
+
+### Job role lookup endpoints
+
+These public endpoints provide the lookup data used when creating a job role. They do not require authentication and do not accept a request body or query parameters.
+
+- `GET /job-roles/statuses` returns `{ "statusId": 1, "statusName": "OPEN" }` objects.
+- `GET /job-roles/bands` returns `{ "bandId": 3, "bandName": "Engineer" }` objects.
+- `GET /job-roles/capabilities` returns `{ "capabilityId": 1, "capabilityName": "Software Engineering" }` objects.
+- `GET /job-roles/locations` returns `{ "locationId": 1, "locationName": "Belfast" }` objects.
+
+Each endpoint returns an array with status `200`. If no lookup records exist, it returns `404` with an error object; unexpected database or service failures return `500`.
 
 Authentication error (`401`) example:
 

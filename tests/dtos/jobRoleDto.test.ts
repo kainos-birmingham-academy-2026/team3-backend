@@ -32,14 +32,14 @@ describe("job role DTO schemas", () => {
 			description: "  Build and maintain software systems  ",
 			responsibilities: "  Code development, testing, deployment  ",
 			sharepointUrl: "https://sharepoint.example.com/roles/1",
-			numberOfOpenPositions: "2",
+			numberOfOpenPositions: 2,
 			closingDate: "2099-12-31T00:00:00.000Z",
-			capabilityId: "1",
-			bandId: "2",
-			locationId: "3",
+			capabilityId: 1,
+			bandId: 2,
+			locationId: 3,
 		};
 
-		it("should trim strings, coerce ids and numbers, and transform the date", () => {
+		it("should trim strings and transform the date", () => {
 			const result = CreateJobRoleSchema.safeParse(validPayload);
 
 			expect(result.success).toBe(true);

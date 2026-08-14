@@ -6,7 +6,7 @@ import { JobRoleDetailedResponse } from "../models/jobRoleDetailedResponse.js";
 import { NotFoundError } from "error-lib";
 import { ConflictError } from "../errors/conflictError.js";
 import { CreateApplicationRequestDto } from "../dtos/jobRoleDto.js";
-import { StatusResponse } from "../models/statusResonse.js";
+import { StatusResponse } from "../models/statusResponse.js";
 import { CapabilityResponse } from "../models/capabilityResponse.js";
 import { BandResponse } from "../models/bandResponse.js";
 import { LocationResponse } from "../models/locationResponse.js";

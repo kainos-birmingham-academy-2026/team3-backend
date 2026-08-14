@@ -29,6 +29,10 @@ describe("JobRolesController", () => {
 		findById: vi.fn(),
 		createJobRole: vi.fn(),
 		createApplication: vi.fn(),
+		getStatus: vi.fn(),
+		getBands: vi.fn(),
+		getCapabilities: vi.fn(),
+		getLocations: vi.fn(),
 	} as unknown as JobRolesService;
 
 	let controller: JobRolesController;
@@ -332,5 +336,53 @@ describe("JobRolesController", () => {
 			expect(res.status).toHaveBeenCalledWith(500);
 			expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
 		});
+	});
+
+	describe("lookup endpoints", () => {
+		it.each([
+			["getStatus", "OPEN", "getStatus"],
+			["getBands", "Engineer", "getBands"],
+			["getCapabilities", "Software", "getCapabilities"],
+			["getLocations", "Birmingham", "getLocations"],
+		])("should return 200 with %s data", async (method, name, serviceMethod) => {
+			const req = {};
+			const res = createMockResponse();
+			vi.mocked(mockService[serviceMethod]).mockResolvedValue([{ name }]);
+
+			await controller[method](req as never, res as never);
+
+			expect(res.status).toHaveBeenCalledWith(200);
+			expect(res.json).toHaveBeenCalledWith([{ name }]);
+		});
+
+		it.each([
+			["getStatus", "No status found"],
+			["getBands", "No bands found"],
+			["getCapabilities", "No capabilities found"],
+			["getLocations", "No locations found"],
+		])("should return 404 when %s has no data", async (method, message) => {
+			const req = {};
+			const res = createMockResponse();
+			vi.mocked(mockService[method]).mockRejectedValue(new NotFoundError(message));
+
+			await controller[method](req as never, res as never);
+
+			expect(res.status).toHaveBeenCalledWith(404);
+			expect(res.json).toHaveBeenCalledWith({ error: message });
+		});
+
+		it.each(["getStatus", "getBands", "getCapabilities", "getLocations"])(
+			"should return 500 when %s fails unexpectedly",
+			async (method) => {
+				const req = {};
+				const res = createMockResponse();
+				vi.mocked(mockService[method]).mockRejectedValue(new Error("Database error"));
+
+				await controller[method](req as never, res as never);
+
+				expect(res.status).toHaveBeenCalledWith(500);
+				expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
+			},
+		);
 	});
 });

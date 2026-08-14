@@ -30,7 +30,7 @@ export const CreateJobRoleSchema = z.object({
 	),
 	capabilityId: z.preprocess(
 		(value) => value === "" ? undefined : value,
-		z.number({
+		z.coerce.number({
 			message: "Capability cannot be blank",
 		})
 			.int()
@@ -38,7 +38,7 @@ export const CreateJobRoleSchema = z.object({
 	),
 	bandId: z.preprocess(
 		(value) => value === "" ? undefined : value,
-		z.number({
+		z.coerce.number({
 			message: "Band cannot be blank",
 		})
 			.int()

@@ -14,7 +14,34 @@ import { validateBody, validateParams } from '../middleware/validate';
 const jobRolesRouter = Router();
 const controller = new JobRolesController(new JobRolesService());
 
-//get status, band, capability, location for job role creation form
+/**
+ * @openapi
+ * /job-roles/statuses:
+ *   get:
+ *     tags: [Job Roles]
+ *     summary: Get available job role statuses
+ *     responses:
+ *       200:
+ *         description: List of statuses
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/StatusResponse'
+ *       404:
+ *         description: No statuses found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 jobRolesRouter.get(
 	'/statuses',
 	(req: R, res: Res) => {
@@ -22,6 +49,34 @@ jobRolesRouter.get(
 	},
 );
 
+/**
+ * @openapi
+ * /job-roles/bands:
+ *   get:
+ *     tags: [Job Roles]
+ *     summary: Get available job role bands
+ *     responses:
+ *       200:
+ *         description: List of bands
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/BandResponse'
+ *       404:
+ *         description: No bands found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 jobRolesRouter.get(
 	'/bands',
 	(req: R, res: Res) => {
@@ -29,6 +84,34 @@ jobRolesRouter.get(
 	},
 );
 
+/**
+ * @openapi
+ * /job-roles/capabilities:
+ *   get:
+ *     tags: [Job Roles]
+ *     summary: Get available job role capabilities
+ *     responses:
+ *       200:
+ *         description: List of capabilities
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/CapabilityResponse'
+ *       404:
+ *         description: No capabilities found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 jobRolesRouter.get(
 	'/capabilities',
 	(req: R, res: Res) => {
@@ -36,6 +119,34 @@ jobRolesRouter.get(
 	},
 );
 
+/**
+ * @openapi
+ * /job-roles/locations:
+ *   get:
+ *     tags: [Job Roles]
+ *     summary: Get available job role locations
+ *     responses:
+ *       200:
+ *         description: List of locations
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/LocationResponse'
+ *       404:
+ *         description: No locations found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 jobRolesRouter.get(
 	'/locations',
 	(req: R, res: Res) => {

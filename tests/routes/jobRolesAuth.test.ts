@@ -58,6 +58,20 @@ describe('Job role route auth protection', () => {
 		expect(response.body.roleName).toBe('Engineer');
 	});
 
+	it.each([
+		['statuses', 'getStatus', [{ statusId: 1, statusName: 'OPEN' }]],
+		['bands', 'getBands', [{ bandId: 2, bandName: 'Engineer' }]],
+		['capabilities', 'getCapabilities', [{ capabilityId: 3, capabilityName: 'Software' }]],
+		['locations', 'getLocations', [{ locationId: 4, locationName: 'Birmingham' }]],
+	] as const)('should return lookup data from the /job-roles/%s endpoint', async (path, method, data) => {
+		vi.spyOn(JobRolesService.prototype, method).mockResolvedValueOnce(data as never);
+
+		const response = await request(app).get(`/job-roles/${path}`);
+
+		expect(response.status).toBe(200);
+		expect(response.body).toEqual(data);
+	});
+
 	it('should return 200 with user token on list endpoint', async () => {
 		const serviceResponse: JobRoleResponse[] = [
 			{

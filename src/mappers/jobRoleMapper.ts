@@ -1,7 +1,7 @@
-import type { JobRoleResponse } from "../models/jobRoleResponse.ts";
+import type { JobRoleResponse } from "../models/jobRoleResponse.js";
 import type { JobRole } from "../models/jobRole.js";
 import { JobRoleDetailedResponse } from "../models/jobRoleDetailedResponse.js";
-import { StatusResponse } from "../models/statusResonse.js";
+import { StatusResponse } from "../models/statusResponse.js";
 import { BandResponse } from "../models/bandResponse.js";
 import { CapabilityResponse } from "../models/capabilityResponse.js";
 import { LocationResponse } from "../models/locationResponse.js";
