@@ -8,62 +8,119 @@ const prisma = new PrismaClient();
 async function main() {
   // Statuses
   const [openStatus, closedStatus] = await Promise.all([
-    prisma.status.create({ data: { statusName: StatusEnum.OPEN } }),
-    prisma.status.create({ data: { statusName: StatusEnum.CLOSED } }),
+    prisma.status.upsert({
+      where: { statusName: StatusEnum.OPEN },
+      update: {},
+      create: { statusName: StatusEnum.OPEN },
+    }),
+    prisma.status.upsert({
+      where: { statusName: StatusEnum.CLOSED },
+      update: {},
+      create: { statusName: StatusEnum.CLOSED },
+    }),
   ]);
 
   // Locations
   const [belfast, glasgow, birmingham, london, manchester, edinburgh, remote] = await Promise.all([
-    prisma.location.create({
-      data: {
+    prisma.location.upsert({
+      where: { locationName: "Belfast" },
+      update: {
+        locationName: "Belfast",
+        addressLine1: "10 Donegall Square South",
+        addressLine2: "Floor 2",
+        postcode: "BT1 5JD",
+      },
+      create: {
         locationName: "Belfast",
         addressLine1: "10 Donegall Square South",
         addressLine2: "Floor 2",
         postcode: "BT1 5JD",
       },
     }),
-    prisma.location.create({
-      data: {
+    prisma.location.upsert({
+      where: { locationName: "Glasgow" },
+      update: {
+        locationName: "Glasgow",
+        addressLine1: "110 Queen Street",
+        addressLine2: "Suite 4A",
+        postcode: "G1 3BX",
+      },
+      create: {
         locationName: "Glasgow",
         addressLine1: "110 Queen Street",
         addressLine2: "Suite 4A",
         postcode: "G1 3BX",
       },
     }),
-    prisma.location.create({
-      data: {
+    prisma.location.upsert({
+      where: { locationName: "Birmingham" },
+      update: {
+        locationName: "Birmingham",
+        addressLine1: "3 Brindleyplace",
+        addressLine2: "Unit 12",
+        postcode: "B1 2JB",
+      },
+      create: {
         locationName: "Birmingham",
         addressLine1: "3 Brindleyplace",
         addressLine2: "Unit 12",
         postcode: "B1 2JB",
       },
     }),
-    prisma.location.create({
-      data: {
+    prisma.location.upsert({
+      where: { locationName: "London" },
+      update: {
+        locationName: "London",
+        addressLine1: "25 Canada Square",
+        addressLine2: "Level 18",
+        postcode: "E14 5LQ",
+      },
+      create: {
         locationName: "London",
         addressLine1: "25 Canada Square",
         addressLine2: "Level 18",
         postcode: "E14 5LQ",
       },
     }),
-    prisma.location.create({
-      data: {
+    prisma.location.upsert({
+      where: { locationName: "Manchester" },
+      update: {
+        locationName: "Manchester",
+        addressLine1: "1 Spinningfields",
+        addressLine2: "Suite 9",
+        postcode: "M3 3EB",
+      },
+      create: {
         locationName: "Manchester",
         addressLine1: "1 Spinningfields",
         addressLine2: "Suite 9",
         postcode: "M3 3EB",
       },
     }),
-    prisma.location.create({
-      data: {
+    prisma.location.upsert({
+      where: { locationName: "Edinburgh" },
+      update: {
+        locationName: "Edinburgh",
+        addressLine1: "7 Castle Terrace",
+        addressLine2: null,
+        postcode: "EH1 2DP",
+      },
+      create: {
         locationName: "Edinburgh",
         addressLine1: "7 Castle Terrace",
         addressLine2: null,
         postcode: "EH1 2DP",
       },
     }),
-    prisma.location.create({
-      data: {
+    prisma.location.upsert({
+      where: { locationName: "Remote" },
+      update: {
+        locationName: "Remote",
+        addressLine1: "Remote Workforce Hub",
+        addressLine2: null,
+        postcode: "REMOTE",
+      },
+      create: {
         locationName: "Remote",
         addressLine1: "Remote Workforce Hub",
         addressLine2: null,
@@ -88,23 +145,36 @@ async function main() {
 		},
 	});
 
+	await prisma.user.upsert({
+		where: { email: "user@example.com" },
+    update: {
+      passwordHash,
+      role: "USER",
+    },
+		create: {
+			email: "user@example.com",
+			passwordHash,
+      role: "USER",
+		},
+	});
+
   // Capabilities
   const [engineering, data, cloud, security, delivery] = await Promise.all([
-    prisma.capability.create({ data: { capabilityName: "Software Engineering" } }),
-    prisma.capability.create({ data: { capabilityName: "Data & AI" } }),
-    prisma.capability.create({ data: { capabilityName: "Cloud & Infrastructure" } }),
-    prisma.capability.create({ data: { capabilityName: "Cyber Security" } }),
-    prisma.capability.create({ data: { capabilityName: "Delivery Management" } }),
+    prisma.capability.upsert({ where: { capabilityName: "Software Engineering" }, update: {}, create: { capabilityName: "Software Engineering" } }),
+    prisma.capability.upsert({ where: { capabilityName: "Data & AI" }, update: {}, create: { capabilityName: "Data & AI" } }),
+    prisma.capability.upsert({ where: { capabilityName: "Cloud & Infrastructure" }, update: {}, create: { capabilityName: "Cloud & Infrastructure" } }),
+    prisma.capability.upsert({ where: { capabilityName: "Cyber Security" }, update: {}, create: { capabilityName: "Cyber Security" } }),
+    prisma.capability.upsert({ where: { capabilityName: "Delivery Management" }, update: {}, create: { capabilityName: "Delivery Management" } }),
   ]);
 
   // Bands
   const [trainee, associate, engineer, senior, lead, principal] = await Promise.all([
-    prisma.band.create({ data: { bandName: "Trainee" } }),
-    prisma.band.create({ data: { bandName: "Associate" } }),
-    prisma.band.create({ data: { bandName: "Engineer" } }),
-    prisma.band.create({ data: { bandName: "Senior Engineer" } }),
-    prisma.band.create({ data: { bandName: "Lead Engineer" } }),
-    prisma.band.create({ data: { bandName: "Principal Engineer" } }),
+    prisma.band.upsert({ where: { bandName: "Trainee" }, update: {}, create: { bandName: "Trainee" } }),
+    prisma.band.upsert({ where: { bandName: "Associate" }, update: {}, create: { bandName: "Associate" } }),
+    prisma.band.upsert({ where: { bandName: "Engineer" }, update: {}, create: { bandName: "Engineer" } }),
+    prisma.band.upsert({ where: { bandName: "Senior Engineer" }, update: {}, create: { bandName: "Senior Engineer" } }),
+    prisma.band.upsert({ where: { bandName: "Lead Engineer" }, update: {}, create: { bandName: "Lead Engineer" } }),
+    prisma.band.upsert({ where: { bandName: "Principal Engineer" }, update: {}, create: { bandName: "Principal Engineer" } }),
   ]);
 
   // Test user 
@@ -118,8 +188,7 @@ async function main() {
   });
 
   // Job Roles
-  await prisma.jobRole.createMany({
-    data: [
+  const jobRoleSeedData = [
       {
         roleName: "Software Engineer",
         description: "Build and maintain backend services and APIs.",
@@ -240,8 +309,17 @@ async function main() {
         statusId: closedStatus.statusId,
         closingDate: new Date("2026-07-31"),
       },
-    ],
-  });
+  ];
+
+  await Promise.all(
+    jobRoleSeedData.map((jobRole) =>
+      prisma.jobRole.upsert({
+        where: { roleName: jobRole.roleName },
+        update: jobRole,
+        create: jobRole,
+      }),
+    ),
+  );
 
   // Create test applications
   const jobRoleIds = await prisma.jobRole.findMany({
@@ -254,25 +332,46 @@ async function main() {
   }))?.id;
 
   if (testUserId && jobRoleIds.length > 0) {
-    await prisma.application.createMany({
-      data: [
+    const testCvText = `Lagosuchus. Amtosaurus. Ischyrosaurus. Xixiasaurus. Sinoceratops. Changchunsaurus. Kundurosaurus. Cryptovolans. Sinovenator. Heterosaurus. Lisboasaurus. Borogovia. Gideonmantellia. Apatodon. Aviatyrannis. Saurophaganax. Baotianmansaurus. Teyuwasu. Pachycephalosaurus. Galtonia. Sinornithomimus.
+
+Geminiraptor. Vulcanodon. Banji. Sinucerasaurus. Maiasaura. Osmakasaurus. Inosaurus. Eucercosaurus. Petrobrasaurus. Indosuchus. Anserimimus. Yuanmousaurus. Adeopapposaurus. Abydosaurus. Crichtonsaurus. Prenoceratops. Coronosaurus. Xenoceratops. Shuvuuia. Mirischia. Ojoraptorsaurus. Eotyrannus. Tsaagan. Qinlingosaurus. Epidexipteryx. Gresslyosaurus. Platyceratops. Sinornithoides. Halticosaurus. Siluosaurus. Campylodoniscus. Eocarcharia.
+
+Mirischia. Geminiraptor. Styracosaurus. Chaoyangsaurus. Triassolestes. Elaphrosaurus. Albertonykus. Pyroraptor. Asylosaurus. Austroraptor. Qiupalong. Coelosaurus. Trimucrodon. Xuwulong. Libycosaurus. Gongxianosaurus. Augustia. Nothronychus. Maxakalisaurus. Procerosaurus. Fukuiraptor. Alectrosaurus. Proa. Karongasaurus. Teinurosaurus. Troodon. Krzyzanowskisaurus.
+
+Jiangshanosaurus. Hypselorhachis. Owenodon. Calamosaurus. Saltasaurus. Isisaurus. Cryptodraco. Huaxiaosaurus. Elosaurus. Mandschurosaurus. Jixiangornis. Serendipaceratops. Rioarribasaurus. Agathaumas. Sinocalliopteryx. Cystosaurus. Ferganasaurus. Alectrosaurus. Pellegrinisaurus. Machimosaurus. Suchomimus. Aviatyrannis. Rioarribasaurus. Riojasuchus. Pelecanimimus. Bicentenaria. Chienkosaurus. Therizinosaurus. Valdoraptor. Oohkotokia. Penelopognathus. Iguanacolossus. Heterodontosaurus. Zhuchengceratops. Tianchisaurus. Vulcanodon. Herbstosaurus. Orkoraptor.`;
+
+    const applicationSeedData = [
         {
-          cvText: "Lorem ipsum dolor sit amet. Qui repellendus exercitationem sed reiciendis quia est voluptate autem ut ratione consequatur est eligendi nisi rem aliquid illum et dolorem autem. Id error voluptas non fuga doloribus ut iure velit ut voluptas laboriosam. Qui quae possimus ut Quis blanditiis ut modi molestiae in natus voluptate et quisquam distinctio sed molestias molestiae eum ratione ipsam.\n\nVel saepe delectus ad expedita quia sed laborum laborum et quasi sunt.Vel error odio et consequuntur sunt qui unde quaerat sed provident iusto et blanditiis cupiditate sed quae iusto et architecto molestiae.\n\nId minima harum nam incidunt delectus non eligendi modi ut molestiae rerum ut placeat autem nam ipsam doloremque 33 perspiciatis distinctio.Ut optio dicta in laboriosam vitae hic officia molestiae a dolores eveniet id fugiat dolorem ut magni earum? Est laboriosam voluptatibus et rerum cupiditate aut rerum ullam non distinctio facere ut veritatis voluptatem et alias facere.In iure nihil est autem molestiae est asperiores excepturi.",
+          cvText: testCvText,
           jobRoleId: jobRoleIds[0].jobRoleId,
           userId: testUserId,
         },
         {
-          cvText: "Lorem ipsum dolor sit amet. Qui repellendus exercitationem sed reiciendis quia est voluptate autem ut ratione consequatur est eligendi nisi rem aliquid illum et dolorem autem. Id error voluptas non fuga doloribus ut iure velit ut voluptas laboriosam. Qui quae possimus ut Quis blanditiis ut modi molestiae in natus voluptate et quisquam distinctio sed molestias molestiae eum ratione ipsam.\n\nVel saepe delectus ad expedita quia sed laborum laborum et quasi sunt.Vel error odio et consequuntur sunt qui unde quaerat sed provident iusto et blanditiis cupiditate sed quae iusto et architecto molestiae.\n\nId minima harum nam incidunt delectus non eligendi modi ut molestiae rerum ut placeat autem nam ipsam doloremque 33 perspiciatis distinctio.Ut optio dicta in laboriosam vitae hic officia molestiae a dolores eveniet id fugiat dolorem ut magni earum? Est laboriosam voluptatibus et rerum cupiditate aut rerum ullam non distinctio facere ut veritatis voluptatem et alias facere.In iure nihil est autem molestiae est asperiores excepturi.",
+          cvText: testCvText,
           jobRoleId: jobRoleIds[1].jobRoleId,
           userId: testUserId,
         },
         {
-          cvText: "Lorem ipsum dolor sit amet. Qui repellendus exercitationem sed reiciendis quia est voluptate autem ut ratione consequatur est eligendi nisi rem aliquid illum et dolorem autem. Id error voluptas non fuga doloribus ut iure velit ut voluptas laboriosam. Qui quae possimus ut Quis blanditiis ut modi molestiae in natus voluptate et quisquam distinctio sed molestias molestiae eum ratione ipsam.\n\nVel saepe delectus ad expedita quia sed laborum laborum et quasi sunt.Vel error odio et consequuntur sunt qui unde quaerat sed provident iusto et blanditiis cupiditate sed quae iusto et architecto molestiae.\n\nId minima harum nam incidunt delectus non eligendi modi ut molestiae rerum ut placeat autem nam ipsam doloremque 33 perspiciatis distinctio.Ut optio dicta in laboriosam vitae hic officia molestiae a dolores eveniet id fugiat dolorem ut magni earum? Est laboriosam voluptatibus et rerum cupiditate aut rerum ullam non distinctio facere ut veritatis voluptatem et alias facere.In iure nihil est autem molestiae est asperiores excepturi.",
+          cvText: testCvText,
           jobRoleId: jobRoleIds[2].jobRoleId,
           userId: testUserId,
         },
-      ],
-    });
+    ];
+
+    await Promise.all(
+      applicationSeedData.map((application) =>
+        prisma.application.upsert({
+          where: {
+            jobRoleId_userId: {
+              jobRoleId: application.jobRoleId,
+              userId: application.userId,
+            },
+          },
+          update: { cvText: application.cvText },
+          create: application,
+        }),
+      ),
+    );
   }
 
   console.log("Seed complete.");
