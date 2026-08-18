@@ -13,7 +13,10 @@ vi.mock("../../src/prismaClient.js", () => ({
 			findFirst: vi.fn(),
 			create: vi.fn(),
 		},
-		status: { findMany: vi.fn() },
+		status: {
+			findMany: vi.fn(),
+			findUniqueOrThrow: vi.fn(),
+		},
 		band: { findMany: vi.fn() },
 		capability: { findMany: vi.fn() },
 		location: { findMany: vi.fn() },
@@ -69,6 +72,9 @@ describe("JobRoleDao", () => {
 
 	beforeEach(() => {
 		vi.resetAllMocks();
+		vi.mocked(prisma.status.findUniqueOrThrow as any).mockResolvedValue({
+			statusId: 2,
+		});
 		dao = new JobRoleDao();
 	});
 
@@ -176,10 +182,14 @@ describe("JobRoleDao", () => {
 
 			const result = await dao.createJobRole(createData);
 
+			expect(prisma.status.findUniqueOrThrow).toHaveBeenCalledWith({
+				where: { statusName: "OPEN" },
+				select: { statusId: true },
+			});
 			expect(prisma.jobRole.create).toHaveBeenCalledWith({
 				data: {
 					...createData,
-					statusId: 1,
+					statusId: 2,
 				},
 				relationLoadStrategy: "join",
 				include: {

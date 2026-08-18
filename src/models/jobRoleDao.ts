@@ -1,6 +1,7 @@
 import { JobRole } from "./jobRole.js";
 import prisma from "../prismaClient.js";
 import type { Prisma } from "../generated/prisma/client.js";
+import { StatusEnum } from "../generated/prisma/enums.js";
 
 import { JobRoleApplication } from "./jobRoleApplication.js";
 import { CreateJobRoleRequestDto, CreateApplicationRequestDto, UpdateJobRoleRequestDto } from "../dtos/jobRoleDto.js";
@@ -69,6 +70,10 @@ export class JobRoleDao {
     }
 
     async createJobRole(data: CreateJobRoleRequestDto): Promise<JobRole> {
+        const openStatus = await prisma.status.findUniqueOrThrow({
+            where: { statusName: StatusEnum.OPEN },
+            select: { statusId: true },
+        });
         const row = await prisma.jobRole.create({
             data: {
                 roleName: data.roleName,
@@ -80,7 +85,7 @@ export class JobRoleDao {
                 capabilityId: data.capabilityId,
                 bandId: data.bandId,
                 locationId: data.locationId,
-                statusId: 1, // Assuming 1 is the ID for OPEN status can be changed in future 
+                statusId: openStatus.statusId,
             },
             relationLoadStrategy: "join",
             include: {
