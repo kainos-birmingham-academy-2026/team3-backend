@@ -257,6 +257,27 @@ These public endpoints provide the lookup data used when creating a job role. Th
 
 Each endpoint returns an array with status `200`. If no lookup records exist, it returns `404` with an error object; unexpected database or service failures return `500`.
 
+### `DELETE /job-roles/{id}`
+
+Deletes a job role and its associated applications.
+
+Authentication:
+
+- Requires `Authorization: Bearer <jwt>`
+- Admin role required
+
+Path parameters:
+
+- `id` - A positive integer job role ID
+
+Success response: `204 No Content`
+
+Error responses:
+
+- `401` - Missing or invalid token
+- `403` - Authenticated user is not an admin
+- `404` - Job role does not exist
+
 Authentication error (`401`) example:
 
 ```json
