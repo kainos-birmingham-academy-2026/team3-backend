@@ -7,6 +7,7 @@ vi.mock("../../src/prismaClient.js", () => ({
 			findUnique: vi.fn(),
 			create: vi.fn(),
 			update: vi.fn(),
+			delete: vi.fn(),
 		},
 		application: {
 			findFirst: vi.fn(),
@@ -21,6 +22,7 @@ vi.mock("../../src/prismaClient.js", () => ({
 
 import { JobRoleDao } from "../../src/models/jobRoleDao.js";
 import prisma from "../../src/prismaClient.js";
+import type { CreateJobRoleRequestDto } from "../../src/dtos/jobRoleDto.js";
 
 const mockJobRoleRow = (overrides: Record<string, unknown> = {}) => ({
 	jobRoleId: 1,
@@ -193,8 +195,18 @@ describe("JobRoleDao", () => {
 
 		it("should propagate database errors", async () => {
 			vi.mocked(prisma.jobRole.create as any).mockRejectedValue(new Error("Create failed"));
+			const createData: CreateJobRoleRequestDto = {
+				roleName: "Role",
+				description: "Role description",
+				responsibilities: "Role responsibilities",
+				sharepointUrl: "https://example.com/role",
+				numberOfOpenPositions: 1,
+				capabilityId: 1,
+				bandId: 1,
+				locationId: 1,
+			};
 
-			await expect(dao.createJobRole({ roleName: "Role" })).rejects.toThrow("Create failed");
+			await expect(dao.createJobRole(createData)).rejects.toThrow("Create failed");
 		});
 	});
 
@@ -229,6 +241,18 @@ describe("JobRoleDao", () => {
 				},
 			});
 			expect(result.roleName).toBe("Lead Software Engineer");
+		});
+	});
+
+	describe("deleteJobRole", () => {
+		it("should delete a job role by ID", async () => {
+			vi.mocked(prisma.jobRole.delete as any).mockResolvedValue(mockJobRoleRow());
+
+			await dao.deleteJobRole(1);
+
+			expect(prisma.jobRole.delete).toHaveBeenCalledWith({
+				where: { jobRoleId: 1 },
+			});
 		});
 	});
 

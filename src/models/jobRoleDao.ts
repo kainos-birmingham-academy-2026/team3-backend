@@ -118,6 +118,12 @@ export class JobRoleDao {
         return toJobRoleDomain(row);
     }
 
+    async deleteJobRole(jobRoleId: number): Promise<void> {
+        await prisma.jobRole.delete({
+            where: { jobRoleId },
+        });
+    }
+
     async findApplicationByUserIdAndJobRoleId(userId: number, jobRoleId: number): Promise<JobRoleApplication | null> {
         const application = await prisma.application.findFirst({
             where: {

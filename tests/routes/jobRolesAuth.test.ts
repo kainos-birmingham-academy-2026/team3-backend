@@ -288,6 +288,36 @@ describe('Job role route auth protection', () => {
 
 		expect(response.status).toBe(403);
 	});
+
+	it('should delete a job role for an admin', async () => {
+		const token = jwt.sign(
+			{ userId: 2, email: 'admin@example.com', role: 'ADMIN' },
+			process.env.JWT_SECRET as string,
+			{ expiresIn: '1h' },
+		);
+		const deleteSpy = vi.spyOn(JobRolesService.prototype, 'deleteJobRole').mockResolvedValueOnce();
+
+		const response = await request(app)
+			.delete('/job-roles/1')
+			.set('Authorization', `Bearer ${token}`);
+
+		expect(response.status).toBe(204);
+		expect(deleteSpy).toHaveBeenCalledWith(1);
+	});
+
+	it('should forbid non-admin users from deleting a job role', async () => {
+		const token = jwt.sign(
+			{ userId: 1, email: 'user@example.com', role: 'USER' },
+			process.env.JWT_SECRET as string,
+			{ expiresIn: '1h' },
+		);
+
+		const response = await request(app)
+			.delete('/job-roles/1')
+			.set('Authorization', `Bearer ${token}`);
+
+		expect(response.status).toBe(403);
+	});
 });
 
 describe('POST /job-roles/:id/apply', () => {
