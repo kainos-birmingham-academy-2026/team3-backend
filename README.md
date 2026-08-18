@@ -459,6 +459,145 @@ Authentication error (`401`) example:
 }
 ```
 
+### Admin Job Applications Endpoints
+
+#### `GET /job-applications`
+
+Retrieves all job applications across all job roles (admin only).
+
+Authentication:
+
+- Requires `Authorization: Bearer <jwt>`
+- Admin role required
+
+Success response (`200`):
+
+```json
+[
+  {
+    "applicationId": 1,
+    "jobRoleId": 1,
+    "applicant": "test@example.com",
+    "email": "test@example.com",
+    "appliedRole": "Software Engineer",
+    "applicationDate": "2026-08-15T10:30:00.000Z",
+    "status": "IN_PROGRESS",
+    "cvText": "Lorem ipsum dolor sit amet...",
+    "actions": {
+      "canHire": true,
+      "canReject": true
+    }
+  }
+]
+```
+
+#### `GET /job-applications/:jobRoleId/applications`
+
+Retrieves all applications for a specific job role (admin only).
+
+Authentication:
+
+- Requires `Authorization: Bearer <jwt>`
+- Admin role required
+
+Path parameters:
+
+- `jobRoleId` - The job role ID (positive integer)
+
+Success response (`200`):
+
+```json
+[
+  {
+    "applicationId": 1,
+    "jobRoleId": 1,
+    "applicant": "test@example.com",
+    "email": "test@example.com",
+    "appliedRole": "Software Engineer",
+    "applicationDate": "2026-08-15T10:30:00.000Z",
+    "status": "IN_PROGRESS",
+    "cvText": "Lorem ipsum dolor sit amet...",
+    "actions": {
+      "canHire": true,
+      "canReject": true
+    }
+  }
+]
+```
+
+Not found error (`404`) example:
+
+```json
+{
+  "error": "JobRole with id 999 not found"
+}
+```
+
+#### `PATCH /job-applications/:applicationId/status`
+
+Updates the status of a job application (admin only).
+
+Authentication:
+
+- Requires `Authorization: Bearer <jwt>`
+- Admin role required
+
+Path parameters:
+
+- `applicationId` - The application ID (positive integer)
+
+Request body:
+
+```json
+{
+  "status": "HIRED"
+}
+```
+
+Allowed status values:
+
+- `HIRED` or `APPROVED` - Mark applicant as hired
+- `REJECTED` or `REJECT` - Reject the application
+
+Success response (`200`):
+
+```json
+{
+  "applicationId": 1,
+  "jobRoleId": 1,
+  "applicant": "test@example.com",
+  "email": "test@example.com",
+  "appliedRole": "Software Engineer",
+  "applicationDate": "2026-08-15T10:30:00.000Z",
+  "status": "HIRED",
+  "cvText": "Lorem ipsum dolor sit amet..."
+}
+```
+
+Validation error (`400`) example:
+
+```json
+{
+  "message": "Unsupported status. Use HIRED/APPROVED or REJECTED"
+}
+```
+
+Not found error (`404`) example:
+
+```json
+{
+  "message": "Application not found"
+}
+```
+
+Conflict error (`409`) example:
+
+```json
+{
+  "message": "Only IN_PROGRESS applications can be hired"
+}
+```
+
 ## Quick Check
 
 After starting the app, you can verify endpoints with:
