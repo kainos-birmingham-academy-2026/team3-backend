@@ -217,6 +217,77 @@ describe('Job role route auth protection', () => {
 			errors: expect.any(Array),
 		});
 	});
+
+	it('should return 200 when an admin updates a valid job role', async () => {
+		const token = jwt.sign(
+			{ userId: 2, email: 'admin@example.com', role: 'ADMIN' },
+			process.env.JWT_SECRET as string,
+			{ expiresIn: '1h' },
+		);
+		const payload = {
+			roleName: 'Lead Engineer',
+			description: 'Lead software delivery',
+			responsibilities: 'Coach the engineering team',
+			sharepointUrl: 'https://example.com/roles/lead-engineer',
+			numberOfOpenPositions: 2,
+			capabilityId: 1,
+			bandId: 2,
+			locationId: 3,
+		};
+		vi.spyOn(JobRolesService.prototype, 'updateJobRole').mockResolvedValueOnce({
+			jobRoleId: 1,
+			...payload,
+			closingDate: null,
+			capabilityName: 'Software',
+			bandName: 'Lead',
+			locationName: 'Birmingham',
+			statusName: 'OPEN',
+			addressLine1: '1 Street',
+			addressLine2: null,
+			postcode: 'B1 1AA',
+		});
+
+		const response = await request(app)
+			.patch('/job-roles/1')
+			.set('Authorization', `Bearer ${token}`)
+			.send(payload);
+
+		expect(response.status).toBe(200);
+		expect(response.body.roleName).toBe('Lead Engineer');
+	});
+
+	it('should reject invalid update data before calling the service', async () => {
+		const token = jwt.sign(
+			{ userId: 2, email: 'admin@example.com', role: 'ADMIN' },
+			process.env.JWT_SECRET as string,
+			{ expiresIn: '1h' },
+		);
+		const updateSpy = vi.spyOn(JobRolesService.prototype, 'updateJobRole');
+
+		const response = await request(app)
+			.patch('/job-roles/1')
+			.set('Authorization', `Bearer ${token}`)
+			.send({ roleName: '' });
+
+		expect(response.status).toBe(400);
+		expect(response.body.errors).toEqual(expect.any(Array));
+		expect(updateSpy).not.toHaveBeenCalled();
+	});
+
+	it('should forbid non-admin users from updating a job role', async () => {
+		const token = jwt.sign(
+			{ userId: 1, email: 'user@example.com', role: 'USER' },
+			process.env.JWT_SECRET as string,
+			{ expiresIn: '1h' },
+		);
+
+		const response = await request(app)
+			.patch('/job-roles/1')
+			.set('Authorization', `Bearer ${token}`)
+			.send({});
+
+		expect(response.status).toBe(403);
+	});
 });
 
 describe('POST /job-roles/:id/apply', () => {

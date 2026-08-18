@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mockDao = {
 	findAll: vi.fn(),
 	findById: vi.fn(),
+	updateJobRole: vi.fn(),
 	createApplication: vi.fn(),
 	findApplicationByUserIdAndJobRoleId: vi.fn(),
 	getStatus: vi.fn(),
@@ -24,6 +25,7 @@ vi.mock("../../src/models/jobRoleDao.js", () => ({
 	JobRoleDao: class {
 		findAll = mockDao.findAll;
 		findById = mockDao.findById;
+		updateJobRole = mockDao.updateJobRole;
 		createApplication = mockDao.createApplication;
 		findApplicationByUserIdAndJobRoleId = mockDao.findApplicationByUserIdAndJobRoleId;
 		getStatus = mockDao.getStatus;
@@ -151,6 +153,39 @@ describe("JobRolesService", () => {
 			mockDao.findById.mockResolvedValue(null);
 
 			await expect(service.findById(999)).rejects.toThrow(NotFoundError);
+		});
+	});
+
+	describe("updateJobRole", () => {
+		const updateData = {
+			roleName: "Lead Software Engineer",
+			description: "Lead delivery",
+			responsibilities: "Coach engineers",
+			sharepointUrl: "https://example.com/lead-role",
+			numberOfOpenPositions: 3,
+			closingDate: undefined,
+			capabilityId: 1,
+			bandId: 1,
+			locationId: 1,
+		};
+
+		it("should update and map an existing job role", async () => {
+			const mappedResponse = { jobRoleId: 1, roleName: updateData.roleName };
+			mockDao.findById.mockResolvedValue(jobRole1);
+			mockDao.updateJobRole.mockResolvedValue(jobRole1);
+			mockMapper.jobRoleToDetailedResponse.mockReturnValue(mappedResponse);
+
+			const result = await service.updateJobRole(1, updateData);
+
+			expect(mockDao.updateJobRole).toHaveBeenCalledWith(1, updateData);
+			expect(result).toBe(mappedResponse);
+		});
+
+		it("should throw NotFoundError without updating a missing role", async () => {
+			mockDao.findById.mockResolvedValue(null);
+
+			await expect(service.updateJobRole(999, updateData)).rejects.toThrow(NotFoundError);
+			expect(mockDao.updateJobRole).not.toHaveBeenCalled();
 		});
 	});
 

@@ -28,6 +28,7 @@ describe("JobRolesController", () => {
 		findAll: vi.fn(),
 		findById: vi.fn(),
 		createJobRole: vi.fn(),
+		updateJobRole: vi.fn(),
 		createApplication: vi.fn(),
 		getStatus: vi.fn(),
 		getBands: vi.fn(),
@@ -235,6 +236,34 @@ describe("JobRolesController", () => {
 
 			expect(res.status).toHaveBeenCalledWith(500);
 			expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
+		});
+	});
+
+	describe("updateJobRole", () => {
+		it("should return 200 with the updated job role", async () => {
+			const req = { params: { id: "1" }, body: { roleName: "Lead Engineer" } };
+			const res = createMockResponse();
+			const updatedJobRole = { jobRoleId: 1, roleName: "Lead Engineer" };
+			vi.mocked(mockService.updateJobRole).mockResolvedValue(updatedJobRole as never);
+
+			await controller.updateJobRole(req as never, res as never);
+
+			expect(mockService.updateJobRole).toHaveBeenCalledWith(1, req.body);
+			expect(res.status).toHaveBeenCalledWith(200);
+			expect(res.json).toHaveBeenCalledWith(updatedJobRole);
+		});
+
+		it("should return 404 when the job role does not exist", async () => {
+			const req = { params: { id: "999" }, body: { roleName: "Lead Engineer" } };
+			const res = createMockResponse();
+			vi.mocked(mockService.updateJobRole).mockRejectedValue(
+				new NotFoundError("JobRole with id 999 not found"),
+			);
+
+			await controller.updateJobRole(req as never, res as never);
+
+			expect(res.status).toHaveBeenCalledWith(404);
+			expect(res.json).toHaveBeenCalledWith({ error: "JobRole with id 999 not found" });
 		});
 	});
 

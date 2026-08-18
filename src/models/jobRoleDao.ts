@@ -3,7 +3,7 @@ import prisma from "../prismaClient.js";
 import type { Prisma } from "../generated/prisma/client.js";
 
 import { JobRoleApplication } from "./jobRoleApplication.js";
-import { CreateJobRoleRequestDto, CreateApplicationRequestDto } from "../dtos/jobRoleDto.js";
+import { CreateJobRoleRequestDto, CreateApplicationRequestDto, UpdateJobRoleRequestDto } from "../dtos/jobRoleDto.js";
 
 
 type JobRoleRow = Prisma.JobRoleGetPayload<{
@@ -88,6 +88,31 @@ export class JobRoleDao {
                 capability: true,
                 band: true,
                 location: true, 
+            },
+        });
+        return toJobRoleDomain(row);
+    }
+
+    async updateJobRole(jobRoleId: number, data: UpdateJobRoleRequestDto): Promise<JobRole> {
+        const row = await prisma.jobRole.update({
+            where: { jobRoleId },
+            data: {
+                roleName: data.roleName,
+                description: data.description,
+                responsibilities: data.responsibilities,
+                sharepointUrl: data.sharepointUrl,
+                numberOfOpenPositions: data.numberOfOpenPositions,
+                closingDate: data.closingDate,
+                capabilityId: data.capabilityId,
+                bandId: data.bandId,
+                locationId: data.locationId,
+            },
+            relationLoadStrategy: "join",
+            include: {
+                status: true,
+                capability: true,
+                band: true,
+                location: true,
             },
         });
         return toJobRoleDomain(row);
