@@ -29,7 +29,8 @@ vi.mock("../../src/models/jobRoleDao.js", () => ({
 		updateJobRole = mockDao.updateJobRole;
 		deleteJobRole = mockDao.deleteJobRole;
 		createApplication = mockDao.createApplication;
-		findApplicationByUserIdAndJobRoleId = mockDao.findApplicationByUserIdAndJobRoleId;
+		findApplicationByUserIdAndJobRoleId =
+			mockDao.findApplicationByUserIdAndJobRoleId;
 		getStatus = mockDao.getStatus;
 		getBands = mockDao.getBands;
 		getCapabilities = mockDao.getCapabilities;
@@ -48,10 +49,10 @@ vi.mock("../../src/mappers/jobRoleMapper.js", () => ({
 	},
 }));
 
-import { JobRolesService } from "../../src/services/jobRolesService.js";
-import { JobRole } from "../../src/models/jobRole.js";
 import { NotFoundError } from "error-lib";
 import { ConflictError } from "../../src/errors/conflictError.js";
+import { JobRole } from "../../src/models/jobRole.js";
+import { JobRolesService } from "../../src/services/jobRolesService.js";
 
 const jobRole1 = new JobRole(
 	1,
@@ -147,7 +148,10 @@ describe("JobRolesService", () => {
 
 			const jobRole = await service.findById(1);
 
-			expect(jobRole).toMatchObject({ jobRoleId: 1, roleName: "Software Engineer" });
+			expect(jobRole).toMatchObject({
+				jobRoleId: 1,
+				roleName: "Software Engineer",
+			});
 			expect(mockDao.findById).toHaveBeenCalledWith(1);
 		});
 
@@ -172,7 +176,9 @@ describe("JobRolesService", () => {
 		it("should throw NotFoundError without deleting a missing role", async () => {
 			mockDao.findById.mockResolvedValue(null);
 
-			await expect(service.deleteJobRole(999)).rejects.toThrow("JobRole with id 999 not found");
+			await expect(service.deleteJobRole(999)).rejects.toThrow(
+				"JobRole with id 999 not found",
+			);
 			expect(mockDao.deleteJobRole).not.toHaveBeenCalled();
 		});
 	});
@@ -205,7 +211,9 @@ describe("JobRolesService", () => {
 		it("should throw NotFoundError without updating a missing role", async () => {
 			mockDao.findById.mockResolvedValue(null);
 
-			await expect(service.updateJobRole(999, updateData)).rejects.toThrow(NotFoundError);
+			await expect(service.updateJobRole(999, updateData)).rejects.toThrow(
+				NotFoundError,
+			);
 			expect(mockDao.updateJobRole).not.toHaveBeenCalled();
 		});
 	});
@@ -227,7 +235,11 @@ describe("JobRolesService", () => {
 				cvText: "CV-2026-001",
 			});
 
-			const result = await service.createApplication(jobRoleId, userId, applicationData);
+			const result = await service.createApplication(
+				jobRoleId,
+				userId,
+				applicationData,
+			);
 
 			expect(result).toSatisfy(
 				(value) =>
@@ -237,8 +249,15 @@ describe("JobRolesService", () => {
 					value.cvText === "CV-2026-001",
 			);
 			expect(mockDao.findById).toHaveBeenCalledWith(1);
-			expect(mockDao.findApplicationByUserIdAndJobRoleId).toHaveBeenCalledWith(1, 1);
-			expect(mockDao.createApplication).toHaveBeenCalledWith(jobRoleId, userId, applicationData);
+			expect(mockDao.findApplicationByUserIdAndJobRoleId).toHaveBeenCalledWith(
+				1,
+				1,
+			);
+			expect(mockDao.createApplication).toHaveBeenCalledWith(
+				jobRoleId,
+				userId,
+				applicationData,
+			);
 		});
 
 		it("should throw NotFoundError when job role does not exist", async () => {
@@ -250,10 +269,12 @@ describe("JobRolesService", () => {
 
 			mockDao.findById.mockResolvedValue(null);
 
-			await expect(service.createApplication(jobRoleId, userId, applicationData)).rejects.toThrow(NotFoundError);
-			await expect(service.createApplication(jobRoleId, userId, applicationData)).rejects.toThrow(
-				"JobRole with id 999 not found",
-			);
+			await expect(
+				service.createApplication(jobRoleId, userId, applicationData),
+			).rejects.toThrow(NotFoundError);
+			await expect(
+				service.createApplication(jobRoleId, userId, applicationData),
+			).rejects.toThrow("JobRole with id 999 not found");
 
 			expect(mockDao.createApplication).not.toHaveBeenCalled();
 		});
@@ -273,10 +294,16 @@ describe("JobRolesService", () => {
 			};
 
 			mockDao.findById.mockResolvedValue(jobRole1);
-			mockDao.findApplicationByUserIdAndJobRoleId.mockResolvedValue(existingApplication);
+			mockDao.findApplicationByUserIdAndJobRoleId.mockResolvedValue(
+				existingApplication,
+			);
 
-			await expect(service.createApplication(jobRoleId, userId, applicationData)).rejects.toThrow(ConflictError);
-			await expect(service.createApplication(jobRoleId, userId, applicationData)).rejects.toThrow(
+			await expect(
+				service.createApplication(jobRoleId, userId, applicationData),
+			).rejects.toThrow(ConflictError);
+			await expect(
+				service.createApplication(jobRoleId, userId, applicationData),
+			).rejects.toThrow(
 				"User with id 1 has already applied for JobRole with id 1",
 			);
 
@@ -327,7 +354,9 @@ describe("JobRolesService", () => {
 		it("should throw NotFoundError when no capabilities exist", async () => {
 			mockDao.getCapabilities.mockResolvedValue([]);
 
-			await expect(service.getCapabilities()).rejects.toThrow("No capabilities found");
+			await expect(service.getCapabilities()).rejects.toThrow(
+				"No capabilities found",
+			);
 		});
 
 		it("should return mapped locations", async () => {
@@ -341,7 +370,9 @@ describe("JobRolesService", () => {
 		it("should throw NotFoundError when no locations exist", async () => {
 			mockDao.getLocations.mockResolvedValue([]);
 
-			await expect(service.getLocations()).rejects.toThrow("No locations found");
+			await expect(service.getLocations()).rejects.toThrow(
+				"No locations found",
+			);
 		});
 	});
 });

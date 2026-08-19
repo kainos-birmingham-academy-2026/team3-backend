@@ -23,9 +23,9 @@ vi.mock("../../src/prismaClient.js", () => ({
 	},
 }));
 
+import type { CreateJobRoleRequestDto } from "../../src/dtos/jobRoleDto.js";
 import { JobRoleDao } from "../../src/models/jobRoleDao.js";
 import prisma from "../../src/prismaClient.js";
-import type { CreateJobRoleRequestDto } from "../../src/dtos/jobRoleDto.js";
 
 const mockJobRoleRow = (overrides: Record<string, unknown> = {}) => ({
 	jobRoleId: 1,
@@ -118,7 +118,9 @@ describe("JobRoleDao", () => {
 
 		it("should throw error when database fails", async () => {
 			const connectionError = new Error("Database connection failed");
-			vi.mocked(prisma.jobRole.findMany as any).mockRejectedValue(connectionError);
+			vi.mocked(prisma.jobRole.findMany as any).mockRejectedValue(
+				connectionError,
+			);
 
 			await expect(dao.findAll()).rejects.toThrow("Database connection failed");
 		});
@@ -127,7 +129,9 @@ describe("JobRoleDao", () => {
 	describe("findById", () => {
 		it("should query database for specific job role", async () => {
 			const mockJobRole = mockJobRoleRow();
-			vi.mocked(prisma.jobRole.findUnique as any).mockResolvedValue(mockJobRole);
+			vi.mocked(prisma.jobRole.findUnique as any).mockResolvedValue(
+				mockJobRole,
+			);
 
 			await dao.findById(1);
 
@@ -146,7 +150,9 @@ describe("JobRoleDao", () => {
 
 		it("should return JobRole when found", async () => {
 			const mockJobRole = mockJobRoleRow();
-			vi.mocked(prisma.jobRole.findUnique as any).mockResolvedValue(mockJobRole);
+			vi.mocked(prisma.jobRole.findUnique as any).mockResolvedValue(
+				mockJobRole,
+			);
 
 			const result = await dao.findById(1);
 
@@ -204,7 +210,9 @@ describe("JobRoleDao", () => {
 		});
 
 		it("should propagate database errors", async () => {
-			vi.mocked(prisma.jobRole.create as any).mockRejectedValue(new Error("Create failed"));
+			vi.mocked(prisma.jobRole.create as any).mockRejectedValue(
+				new Error("Create failed"),
+			);
 			const createData: CreateJobRoleRequestDto = {
 				roleName: "Role",
 				description: "Role description",
@@ -216,7 +224,9 @@ describe("JobRoleDao", () => {
 				locationId: 1,
 			};
 
-			await expect(dao.createJobRole(createData)).rejects.toThrow("Create failed");
+			await expect(dao.createJobRole(createData)).rejects.toThrow(
+				"Create failed",
+			);
 		});
 	});
 
@@ -256,7 +266,9 @@ describe("JobRoleDao", () => {
 
 	describe("deleteJobRole", () => {
 		it("should delete a job role by ID", async () => {
-			vi.mocked(prisma.jobRole.delete as any).mockResolvedValue(mockJobRoleRow());
+			vi.mocked(prisma.jobRole.delete as any).mockResolvedValue(
+				mockJobRoleRow(),
+			);
 
 			await dao.deleteJobRole(1);
 
@@ -274,7 +286,9 @@ describe("JobRoleDao", () => {
 				userId: 3,
 				cvText: "CV-2026-001",
 			};
-			vi.mocked(prisma.application.findFirst as any).mockResolvedValue(application);
+			vi.mocked(prisma.application.findFirst as any).mockResolvedValue(
+				application,
+			);
 
 			const result = await dao.findApplicationByUserIdAndJobRoleId(3, 2);
 
@@ -305,7 +319,11 @@ describe("JobRoleDao", () => {
 				...applicationData,
 			});
 
-			const result = await dao.createApplication(jobRoleId, userId, applicationData);
+			const result = await dao.createApplication(
+				jobRoleId,
+				userId,
+				applicationData,
+			);
 
 			expect(prisma.application.create).toHaveBeenCalledWith({
 				data: { jobRoleId, userId, ...applicationData },
@@ -317,16 +335,25 @@ describe("JobRoleDao", () => {
 		});
 
 		it("should propagate database errors", async () => {
-			vi.mocked(prisma.application.create as any).mockRejectedValue(new Error("Create failed"));
+			vi.mocked(prisma.application.create as any).mockRejectedValue(
+				new Error("Create failed"),
+			);
 
-			await expect(dao.createApplication(2, 3, { cvText: "CV-2026-001" })).rejects.toThrow("Create failed");
+			await expect(
+				dao.createApplication(2, 3, { cvText: "CV-2026-001" }),
+			).rejects.toThrow("Create failed");
 		});
 	});
 
 	describe("lookup methods", () => {
 		it("should return status lookup values", async () => {
 			vi.mocked(prisma.status.findMany as any).mockResolvedValue([
-				{ statusId: 1, statusName: "OPEN", createdAt: new Date(), updatedAt: new Date() },
+				{
+					statusId: 1,
+					statusName: "OPEN",
+					createdAt: new Date(),
+					updatedAt: new Date(),
+				},
 			]);
 
 			const result = await dao.getStatus();
@@ -337,7 +364,12 @@ describe("JobRoleDao", () => {
 
 		it("should return band lookup values", async () => {
 			vi.mocked(prisma.band.findMany as any).mockResolvedValue([
-				{ bandId: 2, bandName: "Engineer", createdAt: new Date(), updatedAt: new Date() },
+				{
+					bandId: 2,
+					bandName: "Engineer",
+					createdAt: new Date(),
+					updatedAt: new Date(),
+				},
 			]);
 
 			const result = await dao.getBands();
@@ -348,7 +380,12 @@ describe("JobRoleDao", () => {
 
 		it("should return capability lookup values", async () => {
 			vi.mocked(prisma.capability.findMany as any).mockResolvedValue([
-				{ capabilityId: 3, capabilityName: "Software", createdAt: new Date(), updatedAt: new Date() },
+				{
+					capabilityId: 3,
+					capabilityName: "Software",
+					createdAt: new Date(),
+					updatedAt: new Date(),
+				},
 			]);
 
 			const result = await dao.getCapabilities();

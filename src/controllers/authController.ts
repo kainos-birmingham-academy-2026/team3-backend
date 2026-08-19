@@ -5,12 +5,12 @@ import type {
 	RegisterRequestDto,
 	RegisterResponseDto,
 } from "../dtos/authDto.js";
-import { AuthService } from "../services/authService.js";
 import { AuthError } from "../errors/authError.js";
 import { ConflictError } from "../errors/conflictError.js";
+import type { AuthService } from "../services/authService.js";
 
 export class AuthController {
-	public constructor(private readonly authService: AuthService) { }
+	public constructor(private readonly authService: AuthService) {}
 
 	public async register(req: Request, res: Response): Promise<Response> {
 		try {

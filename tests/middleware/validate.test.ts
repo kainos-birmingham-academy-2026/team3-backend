@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { z } from 'zod';
-import { validateBody, validateParams } from '../../src/middleware/validate.ts';
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { z } from "zod";
+import { validateBody, validateParams } from "../../src/middleware/validate.ts";
 
-describe('validate middleware', () => {
+describe("validate middleware", () => {
 	let statusSpy: ReturnType<typeof vi.fn>;
 	let jsonSpy: ReturnType<typeof vi.fn>;
 	let nextSpy: ReturnType<typeof vi.fn>;
@@ -21,13 +21,13 @@ describe('validate middleware', () => {
 		};
 	});
 
-	it('should call next for valid body', () => {
+	it("should call next for valid body", () => {
 		const schema = z.object({
 			email: z.email(),
 			password: z.string().min(1),
 		});
 		const req = {
-			body: { email: 'user@example.com', password: 'password123' },
+			body: { email: "user@example.com", password: "password123" },
 		};
 		const middleware = validateBody(schema);
 
@@ -37,13 +37,13 @@ describe('validate middleware', () => {
 		expect(statusSpy).not.toHaveBeenCalled();
 	});
 
-	it('should return 400 with formatted body errors for invalid body', () => {
+	it("should return 400 with formatted body errors for invalid body", () => {
 		const schema = z.object({
 			email: z.email(),
 			password: z.string().min(1),
 		});
 		const req = {
-			body: { email: 'not-an-email', password: '' },
+			body: { email: "not-an-email", password: "" },
 		};
 		const middleware = validateBody(schema);
 
@@ -53,16 +53,22 @@ describe('validate middleware', () => {
 		expect(statusSpy).toHaveBeenCalledWith(400);
 		expect(jsonSpy).toHaveBeenCalledWith({
 			errors: expect.arrayContaining([
-				expect.objectContaining({ field: 'email', message: expect.any(String) }),
-				expect.objectContaining({ field: 'password', message: expect.any(String) }),
+				expect.objectContaining({
+					field: "email",
+					message: expect.any(String),
+				}),
+				expect.objectContaining({
+					field: "password",
+					message: expect.any(String),
+				}),
 			]),
 		});
 	});
 
-	it('should parse and replace request body with schema output', () => {
+	it("should parse and replace request body with schema output", () => {
 		const schema = z.object({ count: z.coerce.number().int() });
 		const req = {
-			body: { count: '42' },
+			body: { count: "42" },
 		};
 		const middleware = validateBody(schema);
 
@@ -72,10 +78,10 @@ describe('validate middleware', () => {
 		expect(req.body).toEqual({ count: 42 });
 	});
 
-	it('should return 400 with formatted params errors for invalid params', () => {
+	it("should return 400 with formatted params errors for invalid params", () => {
 		const schema = z.object({ id: z.coerce.number().int().positive() });
 		const req = {
-			params: { id: 'abc' },
+			params: { id: "abc" },
 		};
 		const middleware = validateParams(schema);
 
@@ -85,15 +91,15 @@ describe('validate middleware', () => {
 		expect(statusSpy).toHaveBeenCalledWith(400);
 		expect(jsonSpy).toHaveBeenCalledWith({
 			errors: expect.arrayContaining([
-				expect.objectContaining({ field: 'id', message: expect.any(String) }),
+				expect.objectContaining({ field: "id", message: expect.any(String) }),
 			]),
 		});
 	});
 
-	it('should parse and replace request params with schema output', () => {
+	it("should parse and replace request params with schema output", () => {
 		const schema = z.object({ id: z.coerce.number().int().positive() });
 		const req = {
-			params: { id: '42' },
+			params: { id: "42" },
 		};
 		const middleware = validateParams(schema);
 

@@ -1,6 +1,5 @@
-import { Router } from 'express';
-import { Request as R, Response as Res } from 'express';
-import { TeapotError } from '../errors/teapotError.js';
+import { type Request as R, type Response as Res, Router } from "express";
+import { TeapotError } from "../errors/teapotError.js";
 
 const teapotRouter = Router();
 
@@ -23,14 +22,14 @@ const teapotRouter = Router();
  *                   type: string
  *                   example: "I'm a teapot"
  */
-teapotRouter.get('/', (req: R, res: Res) => {
+teapotRouter.get("/", (req: R, res: Res) => {
 	try {
 		throw new TeapotError();
 	} catch (error) {
 		if (error instanceof TeapotError) {
 			return res.status(error.statusCode).json({ message: error.message });
 		}
-		return res.status(500).json({ error: 'Internal server error' });
+		return res.status(500).json({ error: "Internal server error" });
 	}
 });
 

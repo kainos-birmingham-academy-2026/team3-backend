@@ -48,7 +48,10 @@ describe("jobApplicationAdminController", () => {
 				},
 			]);
 
-			await controller.getAllAdmin(req as unknown as Request, res as unknown as Response);
+			await controller.getAllAdmin(
+				req as unknown as Request,
+				res as unknown as Response,
+			);
 
 			expect(mockService.findAllAdmin).toHaveBeenCalled();
 			expect(res.status).toHaveBeenCalledWith(200);
@@ -68,7 +71,10 @@ describe("jobApplicationAdminController", () => {
 
 			vi.mocked(mockService.findAllAdmin).mockRejectedValue(new Error("boom"));
 
-			await controller.getAllAdmin(req as unknown as Request, res as unknown as Response);
+			await controller.getAllAdmin(
+				req as unknown as Request,
+				res as unknown as Response,
+			);
 
 			expect(res.status).toHaveBeenCalledWith(500);
 			expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
@@ -88,7 +94,10 @@ describe("jobApplicationAdminController", () => {
 				},
 			]);
 
-			await controller.getAll(req as unknown as Request, res as unknown as Response);
+			await controller.getAll(
+				req as unknown as Request,
+				res as unknown as Response,
+			);
 
 			expect(mockService.findAll).toHaveBeenCalledWith(1);
 			expect(res.status).toHaveBeenCalledWith(200);
@@ -109,7 +118,10 @@ describe("jobApplicationAdminController", () => {
 
 			vi.mocked(mockService.findAll).mockRejectedValue(new Error("boom"));
 
-			await controller.getAll(req as unknown as Request, res as unknown as Response);
+			await controller.getAll(
+				req as unknown as Request,
+				res as unknown as Response,
+			);
 
 			expect(res.status).toHaveBeenCalledWith(500);
 			expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
@@ -133,9 +145,15 @@ describe("jobApplicationAdminController", () => {
 				},
 			});
 
-			await controller.updateStatus(req as unknown as Request, res as unknown as Response);
+			await controller.updateStatus(
+				req as unknown as Request,
+				res as unknown as Response,
+			);
 
-			expect(mockService.updateApplicationStatusById).toHaveBeenCalledWith(2, "REJECTED");
+			expect(mockService.updateApplicationStatusById).toHaveBeenCalledWith(
+				2,
+				"REJECTED",
+			);
 			expect(res.status).toHaveBeenCalledWith(200);
 		});
 
@@ -146,34 +164,44 @@ describe("jobApplicationAdminController", () => {
 			};
 			const res = createMockResponse();
 
-			await controller.updateStatus(req as unknown as Request, res as unknown as Response);
+			await controller.updateStatus(
+				req as unknown as Request,
+				res as unknown as Response,
+			);
 
 			expect(res.status).toHaveBeenCalledWith(400);
 			expect(res.json).toHaveBeenCalledWith({
-					message: "status (or applicationStatus/action/decision/newStatus) is required",
+				message:
+					"status (or applicationStatus/action/decision/newStatus) is required",
 			});
 		});
 
-			it("should accept decision field for approved action", async () => {
-				const req = {
-					params: { applicationId: "2" },
-					body: { decision: "APPROVED" },
-				};
-				const res = createMockResponse();
+		it("should accept decision field for approved action", async () => {
+			const req = {
+				params: { applicationId: "2" },
+				body: { decision: "APPROVED" },
+			};
+			const res = createMockResponse();
 
-				vi.mocked(mockService.updateApplicationStatusById).mockResolvedValue({
-					message: "Applicant hired",
-					application: {
-						applicationId: 2,
-						username: "candidate@example.com",
-						status: "HIRED",
-					},
-				});
-
-				await controller.updateStatus(req as unknown as Request, res as unknown as Response);
-
-				expect(mockService.updateApplicationStatusById).toHaveBeenCalledWith(2, "APPROVED");
-				expect(res.status).toHaveBeenCalledWith(200);
+			vi.mocked(mockService.updateApplicationStatusById).mockResolvedValue({
+				message: "Applicant hired",
+				application: {
+					applicationId: 2,
+					username: "candidate@example.com",
+					status: "HIRED",
+				},
 			});
+
+			await controller.updateStatus(
+				req as unknown as Request,
+				res as unknown as Response,
+			);
+
+			expect(mockService.updateApplicationStatusById).toHaveBeenCalledWith(
+				2,
+				"APPROVED",
+			);
+			expect(res.status).toHaveBeenCalledWith(200);
+		});
 	});
 });

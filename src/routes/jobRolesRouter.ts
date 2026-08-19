@@ -1,15 +1,15 @@
-import { Router } from 'express';
-import { Request as R, Response as Res } from 'express';
-
-import { CreateJobRoleSchema, IdParamSchema, CreateApplicationSchema, UpdateJobRoleSchema } from '../dtos/jobRoleDto';
-
-import { JobRolesController } from '../controllers/jobRolesController';
-import { JobRolesService } from '../services/jobRolesService';
-
-import { allowRoles, USER_ROLES } from '../middleware/authorise';
-import { requireAuth } from '../middleware/requireAuth';
-import { validateBody, validateParams } from '../middleware/validate';
-
+import { type Request as R, type Response as Res, Router } from "express";
+import { JobRolesController } from "../controllers/jobRolesController";
+import {
+	CreateApplicationSchema,
+	CreateJobRoleSchema,
+	IdParamSchema,
+	UpdateJobRoleSchema,
+} from "../dtos/jobRoleDto";
+import { allowRoles, USER_ROLES } from "../middleware/authorise";
+import { requireAuth } from "../middleware/requireAuth";
+import { validateBody, validateParams } from "../middleware/validate";
+import { JobRolesService } from "../services/jobRolesService";
 
 const jobRolesRouter = Router();
 const controller = new JobRolesController(new JobRolesService());
@@ -42,12 +42,9 @@ const controller = new JobRolesController(new JobRolesService());
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-jobRolesRouter.get(
-	'/statuses',
-	(req: R, res: Res) => {
-		controller.getStatus(req, res);
-	},
-);
+jobRolesRouter.get("/statuses", (req: R, res: Res) => {
+	controller.getStatus(req, res);
+});
 
 /**
  * @openapi
@@ -77,12 +74,9 @@ jobRolesRouter.get(
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-jobRolesRouter.get(
-	'/bands',
-	(req: R, res: Res) => {
-		controller.getBands(req, res);
-	},
-);
+jobRolesRouter.get("/bands", (req: R, res: Res) => {
+	controller.getBands(req, res);
+});
 
 /**
  * @openapi
@@ -112,12 +106,9 @@ jobRolesRouter.get(
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-jobRolesRouter.get(
-	'/capabilities',
-	(req: R, res: Res) => {
-		controller.getCapabilities(req, res);
-	},
-);
+jobRolesRouter.get("/capabilities", (req: R, res: Res) => {
+	controller.getCapabilities(req, res);
+});
 
 /**
  * @openapi
@@ -147,12 +138,9 @@ jobRolesRouter.get(
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-jobRolesRouter.get(
-	'/locations',
-	(req: R, res: Res) => {
-		controller.getLocations(req, res);
-	},
-);
+jobRolesRouter.get("/locations", (req: R, res: Res) => {
+	controller.getLocations(req, res);
+});
 
 /**
  * @openapi
@@ -176,12 +164,9 @@ jobRolesRouter.get(
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-jobRolesRouter.get(
-	'',
-	(req: R, res: Res) => {
-		controller.getAll(req, res);
-	},
-);
+jobRolesRouter.get("", (req: R, res: Res) => {
+	controller.getAll(req, res);
+});
 
 /**
  * @openapi
@@ -224,7 +209,7 @@ jobRolesRouter.get(
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 jobRolesRouter.get(
-	'/:id',
+	"/:id",
 	validateParams(IdParamSchema),
 	(req: R, res: Res) => {
 		controller.getById(req, res);
@@ -279,7 +264,7 @@ jobRolesRouter.get(
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 jobRolesRouter.post(
-	'/create',
+	"/create",
 	requireAuth,
 	allowRoles([USER_ROLES.ADMIN]),
 	validateBody(CreateJobRoleSchema),
@@ -323,7 +308,7 @@ jobRolesRouter.post(
  *         description: Job role not found
  */
 jobRolesRouter.patch(
-	'/:id',
+	"/:id",
 	requireAuth,
 	allowRoles([USER_ROLES.ADMIN]),
 	validateParams(IdParamSchema),
@@ -360,7 +345,7 @@ jobRolesRouter.patch(
  *         description: Job role not found
  */
 jobRolesRouter.delete(
-	'/:id',
+	"/:id",
 	requireAuth,
 	allowRoles([USER_ROLES.ADMIN]),
 	validateParams(IdParamSchema),
@@ -437,7 +422,7 @@ jobRolesRouter.delete(
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 jobRolesRouter.post(
-	'/:id/apply',
+	"/:id/apply",
 	requireAuth,
 	allowRoles([USER_ROLES.ADMIN, USER_ROLES.USER]),
 	validateParams(IdParamSchema),
@@ -446,8 +431,6 @@ jobRolesRouter.post(
 		controller.createApplication(req, res);
 	},
 );
-
-
 
 //future endpoint urls for url reference exclude /job-roles/
 // jobRolesRouter.post('/job-roles/create', (req: R, res: Res) => {
