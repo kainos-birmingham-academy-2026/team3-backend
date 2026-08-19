@@ -57,6 +57,14 @@ docker run --name jobRoles-db -e POSTGRES_PASSWORD=password -e POSTGRES_DB=jobRo
 npx prisma migrate dev
 ```
 
+If necessary, reset the local database by dropping it, reapplying all migrations, and reseeding it:
+
+```bash
+npx prisma migrate reset
+```
+
+Warning: this deletes all data in the database.
+
 ### 5. Open Prisma Studio (optional)
 
 ```bash
