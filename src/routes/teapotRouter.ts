@@ -22,7 +22,7 @@ const teapotRouter = Router();
  *                   type: string
  *                   example: "I'm a teapot"
  */
-teapotRouter.get("/", (req: R, res: Res) => {
+teapotRouter.get("/", (_req: R, res: Res) => {
 	try {
 		throw new TeapotError();
 	} catch (error) {

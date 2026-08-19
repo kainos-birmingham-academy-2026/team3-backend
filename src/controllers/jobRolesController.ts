@@ -15,7 +15,7 @@ export class JobRolesController {
 		this.service = service;
 	}
 
-	async getAll(req: Request, res: Response) {
+	async getAll(_req: Request, res: Response) {
 		try {
 			const jobRoles = await this.service.findAll();
 			return res.status(200).send(jobRoles);
@@ -28,7 +28,7 @@ export class JobRolesController {
 		const idParam = req.params.id;
 		const jobRoleId = parseInt(idParam, 10);
 		// This is redundant with validation middleware but kept as a defensive guard.
-		if (isNaN(jobRoleId)) {
+		if (Number.isNaN(jobRoleId)) {
 			return res.status(400).json({ error: "Invalid job role ID" });
 		}
 
@@ -82,7 +82,7 @@ export class JobRolesController {
 		try {
 			const jobRole = await this.service.createJobRole(payload);
 			return res.status(201).json(jobRole);
-		} catch (error) {
+		} catch (_error) {
 			return res.status(500).json({ error: "Internal Server Error" });
 		}
 	}
@@ -122,7 +122,7 @@ export class JobRolesController {
 	}
 
 	//get status, band, capability, location for job role creation form
-	async getStatus(req: Request, res: Response) {
+	async getStatus(_req: Request, res: Response) {
 		try {
 			const status = await this.service.getStatus();
 			return res.status(200).json(status);
@@ -134,7 +134,7 @@ export class JobRolesController {
 		}
 	}
 
-	async getBands(req: Request, res: Response) {
+	async getBands(_req: Request, res: Response) {
 		try {
 			const bands = await this.service.getBands();
 			return res.status(200).json(bands);
@@ -146,7 +146,7 @@ export class JobRolesController {
 		}
 	}
 
-	async getCapabilities(req: Request, res: Response) {
+	async getCapabilities(_req: Request, res: Response) {
 		try {
 			const capabilities = await this.service.getCapabilities();
 			return res.status(200).json(capabilities);
@@ -158,7 +158,7 @@ export class JobRolesController {
 		}
 	}
 
-	async getLocations(req: Request, res: Response) {
+	async getLocations(_req: Request, res: Response) {
 		try {
 			const locations = await this.service.getLocations();
 			return res.status(200).json(locations);

@@ -10,10 +10,10 @@ export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
 export const allowRoles = (
 	allowedRoles: readonly UserRole[],
 ): RequestHandler => {
-	return (req, res, next) => {
+	return (_req, res, next) => {
 		const authUser = res.locals.authUser as { role?: UserRole } | undefined;
 
-		if (!authUser || !authUser.role) {
+		if (!authUser?.role) {
 			return res.status(401).json({ message: "Invalid token" });
 		}
 

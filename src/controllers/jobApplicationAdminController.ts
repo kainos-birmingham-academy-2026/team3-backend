@@ -8,7 +8,7 @@ export class JobApplicationAdminController {
 		this.service = service;
 	}
 
-	async getAllAdmin(req: Request, res: Response) {
+	async getAllAdmin(_req: Request, res: Response) {
 		try {
 			const jobApplications = await this.service.findAllAdmin();
 			return res.status(200).send(jobApplications);

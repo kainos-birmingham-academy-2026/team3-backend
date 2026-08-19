@@ -21,114 +21,121 @@ async function main() {
 	]);
 
 	// Locations
-	const [belfast, glasgow, birmingham, london, manchester, edinburgh, remote] =
-		await Promise.all([
-			prisma.location.upsert({
-				where: { locationName: "Belfast" },
-				update: {
-					locationName: "Belfast",
-					addressLine1: "10 Donegall Square South",
-					addressLine2: "Floor 2",
-					postcode: "BT1 5JD",
-				},
-				create: {
-					locationName: "Belfast",
-					addressLine1: "10 Donegall Square South",
-					addressLine2: "Floor 2",
-					postcode: "BT1 5JD",
-				},
-			}),
-			prisma.location.upsert({
-				where: { locationName: "Glasgow" },
-				update: {
-					locationName: "Glasgow",
-					addressLine1: "110 Queen Street",
-					addressLine2: "Suite 4A",
-					postcode: "G1 3BX",
-				},
-				create: {
-					locationName: "Glasgow",
-					addressLine1: "110 Queen Street",
-					addressLine2: "Suite 4A",
-					postcode: "G1 3BX",
-				},
-			}),
-			prisma.location.upsert({
-				where: { locationName: "Birmingham" },
-				update: {
-					locationName: "Birmingham",
-					addressLine1: "3 Brindleyplace",
-					addressLine2: "Unit 12",
-					postcode: "B1 2JB",
-				},
-				create: {
-					locationName: "Birmingham",
-					addressLine1: "3 Brindleyplace",
-					addressLine2: "Unit 12",
-					postcode: "B1 2JB",
-				},
-			}),
-			prisma.location.upsert({
-				where: { locationName: "London" },
-				update: {
-					locationName: "London",
-					addressLine1: "25 Canada Square",
-					addressLine2: "Level 18",
-					postcode: "E14 5LQ",
-				},
-				create: {
-					locationName: "London",
-					addressLine1: "25 Canada Square",
-					addressLine2: "Level 18",
-					postcode: "E14 5LQ",
-				},
-			}),
-			prisma.location.upsert({
-				where: { locationName: "Manchester" },
-				update: {
-					locationName: "Manchester",
-					addressLine1: "1 Spinningfields",
-					addressLine2: "Suite 9",
-					postcode: "M3 3EB",
-				},
-				create: {
-					locationName: "Manchester",
-					addressLine1: "1 Spinningfields",
-					addressLine2: "Suite 9",
-					postcode: "M3 3EB",
-				},
-			}),
-			prisma.location.upsert({
-				where: { locationName: "Edinburgh" },
-				update: {
-					locationName: "Edinburgh",
-					addressLine1: "7 Castle Terrace",
-					addressLine2: null,
-					postcode: "EH1 2DP",
-				},
-				create: {
-					locationName: "Edinburgh",
-					addressLine1: "7 Castle Terrace",
-					addressLine2: null,
-					postcode: "EH1 2DP",
-				},
-			}),
-			prisma.location.upsert({
-				where: { locationName: "Remote" },
-				update: {
-					locationName: "Remote",
-					addressLine1: "Remote Workforce Hub",
-					addressLine2: null,
-					postcode: "REMOTE",
-				},
-				create: {
-					locationName: "Remote",
-					addressLine1: "Remote Workforce Hub",
-					addressLine2: null,
-					postcode: "REMOTE",
-				},
-			}),
-		]);
+	const [
+		belfast,
+		glasgow,
+		birmingham,
+		london,
+		_manchester,
+		_edinburgh,
+		remote,
+	] = await Promise.all([
+		prisma.location.upsert({
+			where: { locationName: "Belfast" },
+			update: {
+				locationName: "Belfast",
+				addressLine1: "10 Donegall Square South",
+				addressLine2: "Floor 2",
+				postcode: "BT1 5JD",
+			},
+			create: {
+				locationName: "Belfast",
+				addressLine1: "10 Donegall Square South",
+				addressLine2: "Floor 2",
+				postcode: "BT1 5JD",
+			},
+		}),
+		prisma.location.upsert({
+			where: { locationName: "Glasgow" },
+			update: {
+				locationName: "Glasgow",
+				addressLine1: "110 Queen Street",
+				addressLine2: "Suite 4A",
+				postcode: "G1 3BX",
+			},
+			create: {
+				locationName: "Glasgow",
+				addressLine1: "110 Queen Street",
+				addressLine2: "Suite 4A",
+				postcode: "G1 3BX",
+			},
+		}),
+		prisma.location.upsert({
+			where: { locationName: "Birmingham" },
+			update: {
+				locationName: "Birmingham",
+				addressLine1: "3 Brindleyplace",
+				addressLine2: "Unit 12",
+				postcode: "B1 2JB",
+			},
+			create: {
+				locationName: "Birmingham",
+				addressLine1: "3 Brindleyplace",
+				addressLine2: "Unit 12",
+				postcode: "B1 2JB",
+			},
+		}),
+		prisma.location.upsert({
+			where: { locationName: "London" },
+			update: {
+				locationName: "London",
+				addressLine1: "25 Canada Square",
+				addressLine2: "Level 18",
+				postcode: "E14 5LQ",
+			},
+			create: {
+				locationName: "London",
+				addressLine1: "25 Canada Square",
+				addressLine2: "Level 18",
+				postcode: "E14 5LQ",
+			},
+		}),
+		prisma.location.upsert({
+			where: { locationName: "Manchester" },
+			update: {
+				locationName: "Manchester",
+				addressLine1: "1 Spinningfields",
+				addressLine2: "Suite 9",
+				postcode: "M3 3EB",
+			},
+			create: {
+				locationName: "Manchester",
+				addressLine1: "1 Spinningfields",
+				addressLine2: "Suite 9",
+				postcode: "M3 3EB",
+			},
+		}),
+		prisma.location.upsert({
+			where: { locationName: "Edinburgh" },
+			update: {
+				locationName: "Edinburgh",
+				addressLine1: "7 Castle Terrace",
+				addressLine2: null,
+				postcode: "EH1 2DP",
+			},
+			create: {
+				locationName: "Edinburgh",
+				addressLine1: "7 Castle Terrace",
+				addressLine2: null,
+				postcode: "EH1 2DP",
+			},
+		}),
+		prisma.location.upsert({
+			where: { locationName: "Remote" },
+			update: {
+				locationName: "Remote",
+				addressLine1: "Remote Workforce Hub",
+				addressLine2: null,
+				postcode: "REMOTE",
+			},
+			create: {
+				locationName: "Remote",
+				addressLine1: "Remote Workforce Hub",
+				addressLine2: null,
+				postcode: "REMOTE",
+			},
+		}),
+	]);
 
 	// Create a test user
 	const passwordHash = await argon2.hash("password");
@@ -160,7 +167,7 @@ async function main() {
 	});
 
 	// Capabilities
-	const [engineering, data, cloud, security, delivery] = await Promise.all([
+	const [engineering, _data, cloud, security, delivery] = await Promise.all([
 		prisma.capability.upsert({
 			where: { capabilityName: "Software Engineering" },
 			update: {},

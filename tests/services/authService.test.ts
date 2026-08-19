@@ -1,6 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { AuthError } from "../../src/errors/authError.ts";
-import { ConflictError } from "../../src/errors/conflictError.ts";
 import { AuthService } from "../../src/services/authService.ts";
 
 const { mockFindUnique, mockCreate, mockHash, mockVerify, mockSign } =

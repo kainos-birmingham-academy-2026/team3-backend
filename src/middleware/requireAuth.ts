@@ -14,7 +14,7 @@ export const requireAuth: RequestHandler = (req, res, next) => {
 	const authHeader = req.header("authorization");
 
 	// Return a generic 401 so we do not leak token parsing details.
-	if (!authHeader || !authHeader.startsWith("Bearer ")) {
+	if (!authHeader?.startsWith("Bearer ")) {
 		return res.status(401).json({ message: TOKEN_ERROR });
 	}
 

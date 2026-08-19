@@ -1,12 +1,11 @@
 import { NotFoundError } from "error-lib";
-import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { JobRolesController } from "../../src/controllers/jobRolesController.js";
 import { ConflictError } from "../../src/errors/conflictError.js";
 import type { JobRolesService } from "../../src/services/jobRolesService.js";
 
-const CREATED_AT = new Date("2026-01-01T10:00:00.000Z");
-const UPDATED_AT = new Date("2026-01-02T10:00:00.000Z");
+const _CREATED_AT = new Date("2026-01-01T10:00:00.000Z");
+const _UPDATED_AT = new Date("2026-01-02T10:00:00.000Z");
 
 const createMockResponse = () => {
 	const res = {

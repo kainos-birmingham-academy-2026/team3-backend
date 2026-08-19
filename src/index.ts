@@ -39,7 +39,7 @@ app.use("/teapot", teapotRouter);
  *               $ref: '#/components/schemas/RootResponse'
  */
 
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
 	res.json({ message: "Welcome to your API!" });
 });
 
@@ -59,7 +59,7 @@ app.get("/", (req, res) => {
  *               $ref: '#/components/schemas/HealthResponse'
  */
 
-app.get("/health", (req, res) => {
+app.get("/health", (_req, res) => {
 	res.json({ status: "UP", timestamp: new Date().toISOString() });
 });
 
