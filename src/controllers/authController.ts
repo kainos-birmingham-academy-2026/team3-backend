@@ -34,7 +34,7 @@ export class AuthController {
 		}
 	}
 
-	private handleError(error: any, res: Response): Response {
+	private handleError(error: unknown, res: Response): Response {
 		if (error instanceof AuthError) {
 			return res.status(error.statusCode).json({ message: error.message });
 		}

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Prisma } from "../../src/generated/prisma/client.js";
 import { JobApplicationAdminService } from "../../src/services/jobApplicationAdminService";
 
 const {
@@ -43,7 +44,7 @@ describe("jobApplicationAdminService", () => {
 		vi.clearAllMocks();
 
 		mockTransaction.mockImplementation(
-			async (callback: (tx: any) => Promise<unknown>) =>
+			async (callback: (tx: Prisma.TransactionClient) => Promise<unknown>) =>
 				callback({
 					application: {
 						findFirst: mockFindFirst,

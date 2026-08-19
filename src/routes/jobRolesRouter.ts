@@ -211,7 +211,7 @@ jobRolesRouter.get("", (req: R, res: Res) => {
 jobRolesRouter.get(
 	"/:id",
 	validateParams(IdParamSchema),
-	(req: R, res: Res) => {
+	(req: R<{ id: string }>, res: Res) => {
 		controller.getById(req, res);
 	},
 );
@@ -313,7 +313,7 @@ jobRolesRouter.patch(
 	allowRoles([USER_ROLES.ADMIN]),
 	validateParams(IdParamSchema),
 	validateBody(UpdateJobRoleSchema),
-	(req: R, res: Res) => {
+	(req: R<{ id: string }>, res: Res) => {
 		controller.updateJobRole(req, res);
 	},
 );
@@ -427,7 +427,7 @@ jobRolesRouter.post(
 	allowRoles([USER_ROLES.ADMIN, USER_ROLES.USER]),
 	validateParams(IdParamSchema),
 	validateBody(CreateApplicationSchema),
-	(req: R, res: Res) => {
+	(req: R<{ id: string }>, res: Res) => {
 		controller.createApplication(req, res);
 	},
 );

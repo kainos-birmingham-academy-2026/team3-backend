@@ -34,7 +34,9 @@ function toJobRoleDomain(row: JobRoleRow): JobRole {
 	);
 }
 
-function toApplicationDomain(row: any): JobRoleApplication {
+function toApplicationDomain(
+	row: Prisma.ApplicationGetPayload<Record<string, never>>,
+): JobRoleApplication {
 	return new JobRoleApplication(
 		row.applicationId,
 		row.jobRoleId,
@@ -163,7 +165,7 @@ export class JobRoleDao {
 	}
 
 	//get status, band, capability, location for job role creation form
-	async getStatus(): Promise<any[]> {
+	async getStatus(): Promise<Array<{ statusId: number; statusName: string }>> {
 		const rows = await prisma.status.findMany();
 		return rows.map((row) => ({
 			statusId: row.statusId,
@@ -171,12 +173,14 @@ export class JobRoleDao {
 		}));
 	}
 
-	async getBands(): Promise<any[]> {
+	async getBands(): Promise<Array<{ bandId: number; bandName: string }>> {
 		const rows = await prisma.band.findMany();
 		return rows.map((row) => ({ bandId: row.bandId, bandName: row.bandName }));
 	}
 
-	async getCapabilities(): Promise<any[]> {
+	async getCapabilities(): Promise<
+		Array<{ capabilityId: number; capabilityName: string }>
+	> {
 		const rows = await prisma.capability.findMany();
 		return rows.map((row) => ({
 			capabilityId: row.capabilityId,
@@ -184,7 +188,15 @@ export class JobRoleDao {
 		}));
 	}
 
-	async getLocations(): Promise<any[]> {
+	async getLocations(): Promise<
+		Array<{
+			locationId: number;
+			locationName: string;
+			addressLine1: string;
+			addressLine2: string | null;
+			postcode: string;
+		}>
+	> {
 		const rows = await prisma.location.findMany();
 		return rows.map((row) => ({
 			locationId: row.locationId,

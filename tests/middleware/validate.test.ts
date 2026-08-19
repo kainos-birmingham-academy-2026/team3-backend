@@ -1,3 +1,4 @@
+import type { NextFunction, Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { validateBody, validateParams } from "../../src/middleware/validate.ts";
@@ -31,7 +32,11 @@ describe("validate middleware", () => {
 		};
 		const middleware = validateBody(schema);
 
-		middleware(req as any, res as any, nextSpy as any);
+		middleware(
+			req as unknown as Request,
+			res as unknown as Response,
+			nextSpy as unknown as NextFunction,
+		);
 
 		expect(nextSpy).toHaveBeenCalledTimes(1);
 		expect(statusSpy).not.toHaveBeenCalled();
@@ -47,7 +52,11 @@ describe("validate middleware", () => {
 		};
 		const middleware = validateBody(schema);
 
-		middleware(req as any, res as any, nextSpy as any);
+		middleware(
+			req as unknown as Request,
+			res as unknown as Response,
+			nextSpy as unknown as NextFunction,
+		);
 
 		expect(nextSpy).not.toHaveBeenCalled();
 		expect(statusSpy).toHaveBeenCalledWith(400);
@@ -72,7 +81,11 @@ describe("validate middleware", () => {
 		};
 		const middleware = validateBody(schema);
 
-		middleware(req as any, res as any, nextSpy as any);
+		middleware(
+			req as unknown as Request,
+			res as unknown as Response,
+			nextSpy as unknown as NextFunction,
+		);
 
 		expect(nextSpy).toHaveBeenCalledTimes(1);
 		expect(req.body).toEqual({ count: 42 });
@@ -85,7 +98,11 @@ describe("validate middleware", () => {
 		};
 		const middleware = validateParams(schema);
 
-		middleware(req as any, res as any, nextSpy as any);
+		middleware(
+			req as unknown as Request,
+			res as unknown as Response,
+			nextSpy as unknown as NextFunction,
+		);
 
 		expect(nextSpy).not.toHaveBeenCalled();
 		expect(statusSpy).toHaveBeenCalledWith(400);
@@ -103,7 +120,11 @@ describe("validate middleware", () => {
 		};
 		const middleware = validateParams(schema);
 
-		middleware(req as any, res as any, nextSpy as any);
+		middleware(
+			req as unknown as Request,
+			res as unknown as Response,
+			nextSpy as unknown as NextFunction,
+		);
 
 		expect(nextSpy).toHaveBeenCalledTimes(1);
 		expect(statusSpy).not.toHaveBeenCalled();
