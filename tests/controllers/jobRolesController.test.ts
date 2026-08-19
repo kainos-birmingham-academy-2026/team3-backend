@@ -29,6 +29,7 @@ describe("JobRolesController", () => {
 		findById: vi.fn(),
 		createJobRole: vi.fn(),
 		updateJobRole: vi.fn(),
+		deleteJobRole: vi.fn(),
 		createApplication: vi.fn(),
 		getStatus: vi.fn(),
 		getBands: vi.fn(),
@@ -84,6 +85,33 @@ describe("JobRolesController", () => {
 
 			expect(res.status).toHaveBeenCalledWith(500);
 			expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
+		});
+	});
+
+	describe("deleteJobRole", () => {
+		it("should return 204 when the job role is deleted", async () => {
+			const req = { params: { id: "1" } };
+			const res = createMockResponse();
+			vi.mocked(mockService.deleteJobRole).mockResolvedValue();
+
+			await controller.deleteJobRole(req as never, res as never);
+
+			expect(mockService.deleteJobRole).toHaveBeenCalledWith(1);
+			expect(res.status).toHaveBeenCalledWith(204);
+			expect(res.send).toHaveBeenCalledWith();
+		});
+
+		it("should return 404 when the job role does not exist", async () => {
+			const req = { params: { id: "999" } };
+			const res = createMockResponse();
+			vi.mocked(mockService.deleteJobRole).mockRejectedValue(
+				new NotFoundError("JobRole with id 999 not found"),
+			);
+
+			await controller.deleteJobRole(req as never, res as never);
+
+			expect(res.status).toHaveBeenCalledWith(404);
+			expect(res.json).toHaveBeenCalledWith({ error: "JobRole with id 999 not found" });
 		});
 	});
 
@@ -373,10 +401,10 @@ describe("JobRolesController", () => {
 			["getBands", "Engineer", "getBands"],
 			["getCapabilities", "Software", "getCapabilities"],
 			["getLocations", "Birmingham", "getLocations"],
-		])("should return 200 with %s data", async (method, name, serviceMethod) => {
+		] as const)("should return 200 with %s data", async (method, name, serviceMethod) => {
 			const req = {};
 			const res = createMockResponse();
-			vi.mocked(mockService[serviceMethod]).mockResolvedValue([{ name }]);
+			vi.mocked(mockService[serviceMethod]).mockResolvedValue([{ name }] as never);
 
 			await controller[method](req as never, res as never);
 
@@ -389,7 +417,7 @@ describe("JobRolesController", () => {
 			["getBands", "No bands found"],
 			["getCapabilities", "No capabilities found"],
 			["getLocations", "No locations found"],
-		])("should return 404 when %s has no data", async (method, message) => {
+		] as const)("should return 404 when %s has no data", async (method, message) => {
 			const req = {};
 			const res = createMockResponse();
 			vi.mocked(mockService[method]).mockRejectedValue(new NotFoundError(message));
@@ -400,7 +428,7 @@ describe("JobRolesController", () => {
 			expect(res.json).toHaveBeenCalledWith({ error: message });
 		});
 
-		it.each(["getStatus", "getBands", "getCapabilities", "getLocations"])(
+		it.each(["getStatus", "getBands", "getCapabilities", "getLocations"] as const)(
 			"should return 500 when %s fails unexpectedly",
 			async (method) => {
 				const req = {};

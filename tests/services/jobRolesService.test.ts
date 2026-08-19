@@ -4,6 +4,7 @@ const mockDao = {
 	findAll: vi.fn(),
 	findById: vi.fn(),
 	updateJobRole: vi.fn(),
+	deleteJobRole: vi.fn(),
 	createApplication: vi.fn(),
 	findApplicationByUserIdAndJobRoleId: vi.fn(),
 	getStatus: vi.fn(),
@@ -26,6 +27,7 @@ vi.mock("../../src/models/jobRoleDao.js", () => ({
 		findAll = mockDao.findAll;
 		findById = mockDao.findById;
 		updateJobRole = mockDao.updateJobRole;
+		deleteJobRole = mockDao.deleteJobRole;
 		createApplication = mockDao.createApplication;
 		findApplicationByUserIdAndJobRoleId = mockDao.findApplicationByUserIdAndJobRoleId;
 		getStatus = mockDao.getStatus;
@@ -153,6 +155,25 @@ describe("JobRolesService", () => {
 			mockDao.findById.mockResolvedValue(null);
 
 			await expect(service.findById(999)).rejects.toThrow(NotFoundError);
+		});
+	});
+
+	describe("deleteJobRole", () => {
+		it("should delete an existing job role", async () => {
+			mockDao.findById.mockResolvedValue(jobRole1);
+			mockDao.deleteJobRole.mockResolvedValue(undefined);
+
+			await service.deleteJobRole(1);
+
+			expect(mockDao.findById).toHaveBeenCalledWith(1);
+			expect(mockDao.deleteJobRole).toHaveBeenCalledWith(1);
+		});
+
+		it("should throw NotFoundError without deleting a missing role", async () => {
+			mockDao.findById.mockResolvedValue(null);
+
+			await expect(service.deleteJobRole(999)).rejects.toThrow("JobRole with id 999 not found");
+			expect(mockDao.deleteJobRole).not.toHaveBeenCalled();
 		});
 	});
 

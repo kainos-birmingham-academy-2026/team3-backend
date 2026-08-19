@@ -335,6 +335,42 @@ jobRolesRouter.patch(
 
 /**
  * @openapi
+ * /job-roles/{id}:
+ *   delete:
+ *     tags: [Job Roles]
+ *     summary: Delete a job role
+ *     description: Admin-only endpoint. Deletes a job role and its associated applications.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *     responses:
+ *       204:
+ *         description: Job role deleted
+ *       401:
+ *         description: Missing or invalid token
+ *       403:
+ *         description: Forbidden for non-admin roles
+ *       404:
+ *         description: Job role not found
+ */
+jobRolesRouter.delete(
+	'/:id',
+	requireAuth,
+	allowRoles([USER_ROLES.ADMIN]),
+	validateParams(IdParamSchema),
+	(req: R, res: Res) => {
+		controller.deleteJobRole(req, res);
+	},
+);
+
+/**
+ * @openapi
  * /job-roles/{id}/apply:
  *   post:
  *     tags: [Job Roles]

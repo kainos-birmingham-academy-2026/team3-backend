@@ -94,6 +94,21 @@ export class JobRolesController {
         }
     }
 
+    async deleteJobRole(req: Request, res: Response) {
+        const idParam = req.params.id;
+        const jobRoleId = parseInt(Array.isArray(idParam) ? idParam[0] : idParam, 10);
+
+        try {
+            await this.service.deleteJobRole(jobRoleId);
+            return res.status(204).send();
+        } catch (error) {
+            if (error instanceof NotFoundError) {
+                return res.status(404).json({ error: error.message });
+            }
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
+
     //get status, band, capability, location for job role creation form
     async getStatus(req: Request, res: Response) {
         try {

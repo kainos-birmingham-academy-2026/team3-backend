@@ -49,6 +49,15 @@ export class JobRolesService {
         return this.jobRoleMapper.jobRoleToDetailedResponse(jobRole);
     }
 
+    async deleteJobRole(jobRoleId: number): Promise<void> {
+        const existingJobRole = await this.jobRoleDao.findById(jobRoleId);
+        if (!existingJobRole) {
+            throw new NotFoundError(`JobRole with id ${jobRoleId} not found`);
+        }
+
+        await this.jobRoleDao.deleteJobRole(jobRoleId);
+    }
+
     async createApplication(jobRoleId: number, userId: number, data: CreateApplicationRequestDto): Promise<JobRoleApplication> {
         const jobRole = await this.jobRoleDao.findById(jobRoleId);
         if (!jobRole) {
