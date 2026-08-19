@@ -21,9 +21,9 @@ export class JobRolesController {
         }
     }
 
-    async getById(req: Request, res: Response) {
+    async getById(req: Request<{ id: string }>, res: Response) {
         const idParam = req.params.id;
-        const jobRoleId = parseInt(Array.isArray(idParam) ? idParam[0] : idParam, 10);
+        const jobRoleId = parseInt(idParam, 10);
         // This is redundant with validation middleware but kept as a defensive guard.
         if (isNaN(jobRoleId)) {
             return res.status(400).json({ error: 'Invalid job role ID' });
@@ -40,9 +40,9 @@ export class JobRolesController {
         }
     }
 
-    async createApplication(req: Request, res: Response) {
+    async createApplication(req: Request<{ id: string }>, res: Response) {
         const idParam = req.params.id;
-        const jobRoleId = parseInt(Array.isArray(idParam) ? idParam[0] : idParam, 10);
+        const jobRoleId = parseInt(idParam, 10);
         //this is unnecessary due to validation middleware, but required for error handling 
         const userId = res.locals.authUser?.userId;
         if (!userId) {
@@ -78,9 +78,9 @@ export class JobRolesController {
         }
     }
 
-    async updateJobRole(req: Request, res: Response) {
+    async updateJobRole(req: Request<{ id: string }>, res: Response) {
         const idParam = req.params.id;
-        const jobRoleId = parseInt(Array.isArray(idParam) ? idParam[0] : idParam, 10);
+        const jobRoleId = parseInt(idParam, 10);
         const payload = req.body as UpdateJobRoleRequestDto;
 
         try {
