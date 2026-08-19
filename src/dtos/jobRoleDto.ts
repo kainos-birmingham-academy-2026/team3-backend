@@ -8,10 +8,10 @@ export const IdParamSchema = z.object({
 });
 
 export const CreateJobRoleSchema = z.object({
-	roleName: z.string().trim().min(1, "Role name is required"),
+	roleName: z.string().trim().min(1, "Role name is required").max(100, "Role name must be 100 characters or fewer"),
 	description: z.string().trim().min(1, "Description is required"),
 	responsibilities: z.string().trim().min(1, "Responsibilities are required"),
-	sharepointUrl: z.url("SharePoint URL must be a valid URL"),
+	sharepointUrl: z.url("SharePoint URL must be a valid URL").max(255, "SharePoint URL must be 255 characters or fewer"),
 	numberOfOpenPositions: z.coerce
 		.number("Number of open positions must be a number")
 		.int("Number of open positions must be an integer")
@@ -54,6 +54,8 @@ export const CreateJobRoleSchema = z.object({
 	),
 });
 
+export const UpdateJobRoleSchema = CreateJobRoleSchema;
+
 export type IdParamDto = z.infer<typeof IdParamSchema>;
 
 export const CreateApplicationSchema = z.object({
@@ -64,3 +66,4 @@ export const CreateApplicationSchema = z.object({
 
 export type CreateApplicationRequestDto = z.infer<typeof CreateApplicationSchema>;
 export type CreateJobRoleRequestDto = z.infer<typeof CreateJobRoleSchema>;
+export type UpdateJobRoleRequestDto = z.infer<typeof UpdateJobRoleSchema>;

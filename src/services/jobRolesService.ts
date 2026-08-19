@@ -2,7 +2,7 @@ import type { JobRoleResponse } from "../models/jobRoleResponse.ts";
 import { JobRoleDao } from "../models/jobRoleDao.js";
 import type { JobRoleApplication } from "../models/jobRoleApplication.js";
 import { JobRoleMapper } from "../mappers/jobRoleMapper.js";
-import { JobRoleDetailedResponse } from "../models/jobRoleDetailedResponse.js";
+import { JobRoleDetailedResponse } from "../models/JobRoleDetailedResponse.js";
 import { NotFoundError } from "error-lib";
 import { ConflictError } from "../errors/conflictError.js";
 import { CreateApplicationRequestDto } from "../dtos/jobRoleDto.js";
@@ -10,6 +10,7 @@ import { StatusResponse } from "../models/statusResponse.js";
 import { CapabilityResponse } from "../models/capabilityResponse.js";
 import { BandResponse } from "../models/bandResponse.js";
 import { LocationResponse } from "../models/locationResponse.js";
+import type { UpdateJobRoleRequestDto } from "../dtos/jobRoleDto.js";
 
 export class JobRolesService {
     private jobRoleDao: JobRoleDao;
@@ -36,6 +37,16 @@ export class JobRolesService {
     async createJobRole(data: any): Promise<JobRoleResponse> {
         const jobRole = await this.jobRoleDao.createJobRole(data);
         return this.jobRoleMapper.jobRoleToResponse(jobRole);
+    }
+
+    async updateJobRole(jobRoleId: number, data: UpdateJobRoleRequestDto): Promise<JobRoleDetailedResponse> {
+        const existingJobRole = await this.jobRoleDao.findById(jobRoleId);
+        if (!existingJobRole) {
+            throw new NotFoundError(`JobRole with id ${jobRoleId} not found`);
+        }
+
+        const jobRole = await this.jobRoleDao.updateJobRole(jobRoleId, data);
+        return this.jobRoleMapper.jobRoleToDetailedResponse(jobRole);
     }
 
     async createApplication(jobRoleId: number, userId: number, data: CreateApplicationRequestDto): Promise<JobRoleApplication> {

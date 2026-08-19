@@ -6,6 +6,7 @@ vi.mock("../../src/prismaClient.js", () => ({
 			findMany: vi.fn(),
 			findUnique: vi.fn(),
 			create: vi.fn(),
+			update: vi.fn(),
 		},
 		application: {
 			findFirst: vi.fn(),
@@ -194,6 +195,40 @@ describe("JobRoleDao", () => {
 			vi.mocked(prisma.jobRole.create as any).mockRejectedValue(new Error("Create failed"));
 
 			await expect(dao.createJobRole({ roleName: "Role" })).rejects.toThrow("Create failed");
+		});
+	});
+
+	describe("updateJobRole", () => {
+		it("should update editable fields and return a domain object", async () => {
+			const updateData = {
+				roleName: "Lead Software Engineer",
+				description: "Lead delivery",
+				responsibilities: "Coach engineers",
+				sharepointUrl: "https://example.com/lead-role",
+				numberOfOpenPositions: 3,
+				closingDate: new Date("2099-12-31"),
+				capabilityId: 2,
+				bandId: 3,
+				locationId: 4,
+			};
+			vi.mocked(prisma.jobRole.update as any).mockResolvedValue(
+				mockJobRoleRow({ roleName: updateData.roleName }),
+			);
+
+			const result = await dao.updateJobRole(1, updateData);
+
+			expect(prisma.jobRole.update).toHaveBeenCalledWith({
+				where: { jobRoleId: 1 },
+				data: updateData,
+				relationLoadStrategy: "join",
+				include: {
+					status: true,
+					location: true,
+					capability: true,
+					band: true,
+				},
+			});
+			expect(result.roleName).toBe("Lead Software Engineer");
 		});
 	});
 

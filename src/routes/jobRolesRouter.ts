@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { Request as R, Response as Res } from 'express';
 
-import { CreateJobRoleSchema, IdParamSchema, CreateApplicationSchema } from '../dtos/jobRoleDto';
+import { CreateJobRoleSchema, IdParamSchema, CreateApplicationSchema, UpdateJobRoleSchema } from '../dtos/jobRoleDto';
 
 import { JobRolesController } from '../controllers/jobRolesController';
 import { JobRolesService } from '../services/jobRolesService';
@@ -285,6 +285,51 @@ jobRolesRouter.post(
 	validateBody(CreateJobRoleSchema),
 	(req: R, res: Res) => {
 		controller.createJobRole(req, res);
+	},
+);
+
+/**
+ * @openapi
+ * /job-roles/{id}:
+ *   patch:
+ *     tags: [Job Roles]
+ *     summary: Update a job role
+ *     description: Admin-only endpoint. Updates all editable job role fields.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateJobRoleRequest'
+ *     responses:
+ *       200:
+ *         description: Updated job role
+ *       400:
+ *         description: Request validation failed
+ *       401:
+ *         description: Missing or invalid token
+ *       403:
+ *         description: Forbidden for non-admin roles
+ *       404:
+ *         description: Job role not found
+ */
+jobRolesRouter.patch(
+	'/:id',
+	requireAuth,
+	allowRoles([USER_ROLES.ADMIN]),
+	validateParams(IdParamSchema),
+	validateBody(UpdateJobRoleSchema),
+	(req: R, res: Res) => {
+		controller.updateJobRole(req, res);
 	},
 );
 
