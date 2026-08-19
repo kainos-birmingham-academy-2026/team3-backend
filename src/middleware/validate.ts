@@ -2,7 +2,7 @@ import type { RequestHandler } from "express";
 import type { ZodSchema } from "zod";
 
 const formatErrors = (
-	issues: Array<{ path: PropertyKey[]; message: string, code: string }>,
+	issues: Array<{ path: PropertyKey[]; message: string; code: string }>,
 ) => {
 	return issues.map((issue) => ({
 		field: issue.path.join("."),

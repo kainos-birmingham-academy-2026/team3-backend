@@ -10,4 +10,4 @@ class AuthError extends Error {
 	}
 }
 
-export { LOGIN_ERROR, TOKEN_ERROR, AuthError };
+export { AuthError, LOGIN_ERROR, TOKEN_ERROR };

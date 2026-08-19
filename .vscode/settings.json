@@ -1,6 +1,6 @@
 {
-    "prisma.pinToPrisma6": true,
-    "prisma-smart-formatter.typescript.defaultFormatter": "TypeScriptTeam.native-preview",
-    "prisma-smart-formatter.prisma.defaultFormatter": "Prisma.prisma",
-    "postman.settings.dotenv-detection-notification-visibility": false
+	"prisma.pinToPrisma6": true,
+	"prisma-smart-formatter.typescript.defaultFormatter": "TypeScriptTeam.native-preview",
+	"prisma-smart-formatter.prisma.defaultFormatter": "Prisma.prisma",
+	"postman.settings.dotenv-detection-notification-visibility": false
 }

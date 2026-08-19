@@ -1,12 +1,11 @@
+import { NotFoundError } from "error-lib";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { JobRolesController } from "../../src/controllers/jobRolesController.js";
-import { NotFoundError } from "error-lib";
 import { ConflictError } from "../../src/errors/conflictError.js";
 import type { JobRolesService } from "../../src/services/jobRolesService.js";
-import type { Request, Response } from "express";
 
-const CREATED_AT = new Date("2026-01-01T10:00:00.000Z");
-const UPDATED_AT = new Date("2026-01-02T10:00:00.000Z");
+const _CREATED_AT = new Date("2026-01-01T10:00:00.000Z");
+const _UPDATED_AT = new Date("2026-01-02T10:00:00.000Z");
 
 const createMockResponse = () => {
 	const res = {
@@ -111,7 +110,9 @@ describe("JobRolesController", () => {
 			await controller.deleteJobRole(req as never, res as never);
 
 			expect(res.status).toHaveBeenCalledWith(404);
-			expect(res.json).toHaveBeenCalledWith({ error: "JobRole with id 999 not found" });
+			expect(res.json).toHaveBeenCalledWith({
+				error: "JobRole with id 999 not found",
+			});
 		});
 	});
 
@@ -153,12 +154,16 @@ describe("JobRolesController", () => {
 			const req = { params: { id: "999" } };
 			const res = createMockResponse();
 
-			vi.mocked(mockService.findById).mockRejectedValue(new NotFoundError("JobRole with id 999 not found"));
+			vi.mocked(mockService.findById).mockRejectedValue(
+				new NotFoundError("JobRole with id 999 not found"),
+			);
 
 			await controller.getById(req as never, res as never);
 
 			expect(res.status).toHaveBeenCalledWith(404);
-			expect(res.json).toHaveBeenCalledWith({ error: "JobRole with id 999 not found" });
+			expect(res.json).toHaveBeenCalledWith({
+				error: "JobRole with id 999 not found",
+			});
 		});
 
 		it("should return 400 when the id is invalid", async () => {
@@ -258,7 +263,9 @@ describe("JobRolesController", () => {
 			};
 			const res = createMockResponse();
 
-			vi.mocked(mockService.createJobRole).mockRejectedValue(new Error("Database error"));
+			vi.mocked(mockService.createJobRole).mockRejectedValue(
+				new Error("Database error"),
+			);
 
 			await controller.createJobRole(req as never, res as never);
 
@@ -272,7 +279,9 @@ describe("JobRolesController", () => {
 			const req = { params: { id: "1" }, body: { roleName: "Lead Engineer" } };
 			const res = createMockResponse();
 			const updatedJobRole = { jobRoleId: 1, roleName: "Lead Engineer" };
-			vi.mocked(mockService.updateJobRole).mockResolvedValue(updatedJobRole as never);
+			vi.mocked(mockService.updateJobRole).mockResolvedValue(
+				updatedJobRole as never,
+			);
 
 			await controller.updateJobRole(req as never, res as never);
 
@@ -282,7 +291,10 @@ describe("JobRolesController", () => {
 		});
 
 		it("should return 404 when the job role does not exist", async () => {
-			const req = { params: { id: "999" }, body: { roleName: "Lead Engineer" } };
+			const req = {
+				params: { id: "999" },
+				body: { roleName: "Lead Engineer" },
+			};
 			const res = createMockResponse();
 			vi.mocked(mockService.updateJobRole).mockRejectedValue(
 				new NotFoundError("JobRole with id 999 not found"),
@@ -291,7 +303,9 @@ describe("JobRolesController", () => {
 			await controller.updateJobRole(req as never, res as never);
 
 			expect(res.status).toHaveBeenCalledWith(404);
-			expect(res.json).toHaveBeenCalledWith({ error: "JobRole with id 999 not found" });
+			expect(res.json).toHaveBeenCalledWith({
+				error: "JobRole with id 999 not found",
+			});
 		});
 	});
 
@@ -353,7 +367,10 @@ describe("JobRolesController", () => {
 			res.locals = { authUser: { userId: 1 } };
 
 			vi.mocked(mockService.createApplication).mockRejectedValue(
-				new ConflictError(409, "User with id 1 has already applied for JobRole with id 1"),
+				new ConflictError(
+					409,
+					"User with id 1 has already applied for JobRole with id 1",
+				),
 			);
 
 			await controller.createApplication(req as never, res as never);
@@ -386,7 +403,9 @@ describe("JobRolesController", () => {
 			const res = createMockResponse();
 			res.locals = { authUser: { userId: 1 } };
 
-			vi.mocked(mockService.createApplication).mockRejectedValue(new Error("Database error"));
+			vi.mocked(mockService.createApplication).mockRejectedValue(
+				new Error("Database error"),
+			);
 
 			await controller.createApplication(req as never, res as never);
 
@@ -401,44 +420,63 @@ describe("JobRolesController", () => {
 			["getBands", "Engineer", "getBands"],
 			["getCapabilities", "Software", "getCapabilities"],
 			["getLocations", "Birmingham", "getLocations"],
-		] as const)("should return 200 with %s data", async (method, name, serviceMethod) => {
-			const req = {};
-			const res = createMockResponse();
-			vi.mocked(mockService[serviceMethod]).mockResolvedValue([{ name }] as never);
+		] as const)(
+			"should return 200 with %s data",
+			async (method, name, serviceMethod) => {
+				const req = {};
+				const res = createMockResponse();
+				vi.mocked(mockService[serviceMethod]).mockResolvedValue([
+					{ name },
+				] as never);
 
-			await controller[method](req as never, res as never);
+				await controller[method](req as never, res as never);
 
-			expect(res.status).toHaveBeenCalledWith(200);
-			expect(res.json).toHaveBeenCalledWith([{ name }]);
-		});
+				expect(res.status).toHaveBeenCalledWith(200);
+				expect(res.json).toHaveBeenCalledWith([{ name }]);
+			},
+		);
 
 		it.each([
 			["getStatus", "No status found"],
 			["getBands", "No bands found"],
 			["getCapabilities", "No capabilities found"],
 			["getLocations", "No locations found"],
-		] as const)("should return 404 when %s has no data", async (method, message) => {
-			const req = {};
-			const res = createMockResponse();
-			vi.mocked(mockService[method]).mockRejectedValue(new NotFoundError(message));
+		] as const)(
+			"should return 404 when %s has no data",
+			async (method, message) => {
+				const req = {};
+				const res = createMockResponse();
+				vi.mocked(mockService[method]).mockRejectedValue(
+					new NotFoundError(message),
+				);
 
-			await controller[method](req as never, res as never);
+				await controller[method](req as never, res as never);
 
-			expect(res.status).toHaveBeenCalledWith(404);
-			expect(res.json).toHaveBeenCalledWith({ error: message });
-		});
+				expect(res.status).toHaveBeenCalledWith(404);
+				expect(res.json).toHaveBeenCalledWith({ error: message });
+			},
+		);
 
-		it.each(["getStatus", "getBands", "getCapabilities", "getLocations"] as const)(
+		it.each([
+			"getStatus",
+			"getBands",
+			"getCapabilities",
+			"getLocations",
+		] as const)(
 			"should return 500 when %s fails unexpectedly",
 			async (method) => {
 				const req = {};
 				const res = createMockResponse();
-				vi.mocked(mockService[method]).mockRejectedValue(new Error("Database error"));
+				vi.mocked(mockService[method]).mockRejectedValue(
+					new Error("Database error"),
+				);
 
 				await controller[method](req as never, res as never);
 
 				expect(res.status).toHaveBeenCalledWith(500);
-				expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
+				expect(res.json).toHaveBeenCalledWith({
+					error: "Internal Server Error",
+				});
 			},
 		);
 	});

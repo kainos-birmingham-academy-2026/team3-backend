@@ -48,7 +48,11 @@ const controller = new AuthController(new AuthService());
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 
-router.post("/login", validateBody(LoginSchema), controller.login.bind(controller));
+router.post(
+	"/login",
+	validateBody(LoginSchema),
+	controller.login.bind(controller),
+);
 
 /**
  * @openapi
@@ -90,6 +94,10 @@ router.post("/login", validateBody(LoginSchema), controller.login.bind(controlle
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post("/register", validateBody(RegisterSchema), controller.register.bind(controller));
+router.post(
+	"/register",
+	validateBody(RegisterSchema),
+	controller.register.bind(controller),
+);
 
 export default router;

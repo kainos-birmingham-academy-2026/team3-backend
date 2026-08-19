@@ -1,8 +1,7 @@
 import type { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
-import { USER_ROLES, type UserRole } from "./authorise.js";
 import { TOKEN_ERROR } from "../errors/authError.js";
-
+import { USER_ROLES, type UserRole } from "./authorise.js";
 
 interface AuthTokenPayload {
 	userId: number;
@@ -15,7 +14,7 @@ export const requireAuth: RequestHandler = (req, res, next) => {
 	const authHeader = req.header("authorization");
 
 	// Return a generic 401 so we do not leak token parsing details.
-	if (!authHeader || !authHeader.startsWith("Bearer ")) {
+	if (!authHeader?.startsWith("Bearer ")) {
 		return res.status(401).json({ message: TOKEN_ERROR });
 	}
 
@@ -48,8 +47,7 @@ export const requireAuth: RequestHandler = (req, res, next) => {
 		if (
 			typeof payload.userId !== "number" ||
 			typeof payload.email !== "string" ||
-			(payload.role !== USER_ROLES.ADMIN &&
-				payload.role !== USER_ROLES.USER)
+			(payload.role !== USER_ROLES.ADMIN && payload.role !== USER_ROLES.USER)
 		) {
 			return res.status(401).json({ message: TOKEN_ERROR });
 		}

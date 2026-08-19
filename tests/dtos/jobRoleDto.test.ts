@@ -76,13 +76,17 @@ describe("job role DTO schemas", () => {
 			["an invalid closing date", { closingDate: "not-a-date" }],
 			["a past closing date", { closingDate: "2020-01-01T00:00:00.000Z" }],
 		])("should reject %s", (_name, override) => {
-			expect(CreateJobRoleSchema.safeParse({ ...validPayload, ...override }).success).toBe(false);
+			expect(
+				CreateJobRoleSchema.safeParse({ ...validPayload, ...override }).success,
+			).toBe(false);
 		});
 	});
 
 	describe("CreateApplicationSchema", () => {
 		it("should trim a valid CV reference", () => {
-			const result = CreateApplicationSchema.safeParse({ cvText: "  CV-2026-001  " });
+			const result = CreateApplicationSchema.safeParse({
+				cvText: "  CV-2026-001  ",
+			});
 
 			expect(result.success).toBe(true);
 			if (result.success) {
@@ -91,7 +95,9 @@ describe("job role DTO schemas", () => {
 		});
 
 		it("should reject an empty CV reference", () => {
-			expect(CreateApplicationSchema.safeParse({ cvText: "   " }).success).toBe(false);
+			expect(CreateApplicationSchema.safeParse({ cvText: "   " }).success).toBe(
+				false,
+			);
 		});
 	});
 });

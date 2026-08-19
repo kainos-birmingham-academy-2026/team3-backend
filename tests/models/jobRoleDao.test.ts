@@ -23,9 +23,9 @@ vi.mock("../../src/prismaClient.js", () => ({
 	},
 }));
 
+import type { CreateJobRoleRequestDto } from "../../src/dtos/jobRoleDto.js";
 import { JobRoleDao } from "../../src/models/jobRoleDao.js";
 import prisma from "../../src/prismaClient.js";
-import type { CreateJobRoleRequestDto } from "../../src/dtos/jobRoleDto.js";
 
 const mockJobRoleRow = (overrides: Record<string, unknown> = {}) => ({
 	jobRoleId: 1,
@@ -72,7 +72,10 @@ describe("JobRoleDao", () => {
 
 	beforeEach(() => {
 		vi.resetAllMocks();
-		vi.mocked(prisma.status.findUniqueOrThrow as any).mockResolvedValue({
+		vi.mocked(
+			prisma.status
+				.findUniqueOrThrow as unknown as typeof prisma.status.findUniqueOrThrow,
+		).mockResolvedValue({
 			statusId: 2,
 		});
 		dao = new JobRoleDao();
@@ -80,7 +83,9 @@ describe("JobRoleDao", () => {
 
 	describe("findAll", () => {
 		it("should query database using Prisma client", async () => {
-			vi.mocked(prisma.jobRole.findMany as any).mockResolvedValue([]);
+			vi.mocked(
+				prisma.jobRole.findMany as unknown as typeof prisma.jobRole.findMany,
+			).mockResolvedValue([]);
 
 			await dao.findAll();
 
@@ -99,7 +104,9 @@ describe("JobRoleDao", () => {
 		it("should return array of JobRole objects", async () => {
 			const mockJobRoles = [mockJobRoleRow()];
 
-			vi.mocked(prisma.jobRole.findMany as any).mockResolvedValue(mockJobRoles);
+			vi.mocked(
+				prisma.jobRole.findMany as unknown as typeof prisma.jobRole.findMany,
+			).mockResolvedValue(mockJobRoles);
 
 			const result = await dao.findAll();
 
@@ -108,7 +115,9 @@ describe("JobRoleDao", () => {
 		});
 
 		it("should return empty array when no job roles in database", async () => {
-			vi.mocked(prisma.jobRole.findMany as any).mockResolvedValue([]);
+			vi.mocked(
+				prisma.jobRole.findMany as unknown as typeof prisma.jobRole.findMany,
+			).mockResolvedValue([]);
 
 			const result = await dao.findAll();
 
@@ -118,7 +127,9 @@ describe("JobRoleDao", () => {
 
 		it("should throw error when database fails", async () => {
 			const connectionError = new Error("Database connection failed");
-			vi.mocked(prisma.jobRole.findMany as any).mockRejectedValue(connectionError);
+			vi.mocked(
+				prisma.jobRole.findMany as unknown as typeof prisma.jobRole.findMany,
+			).mockRejectedValue(connectionError);
 
 			await expect(dao.findAll()).rejects.toThrow("Database connection failed");
 		});
@@ -127,7 +138,10 @@ describe("JobRoleDao", () => {
 	describe("findById", () => {
 		it("should query database for specific job role", async () => {
 			const mockJobRole = mockJobRoleRow();
-			vi.mocked(prisma.jobRole.findUnique as any).mockResolvedValue(mockJobRole);
+			vi.mocked(
+				prisma.jobRole
+					.findUnique as unknown as typeof prisma.jobRole.findUnique,
+			).mockResolvedValue(mockJobRole);
 
 			await dao.findById(1);
 
@@ -146,7 +160,10 @@ describe("JobRoleDao", () => {
 
 		it("should return JobRole when found", async () => {
 			const mockJobRole = mockJobRoleRow();
-			vi.mocked(prisma.jobRole.findUnique as any).mockResolvedValue(mockJobRole);
+			vi.mocked(
+				prisma.jobRole
+					.findUnique as unknown as typeof prisma.jobRole.findUnique,
+			).mockResolvedValue(mockJobRole);
 
 			const result = await dao.findById(1);
 
@@ -155,7 +172,10 @@ describe("JobRoleDao", () => {
 		});
 
 		it("should return null when job role not found", async () => {
-			vi.mocked(prisma.jobRole.findUnique as any).mockResolvedValue(null);
+			vi.mocked(
+				prisma.jobRole
+					.findUnique as unknown as typeof prisma.jobRole.findUnique,
+			).mockResolvedValue(null);
 
 			const result = await dao.findById(999);
 
@@ -178,7 +198,9 @@ describe("JobRoleDao", () => {
 				locationId: 1,
 			};
 
-			vi.mocked(prisma.jobRole.create as any).mockResolvedValue(mockJobRole);
+			vi.mocked(
+				prisma.jobRole.create as unknown as typeof prisma.jobRole.create,
+			).mockResolvedValue(mockJobRole);
 
 			const result = await dao.createJobRole(createData);
 
@@ -204,7 +226,9 @@ describe("JobRoleDao", () => {
 		});
 
 		it("should propagate database errors", async () => {
-			vi.mocked(prisma.jobRole.create as any).mockRejectedValue(new Error("Create failed"));
+			vi.mocked(
+				prisma.jobRole.create as unknown as typeof prisma.jobRole.create,
+			).mockRejectedValue(new Error("Create failed"));
 			const createData: CreateJobRoleRequestDto = {
 				roleName: "Role",
 				description: "Role description",
@@ -216,7 +240,9 @@ describe("JobRoleDao", () => {
 				locationId: 1,
 			};
 
-			await expect(dao.createJobRole(createData)).rejects.toThrow("Create failed");
+			await expect(dao.createJobRole(createData)).rejects.toThrow(
+				"Create failed",
+			);
 		});
 	});
 
@@ -233,9 +259,9 @@ describe("JobRoleDao", () => {
 				bandId: 3,
 				locationId: 4,
 			};
-			vi.mocked(prisma.jobRole.update as any).mockResolvedValue(
-				mockJobRoleRow({ roleName: updateData.roleName }),
-			);
+			vi.mocked(
+				prisma.jobRole.update as unknown as typeof prisma.jobRole.update,
+			).mockResolvedValue(mockJobRoleRow({ roleName: updateData.roleName }));
 
 			const result = await dao.updateJobRole(1, updateData);
 
@@ -256,7 +282,9 @@ describe("JobRoleDao", () => {
 
 	describe("deleteJobRole", () => {
 		it("should delete a job role by ID", async () => {
-			vi.mocked(prisma.jobRole.delete as any).mockResolvedValue(mockJobRoleRow());
+			vi.mocked(
+				prisma.jobRole.delete as unknown as typeof prisma.jobRole.delete,
+			).mockResolvedValue(mockJobRoleRow());
 
 			await dao.deleteJobRole(1);
 
@@ -274,7 +302,10 @@ describe("JobRoleDao", () => {
 				userId: 3,
 				cvText: "CV-2026-001",
 			};
-			vi.mocked(prisma.application.findFirst as any).mockResolvedValue(application);
+			vi.mocked(
+				prisma.application
+					.findFirst as unknown as typeof prisma.application.findFirst,
+			).mockResolvedValue(application);
 
 			const result = await dao.findApplicationByUserIdAndJobRoleId(3, 2);
 
@@ -285,7 +316,10 @@ describe("JobRoleDao", () => {
 		});
 
 		it("should return null when no application exists", async () => {
-			vi.mocked(prisma.application.findFirst as any).mockResolvedValue(null);
+			vi.mocked(
+				prisma.application
+					.findFirst as unknown as typeof prisma.application.findFirst,
+			).mockResolvedValue(null);
 
 			const result = await dao.findApplicationByUserIdAndJobRoleId(3, 999);
 
@@ -298,14 +332,21 @@ describe("JobRoleDao", () => {
 			const jobRoleId = 2;
 			const userId = 3;
 			const applicationData = { cvText: "CV-2026-001" };
-			vi.mocked(prisma.application.create as any).mockResolvedValue({
+			vi.mocked(
+				prisma.application
+					.create as unknown as typeof prisma.application.create,
+			).mockResolvedValue({
 				applicationId: 1,
 				jobRoleId,
 				userId,
 				...applicationData,
 			});
 
-			const result = await dao.createApplication(jobRoleId, userId, applicationData);
+			const result = await dao.createApplication(
+				jobRoleId,
+				userId,
+				applicationData,
+			);
 
 			expect(prisma.application.create).toHaveBeenCalledWith({
 				data: { jobRoleId, userId, ...applicationData },
@@ -317,16 +358,28 @@ describe("JobRoleDao", () => {
 		});
 
 		it("should propagate database errors", async () => {
-			vi.mocked(prisma.application.create as any).mockRejectedValue(new Error("Create failed"));
+			vi.mocked(
+				prisma.application
+					.create as unknown as typeof prisma.application.create,
+			).mockRejectedValue(new Error("Create failed"));
 
-			await expect(dao.createApplication(2, 3, { cvText: "CV-2026-001" })).rejects.toThrow("Create failed");
+			await expect(
+				dao.createApplication(2, 3, { cvText: "CV-2026-001" }),
+			).rejects.toThrow("Create failed");
 		});
 	});
 
 	describe("lookup methods", () => {
 		it("should return status lookup values", async () => {
-			vi.mocked(prisma.status.findMany as any).mockResolvedValue([
-				{ statusId: 1, statusName: "OPEN", createdAt: new Date(), updatedAt: new Date() },
+			vi.mocked(
+				prisma.status.findMany as unknown as typeof prisma.status.findMany,
+			).mockResolvedValue([
+				{
+					statusId: 1,
+					statusName: "OPEN",
+					createdAt: new Date(),
+					updatedAt: new Date(),
+				},
 			]);
 
 			const result = await dao.getStatus();
@@ -336,8 +389,15 @@ describe("JobRoleDao", () => {
 		});
 
 		it("should return band lookup values", async () => {
-			vi.mocked(prisma.band.findMany as any).mockResolvedValue([
-				{ bandId: 2, bandName: "Engineer", createdAt: new Date(), updatedAt: new Date() },
+			vi.mocked(
+				prisma.band.findMany as unknown as typeof prisma.band.findMany,
+			).mockResolvedValue([
+				{
+					bandId: 2,
+					bandName: "Engineer",
+					createdAt: new Date(),
+					updatedAt: new Date(),
+				},
 			]);
 
 			const result = await dao.getBands();
@@ -347,8 +407,16 @@ describe("JobRoleDao", () => {
 		});
 
 		it("should return capability lookup values", async () => {
-			vi.mocked(prisma.capability.findMany as any).mockResolvedValue([
-				{ capabilityId: 3, capabilityName: "Software", createdAt: new Date(), updatedAt: new Date() },
+			vi.mocked(
+				prisma.capability
+					.findMany as unknown as typeof prisma.capability.findMany,
+			).mockResolvedValue([
+				{
+					capabilityId: 3,
+					capabilityName: "Software",
+					createdAt: new Date(),
+					updatedAt: new Date(),
+				},
 			]);
 
 			const result = await dao.getCapabilities();
@@ -358,7 +426,9 @@ describe("JobRoleDao", () => {
 		});
 
 		it("should return location lookup values", async () => {
-			vi.mocked(prisma.location.findMany as any).mockResolvedValue([
+			vi.mocked(
+				prisma.location.findMany as unknown as typeof prisma.location.findMany,
+			).mockResolvedValue([
 				{
 					locationId: 4,
 					locationName: "Birmingham",

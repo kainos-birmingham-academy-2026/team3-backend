@@ -1,9 +1,9 @@
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
 import type { LoginRequestDto, RegisterRequestDto } from "../dtos/authDto.js";
-import prisma from "../prismaClient.js";
 import { AuthError, LOGIN_ERROR } from "../errors/authError.js";
 import { ConflictError } from "../errors/conflictError.js";
+import prisma from "../prismaClient.js";
 
 export class AuthService {
 	public async register(input: RegisterRequestDto): Promise<void> {
@@ -37,7 +37,10 @@ export class AuthService {
 			throw new AuthError(401, LOGIN_ERROR);
 		}
 
-		const validPassword = await argon2.verify(user.passwordHash, input.password);
+		const validPassword = await argon2.verify(
+			user.passwordHash,
+			input.password,
+		);
 
 		if (!validPassword) {
 			throw new AuthError(401, LOGIN_ERROR);
@@ -50,10 +53,7 @@ export class AuthService {
 		}
 
 		const userRecord = user as Record<string, unknown>;
-		const role =
-			userRecord.role === "ADMIN"
-				? "ADMIN"
-				: "USER";
+		const role = userRecord.role === "ADMIN" ? "ADMIN" : "USER";
 
 		return jwt.sign({ userId: user.id, email: user.email, role }, secret, {
 			expiresIn: "1h",

@@ -148,25 +148,33 @@ describe("JobRoleMapper", () => {
 
 	describe("lookup response mappings", () => {
 		it("should map status rows to status responses", () => {
-			const result = mapper.statusToResponse([{ statusId: 1, statusName: "OPEN" }]);
+			const result = mapper.statusToResponse([
+				{ statusId: 1, statusName: "OPEN" },
+			]);
 
 			expect(result).toEqual([{ statusId: 1, statusName: "OPEN" }]);
 		});
 
 		it("should map band rows to band responses", () => {
-			const result = mapper.bandToResponse([{ bandId: 2, bandName: "Engineer" }]);
+			const result = mapper.bandToResponse([
+				{ bandId: 2, bandName: "Engineer" },
+			]);
 
 			expect(result).toEqual([{ bandId: 2, bandName: "Engineer" }]);
 		});
 
 		it("should map capability rows to capability responses", () => {
-			const result = mapper.capabilityToResponse([{ capabilityId: 3, capabilityName: "Software" }]);
+			const result = mapper.capabilityToResponse([
+				{ capabilityId: 3, capabilityName: "Software" },
+			]);
 
 			expect(result).toEqual([{ capabilityId: 3, capabilityName: "Software" }]);
 		});
 
 		it("should map location rows to location responses", () => {
-			const result = mapper.locationToResponse([{ locationId: 4, locationName: "Birmingham" }]);
+			const result = mapper.locationToResponse([
+				{ locationId: 4, locationName: "Birmingham" },
+			]);
 
 			expect(result).toEqual([{ locationId: 4, locationName: "Birmingham" }]);
 		});
