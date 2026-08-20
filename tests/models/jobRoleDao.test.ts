@@ -24,6 +24,10 @@ vi.mock("../../src/prismaClient.js", () => ({
 }));
 
 import type { CreateJobRoleRequestDto } from "../../src/dtos/jobRoleDto.js";
+import {
+	ApplicationStatus,
+	StatusEnum,
+} from "../../src/generated/prisma/enums.js";
 import { JobRoleDao } from "../../src/models/jobRoleDao.js";
 import prisma from "../../src/prismaClient.js";
 
@@ -35,6 +39,10 @@ const mockJobRoleRow = (overrides: Record<string, unknown> = {}) => ({
 	sharepointUrl: "https://sharepoint.example.com/roles/1",
 	numberOfOpenPositions: 2,
 	closingDate: new Date("2026-12-31"),
+	capabilityId: 1,
+	bandId: 1,
+	locationId: 1,
+	statusId: 1,
 	createdAt: new Date("2026-01-01"),
 	updatedAt: new Date("2026-01-02"),
 	location: {
@@ -67,6 +75,17 @@ const mockJobRoleRow = (overrides: Record<string, unknown> = {}) => ({
 	...overrides,
 });
 
+const mockApplicationRow = (overrides: Record<string, unknown> = {}) => ({
+	applicationId: 1,
+	jobRoleId: 2,
+	userId: 3,
+	cvText: "CV-2026-001",
+	applicationStatus: ApplicationStatus.IN_PROGRESS,
+	createdAt: new Date("2026-01-01"),
+	updatedAt: new Date("2026-01-02"),
+	...overrides,
+});
+
 describe("JobRoleDao", () => {
 	let dao: JobRoleDao;
 
@@ -77,6 +96,9 @@ describe("JobRoleDao", () => {
 				.findUniqueOrThrow as unknown as typeof prisma.status.findUniqueOrThrow,
 		).mockResolvedValue({
 			statusId: 2,
+			statusName: StatusEnum.OPEN,
+			createdAt: new Date("2026-01-01"),
+			updatedAt: new Date("2026-01-02"),
 		});
 		dao = new JobRoleDao();
 	});
@@ -296,12 +318,7 @@ describe("JobRoleDao", () => {
 
 	describe("findApplicationByUserIdAndJobRoleId", () => {
 		it("should return an application when one exists", async () => {
-			const application = {
-				applicationId: 1,
-				jobRoleId: 2,
-				userId: 3,
-				cvText: "CV-2026-001",
-			};
+			const application = mockApplicationRow();
 			vi.mocked(
 				prisma.application
 					.findFirst as unknown as typeof prisma.application.findFirst,
@@ -312,7 +329,12 @@ describe("JobRoleDao", () => {
 			expect(prisma.application.findFirst).toHaveBeenCalledWith({
 				where: { userId: 3, jobRoleId: 2 },
 			});
-			expect(result).toEqual(application);
+			expect(result).toEqual({
+				applicationId: 1,
+				jobRoleId: 2,
+				userId: 3,
+				cvText: "CV-2026-001",
+			});
 		});
 
 		it("should return null when no application exists", async () => {
@@ -335,12 +357,9 @@ describe("JobRoleDao", () => {
 			vi.mocked(
 				prisma.application
 					.create as unknown as typeof prisma.application.create,
-			).mockResolvedValue({
-				applicationId: 1,
-				jobRoleId,
-				userId,
-				...applicationData,
-			});
+			).mockResolvedValue(
+				mockApplicationRow({ jobRoleId, userId, ...applicationData }),
+			);
 
 			const result = await dao.createApplication(
 				jobRoleId,

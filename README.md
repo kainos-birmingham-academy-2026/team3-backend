@@ -294,10 +294,12 @@ Authentication error (`401`) example:
 }
 ```
 
-Seeded login user for local testing:
+Seeded login users for local and E2E testing all use the password `password`:
 
-- email: `test@example.com`
-- password: `password`
+- Admin: `test@example.com`
+- Applicants: 15 `USER` accounts are seeded, including `user@example.com`, `alex.johnson@example.com`, and `samira.khan@example.com`
+
+Each applicant has at least one application. The seed includes applications across multiple job roles with `IN_PROGRESS`, `HIRED`, and `REJECTED` statuses. Running `npm run seed` again restores these records to their original states.
 
 ### `POST /api/register`
 
