@@ -137,34 +137,35 @@ async function main() {
 		}),
 	]);
 
-	// Create a test user
+	// Users used by local development and E2E tests
 	const passwordHash = await argon2.hash("password");
 
-	await prisma.user.upsert({
-		where: { email: "test@example.com" },
-		update: {
-			passwordHash,
-			role: "ADMIN",
-		},
-		create: {
-			email: "test@example.com",
-			passwordHash,
-			role: "ADMIN",
-		},
-	});
-
-	await prisma.user.upsert({
-		where: { email: "user@example.com" },
-		update: {
-			passwordHash,
-			role: "USER",
-		},
-		create: {
-			email: "user@example.com",
-			passwordHash,
-			role: "USER",
-		},
-	});
+	const users = await Promise.all(
+		[
+			{ email: "test@example.com", role: "ADMIN" as const },
+			{ email: "user@example.com", role: "USER" as const },
+			{ email: "alex.johnson@example.com", role: "USER" as const },
+			{ email: "samira.khan@example.com", role: "USER" as const },
+			{ email: "jamie.lee@example.com", role: "USER" as const },
+			{ email: "priya.patel@example.com", role: "USER" as const },
+			{ email: "daniel.murphy@example.com", role: "USER" as const },
+			{ email: "chloe.wilson@example.com", role: "USER" as const },
+			{ email: "marcus.brown@example.com", role: "USER" as const },
+			{ email: "sofia.garcia@example.com", role: "USER" as const },
+			{ email: "noah.taylor@example.com", role: "USER" as const },
+			{ email: "aisha.rahman@example.com", role: "USER" as const },
+			{ email: "ethan.clark@example.com", role: "USER" as const },
+			{ email: "grace.evans@example.com", role: "USER" as const },
+			{ email: "leo.martin@example.com", role: "USER" as const },
+			{ email: "maya.thompson@example.com", role: "USER" as const },
+		].map((user) =>
+			prisma.user.upsert({
+				where: { email: user.email },
+				update: { passwordHash, role: user.role },
+				create: { ...user, passwordHash },
+			}),
+		),
+	);
 
 	// Capabilities
 	const [engineering, _data, cloud, security, delivery] = await Promise.all([
@@ -229,16 +230,6 @@ async function main() {
 				create: { bandName: "Principal Engineer" },
 			}),
 		]);
-
-	// Test user
-	await prisma.user.upsert({
-		where: { email: "test@example.com" },
-		update: { passwordHash },
-		create: {
-			email: "test@example.com",
-			passwordHash,
-		},
-	});
 
 	// Job Roles
 	const jobRoleSeedData = [
@@ -381,7 +372,7 @@ async function main() {
 		},
 	];
 
-	await Promise.all(
+	const jobRoles = await Promise.all(
 		jobRoleSeedData.map((jobRole) =>
 			prisma.jobRole.upsert({
 				where: { roleName: jobRole.roleName },
@@ -391,60 +382,145 @@ async function main() {
 		),
 	);
 
-	// Create test applications
-	const jobRoleIds = await prisma.jobRole.findMany({
-		select: { jobRoleId: true },
-	});
+	// Applications cover list, hire, reject, and terminal-state E2E scenarios.
+	const usersByEmail = new Map(users.map((user) => [user.email, user]));
+	const jobRolesByName = new Map(
+		jobRoles.map((jobRole) => [jobRole.roleName, jobRole]),
+	);
+	const cvText =
+		"Experienced engineer with a track record of delivering accessible, reliable services. Skilled in TypeScript, automated testing, cloud platforms, collaborative delivery, and supporting production systems.";
+	const applicationSeedData = [
+		["user@example.com", "Software Engineer", "IN_PROGRESS", "2026-08-14"],
+		[
+			"alex.johnson@example.com",
+			"Software Engineer",
+			"IN_PROGRESS",
+			"2026-08-15",
+		],
+		["samira.khan@example.com", "Software Engineer", "HIRED", "2026-08-12"],
+		["jamie.lee@example.com", "Software Engineer", "REJECTED", "2026-08-11"],
+		[
+			"priya.patel@example.com",
+			"Senior Software Engineer",
+			"IN_PROGRESS",
+			"2026-08-16",
+		],
+		[
+			"daniel.murphy@example.com",
+			"Senior Software Engineer",
+			"IN_PROGRESS",
+			"2026-08-17",
+		],
+		[
+			"alex.johnson@example.com",
+			"Senior Cloud Engineer",
+			"IN_PROGRESS",
+			"2026-08-18",
+		],
+		[
+			"samira.khan@example.com",
+			"Cyber Security Engineer",
+			"IN_PROGRESS",
+			"2026-08-19",
+		],
+		[
+			"jamie.lee@example.com",
+			"Associate Software Engineer",
+			"HIRED",
+			"2026-08-10",
+		],
+		[
+			"priya.patel@example.com",
+			"Trainee Software Engineer",
+			"REJECTED",
+			"2026-08-09",
+		],
+		[
+			"chloe.wilson@example.com",
+			"Software Engineer",
+			"IN_PROGRESS",
+			"2026-08-08",
+		],
+		[
+			"marcus.brown@example.com",
+			"Senior Cloud Engineer",
+			"IN_PROGRESS",
+			"2026-08-07",
+		],
+		["sofia.garcia@example.com", "DevOps Engineer", "HIRED", "2026-08-06"],
+		[
+			"noah.taylor@example.com",
+			"Cyber Security Engineer",
+			"REJECTED",
+			"2026-08-05",
+		],
+		[
+			"aisha.rahman@example.com",
+			"Associate Software Engineer",
+			"IN_PROGRESS",
+			"2026-08-04",
+		],
+		[
+			"ethan.clark@example.com",
+			"Lead Software Engineer",
+			"IN_PROGRESS",
+			"2026-08-03",
+		],
+		[
+			"grace.evans@example.com",
+			"Trainee Software Engineer",
+			"HIRED",
+			"2026-08-02",
+		],
+		[
+			"leo.martin@example.com",
+			"Senior Cyber Security Engineer",
+			"IN_PROGRESS",
+			"2026-08-01",
+		],
+		[
+			"maya.thompson@example.com",
+			"Senior Software Engineer",
+			"REJECTED",
+			"2026-07-31",
+		],
+	] as const;
 
-	const testUserId = (
-		await prisma.user.findUnique({
-			where: { email: "test@example.com" },
-			select: { id: true },
-		})
-	)?.id;
+	await Promise.all(
+		applicationSeedData.map(
+			([email, roleName, applicationStatus, createdAt]) => {
+				const user = usersByEmail.get(email);
+				const jobRole = jobRolesByName.get(roleName);
 
-	if (testUserId && jobRoleIds.length > 0) {
-		const testCvText = `Lagosuchus. Amtosaurus. Ischyrosaurus. Xixiasaurus. Sinoceratops. Changchunsaurus. Kundurosaurus. Cryptovolans. Sinovenator. Heterosaurus. Lisboasaurus. Borogovia. Gideonmantellia. Apatodon. Aviatyrannis. Saurophaganax. Baotianmansaurus. Teyuwasu. Pachycephalosaurus. Galtonia. Sinornithomimus.
+				if (!user || !jobRole) {
+					throw new Error(
+						`Missing seed dependency for ${email} and ${roleName}`,
+					);
+				}
 
-Geminiraptor. Vulcanodon. Banji. Sinucerasaurus. Maiasaura. Osmakasaurus. Inosaurus. Eucercosaurus. Petrobrasaurus. Indosuchus. Anserimimus. Yuanmousaurus. Adeopapposaurus. Abydosaurus. Crichtonsaurus. Prenoceratops. Coronosaurus. Xenoceratops. Shuvuuia. Mirischia. Ojoraptorsaurus. Eotyrannus. Tsaagan. Qinlingosaurus. Epidexipteryx. Gresslyosaurus. Platyceratops. Sinornithoides. Halticosaurus. Siluosaurus. Campylodoniscus. Eocarcharia.
+				const data = {
+					cvText,
+					applicationStatus,
+					createdAt: new Date(createdAt),
+				};
 
-Mirischia. Geminiraptor. Styracosaurus. Chaoyangsaurus. Triassolestes. Elaphrosaurus. Albertonykus. Pyroraptor. Asylosaurus. Austroraptor. Qiupalong. Coelosaurus. Trimucrodon. Xuwulong. Libycosaurus. Gongxianosaurus. Augustia. Nothronychus. Maxakalisaurus. Procerosaurus. Fukuiraptor. Alectrosaurus. Proa. Karongasaurus. Teinurosaurus. Troodon. Krzyzanowskisaurus.
-
-Jiangshanosaurus. Hypselorhachis. Owenodon. Calamosaurus. Saltasaurus. Isisaurus. Cryptodraco. Huaxiaosaurus. Elosaurus. Mandschurosaurus. Jixiangornis. Serendipaceratops. Rioarribasaurus. Agathaumas. Sinocalliopteryx. Cystosaurus. Ferganasaurus. Alectrosaurus. Pellegrinisaurus. Machimosaurus. Suchomimus. Aviatyrannis. Rioarribasaurus. Riojasuchus. Pelecanimimus. Bicentenaria. Chienkosaurus. Therizinosaurus. Valdoraptor. Oohkotokia. Penelopognathus. Iguanacolossus. Heterodontosaurus. Zhuchengceratops. Tianchisaurus. Vulcanodon. Herbstosaurus. Orkoraptor.`;
-
-		const applicationSeedData = [
-			{
-				cvText: testCvText,
-				jobRoleId: jobRoleIds[0].jobRoleId,
-				userId: testUserId,
-			},
-			{
-				cvText: testCvText,
-				jobRoleId: jobRoleIds[1].jobRoleId,
-				userId: testUserId,
-			},
-			{
-				cvText: testCvText,
-				jobRoleId: jobRoleIds[2].jobRoleId,
-				userId: testUserId,
-			},
-		];
-
-		await Promise.all(
-			applicationSeedData.map((application) =>
-				prisma.application.upsert({
+				return prisma.application.upsert({
 					where: {
 						jobRoleId_userId: {
-							jobRoleId: application.jobRoleId,
-							userId: application.userId,
+							jobRoleId: jobRole.jobRoleId,
+							userId: user.id,
 						},
 					},
-					update: { cvText: application.cvText },
-					create: application,
-				}),
-			),
-		);
-	}
+					update: data,
+					create: {
+						...data,
+						jobRoleId: jobRole.jobRoleId,
+						userId: user.id,
+					},
+				});
+			},
+		),
+	);
 
 	console.log("Seed complete.");
 }
