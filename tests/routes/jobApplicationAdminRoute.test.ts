@@ -35,6 +35,11 @@ describe("Admin hire API behaviour", () => {
 		}
 	});
 
+    it("Given the absence of a token, when the admin applications route is requested, then the status code should be 401", async () => {
+     const response = (await request(app).get("/job-applications/admin"));
+     expect(response.status).toBe(401);
+    });
+
 	it("Given a non-admin token, when the admin applications route is requested, then the request is forbidden", async () => {
 		const response = await request(app).get("/job-applications/admin").set("Authorization", `Bearer ${userToken()}`);
 
@@ -85,7 +90,7 @@ describe("Admin hire API behaviour", () => {
 		} as never);
 
 		const response = await request(app)
-			.patch("/job-applications/admin/7/status")
+			.patch("/job-applications/admin/2/status")
 			.set("Authorization", `Bearer ${adminToken()}`)
 			.send({ status: "HIRED" });
 
@@ -93,8 +98,8 @@ describe("Admin hire API behaviour", () => {
 		expect(response.body).toEqual({
 			message: "Applicant hired",
 			application: {
-				applicationId: 7,
-				username: "candidate@example.com",
+				applicationId: 2,
+				username: "test@example.com",
 				status: "HIRED",
 			},
 		});
