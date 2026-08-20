@@ -90,7 +90,7 @@ describe("Admin hire API behaviour", () => {
 		} as never);
 
 		const response = await request(app)
-			.patch("/job-applications/admin/2/status")
+			.patch("/job-applications/admin/7/status")
 			.set("Authorization", `Bearer ${adminToken()}`)
 			.send({ status: "HIRED" });
 
@@ -98,8 +98,8 @@ describe("Admin hire API behaviour", () => {
 		expect(response.body).toEqual({
 			message: "Applicant hired",
 			application: {
-				applicationId: 2,
-				username: "test@example.com",
+				applicationId: 7,
+				username: "candidate@example.com",
 				status: "HIRED",
 			},
 		});
