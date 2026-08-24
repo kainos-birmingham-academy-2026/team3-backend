@@ -47,6 +47,14 @@ JWT_SECRET="replace-with-a-strong-local-secret"
 
 Make sure Docker is running, then start the local Postgres container:
 
+**Important:** If you have a local Postgres instance running (e.g., via Homebrew), stop it first to avoid port conflicts:
+
+```bash
+brew services stop postgresql
+```
+
+Then start the Docker Postgres container:
+
 ```bash
 docker run --name jobRoles-db -e POSTGRES_PASSWORD=password -e POSTGRES_DB=jobRoles -p 5432:5432 -d postgres
 ```
@@ -171,8 +179,8 @@ docker build -t backend:1.0.0 .
 From the host machine, use the database port exposed on `localhost:5432`:
 
 ```bash
-DATABASE_URL='postgresql://postgres:password@localhost:5432/jobRoles?schema=public' npx prisma migrate deploy
-DATABASE_URL='postgresql://postgres:password@localhost:5432/jobRoles?schema=public' npm run seed
+npx prisma migrate deploy
+npm run seed
 ```
 
 ### 5. Run the backend container
