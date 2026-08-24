@@ -47,6 +47,14 @@ JWT_SECRET="replace-with-a-strong-local-secret"
 
 Make sure Docker is running, then start the local Postgres container:
 
+**Important:** If you have a local Postgres instance running (e.g., via Homebrew), stop it first to avoid port conflicts:
+
+```bash
+brew services stop postgresql
+```
+
+Then start the Docker Postgres container:
+
 ```bash
 docker run --name jobRoles-db -e POSTGRES_PASSWORD=password -e POSTGRES_DB=jobRoles -p 5432:5432 -d postgres
 ```
@@ -115,6 +123,87 @@ npm run build
 
 ```bash
 npm start
+```
+
+## Running With Docker
+
+These steps run the backend in Docker with the existing Postgres container and make it reachable by the frontend container.
+
+### 1. Start or create Postgres
+
+If the `jobRoles-db` container already exists, start it:
+
+```bash
+docker start jobRoles-db
+```
+
+If it does not exist yet, create it:
+
+```bash
+docker run --name jobRoles-db -e POSTGRES_PASSWORD=password -e POSTGRES_DB=jobRoles -p 5432:5432 -d postgres
+```
+
+### 2. Create the shared Docker network
+
+```bash
+docker network create team3-network
+docker network connect team3-network jobRoles-db
+```
+
+If either command says the network or connection already exists, that is fine.
+
+### 3. Build the backend image
+
+On a Kainos-managed Mac, export the corporate CA chain first so Prisma can download its Linux engine during the Docker build:
+
+```bash
+security find-certificate -a -c 'KAINOS-ZSCALER G2' -p > "$TMPDIR/kainos-corporate-ca-bundle.crt"
+security find-certificate -a -c 'KAINOS-INSPECTION G2' -p >> "$TMPDIR/kainos-corporate-ca-bundle.crt"
+security find-certificate -a -c 'KAINOS-ROOT-CA G2' -p >> "$TMPDIR/kainos-corporate-ca-bundle.crt"
+```
+
+Then build with the CA bundle as a BuildKit secret:
+
+```bash
+docker build --secret id=corporate_ca,src="$TMPDIR/kainos-corporate-ca-bundle.crt" -t backend:1.0.0 .
+```
+
+On a machine that is not behind Kainos/Zscaler HTTPS inspection, this should be enough:
+
+```bash
+docker build -t backend:1.0.0 .
+```
+
+### 4. Apply migrations and seed data
+
+From the host machine, use the database port exposed on `localhost:5432`:
+
+```bash
+npx prisma migrate deploy
+npm run seed
+```
+
+### 5. Run the backend container
+
+Inside Docker, use the Postgres container name as the database host:
+
+```bash
+docker rm -f team3-backend
+docker run -d \
+  --name team3-backend \
+  --network team3-network \
+  -p 4000:4000 \
+  --env-file .env \
+  -e DATABASE_URL='postgresql://postgres:password@jobRoles-db:5432/jobRoles?schema=public' \
+  backend:1.0.0
+```
+
+### 6. Verify the backend
+
+```bash
+curl http://localhost:4000/health
+curl http://localhost:4000/job-roles
+docker logs team3-backend
 ```
 
 ## Available Scripts
