@@ -8,23 +8,44 @@ on:
 
 jobs:
   test:
+    name: Test and lint
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL != '' && secrets.DATABASE_URL || 'file:./dev.db' }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: "20"
-      - run: npm ci
-      - run: npx prisma generate
-      - run: npm run lint
-      - run: npm run test:coverage
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Generate Prisma client
+        run: npx prisma generate
+      - name: Lint
+        run: npm run lint
+      - name: Run tests with coverage
+        run: npm run test:coverage
 
   build:
+    name: Build container image
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Build container image
-        run: docker build --tag team3-backend:${{ github.sha }} --tag team3-backend:latest .
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build image with registry-free cache
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: |
+            team3-backend:${{ github.sha }}
+            team3-backend:latest
+          cache-from: type=gha,scope=team3-backend
+          cache-to: type=gha,mode=max,scope=team3-backend
