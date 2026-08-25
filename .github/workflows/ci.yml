@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: ["**"]
   pull_request:
-    branches: [main]
+    branches: ["**"]
 
 jobs:
   test:
@@ -20,3 +20,11 @@ jobs:
       - run: npx prisma generate
       - run: npm run lint
       - run: npm run test:coverage
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build container image
+        run: docker build --tag team3-backend:${{ github.sha }} --tag team3-backend:latest .
