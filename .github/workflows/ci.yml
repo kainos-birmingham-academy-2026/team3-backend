@@ -7,6 +7,21 @@ on:
     branches: ["**"]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+env:
+  ACR_NAME: ${{ secrets.ACR_NAME }}
+  IMAGE_NAME: team3-backend
+  TF_STATE_CONTAINER: tfstate
+  TF_STATE_RESOURCE_GROUP: rg-team3-tfstate
+  TF_STATE_STORAGE_ACCOUNT: stteam3tfstate26
+  TF_IN_AUTOMATION: true
+  TF_INPUT: false
+  TF_VAR_environment: dev
+  TF_VAR_location: uksouth
+  TF_VAR_project_name: team3
+
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -16,7 +31,7 @@ jobs:
     name: Test and lint
     runs-on: ubuntu-latest
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL != '' && secrets.DATABASE_URL || 'file:./dev.db' }}
+      DATABASE_URL: file:./dev.db
     steps:
       - name: Check out source
         uses: actions/checkout@v4
@@ -54,3 +69,117 @@ jobs:
             team3-backend:latest
           cache-from: type=gha,scope=team3-backend
           cache-to: type=gha,mode=max,scope=team3-backend
+
+  push-image:
+    name: Push image to ACR
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Sign in to Azure
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        run: |
+          az login --service-principal --username "$AZURE_CLIENT_ID" --password "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
+          az account set --subscription "$AZURE_SUBSCRIPTION_ID"
+      - name: Sign in to ACR
+        run: az acr login --name "$ACR_NAME"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:dev-latest
+          cache-from: type=gha,scope=team3-backend
+          cache-to: type=gha,mode=max,scope=team3-backend
+      - name: Verify image exists in ACR
+        run: az acr repository show --name "$ACR_NAME" --image "${IMAGE_NAME}:${GITHUB_SHA}" --only-show-errors
+
+  terraform-plan:
+    name: Plan dev infrastructure
+    if: github.event_name == 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: infrastructure/environments/dev
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Sign in to Azure
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        run: |
+          az login --service-principal --username "$AZURE_CLIENT_ID" --password "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
+          az account set --subscription "$AZURE_SUBSCRIPTION_ID"
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+      - name: Check Terraform formatting
+        run: terraform fmt -check -recursive ../..
+      - name: Initialize Terraform
+        run: >-
+          terraform init
+          -backend-config="resource_group_name=${TF_STATE_RESOURCE_GROUP}"
+          -backend-config="storage_account_name=${TF_STATE_STORAGE_ACCOUNT}"
+          -backend-config="container_name=${TF_STATE_CONTAINER}"
+          -backend-config="key=team3-backend-dev.tfstate"
+      - name: Validate Terraform
+        run: terraform validate
+      - name: Plan Terraform changes
+        run: terraform plan -no-color
+
+  terraform-deploy:
+    name: Deploy dev infrastructure
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: push-image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: infrastructure/environments/dev
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Sign in to Azure
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        run: |
+          az login --service-principal --username "$AZURE_CLIENT_ID" --password "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
+          az account set --subscription "$AZURE_SUBSCRIPTION_ID"
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+      - name: Check Terraform formatting
+        run: terraform fmt -check -recursive ../..
+      - name: Initialize Terraform
+        run: >-
+          terraform init
+          -backend-config="resource_group_name=${TF_STATE_RESOURCE_GROUP}"
+          -backend-config="storage_account_name=${TF_STATE_STORAGE_ACCOUNT}"
+          -backend-config="container_name=${TF_STATE_CONTAINER}"
+          -backend-config="key=team3-backend-dev.tfstate"
+      - name: Validate Terraform
+        run: terraform validate
+      - name: Create Terraform plan
+        run: terraform plan -out=tfplan
+      - name: Apply Terraform plan
+        run: terraform apply -auto-approve tfplan

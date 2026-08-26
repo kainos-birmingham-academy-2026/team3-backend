@@ -18,6 +18,21 @@ pnpm-debug.log*
 dist/
 build/
 coverage/
+
+# Terraform runtime files
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
  
 # Cache and temp files
 .cache/
