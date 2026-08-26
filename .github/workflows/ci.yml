@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 env:
-  ACR_NAME: ${{ secrets.ACR_NAME }}
+  ACR_NAME: acraiacademy26
   IMAGE_NAME: team3-backend
   TF_STATE_CONTAINER: tfstate
   TF_STATE_RESOURCE_GROUP: rg-team3-tfstate
