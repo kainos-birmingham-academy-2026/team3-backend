@@ -25,3 +25,7 @@ the service principal only the roles it needs:
 
 The remote-state resource group, storage account, and container must already
 exist before the workflow's first run.
+
+The dev root imports the existing `rg-team3-dev` resource group into Terraform
+state. The service principal therefore needs `Contributor` only on that resource
+group rather than across the subscription.
