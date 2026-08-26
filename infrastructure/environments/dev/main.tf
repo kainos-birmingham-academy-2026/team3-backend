@@ -36,6 +36,19 @@ module "managed_identity" {
   }
 }
 
+module "container_app_environment" {
+  source = "../../modules/container-app-environment"
+
+  name                = "cae-${var.project_name}-${var.environment}"
+  location            = var.location
+  resource_group_name = module.resource_group.name
+  tags = {
+    environment = var.environment
+    managed_by  = "terraform"
+    project     = var.project_name
+  }
+}
+
 import {
   to = module.resource_group.azurerm_resource_group.this
   id = "/subscriptions/${var.subscription_id}/resourceGroups/rg-${var.project_name}-${var.environment}"
