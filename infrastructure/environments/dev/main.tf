@@ -23,6 +23,19 @@ module "key_vault" {
   }
 }
 
+module "managed_identity" {
+  source = "../../modules/managed-identity"
+
+  name                = "id-${var.project_name}-backend-${var.environment}"
+  location            = var.location
+  resource_group_name = module.resource_group.name
+  tags = {
+    environment = var.environment
+    managed_by  = "terraform"
+    project     = var.project_name
+  }
+}
+
 import {
   to = module.resource_group.azurerm_resource_group.this
   id = "/subscriptions/${var.subscription_id}/resourceGroups/rg-${var.project_name}-${var.environment}"
