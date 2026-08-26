@@ -17,3 +17,13 @@ variable "subscription_id" {
   description = "Azure subscription containing the existing resource group."
   type        = string
 }
+
+variable "acr_name" {
+  description = "Name of the existing shared Azure Container Registry."
+  type        = string
+}
+
+variable "acr_resource_group_name" {
+  description = "Name of the resource group containing the shared Azure Container Registry."
+  type        = string
+}
