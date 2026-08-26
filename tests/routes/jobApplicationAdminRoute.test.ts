@@ -35,13 +35,15 @@ describe("Admin hire API behaviour", () => {
 		}
 	});
 
-    it("Given the absence of a token, when the admin applications route is requested, then the status code should be 401", async () => {
-     const response = (await request(app).get("/job-applications/admin"));
-     expect(response.status).toBe(401);
-    });
+	it("Given the absence of a token, when the admin applications route is requested, then the status code should be 401", async () => {
+		const response = await request(app).get("/job-applications/admin");
+		expect(response.status).toBe(401);
+	});
 
 	it("Given a non-admin token, when the admin applications route is requested, then the request is forbidden", async () => {
-		const response = await request(app).get("/job-applications/admin").set("Authorization", `Bearer ${userToken()}`);
+		const response = await request(app)
+			.get("/job-applications/admin")
+			.set("Authorization", `Bearer ${userToken()}`);
 
 		expect(response.status).toBe(403);
 		expect(response.body).toEqual({ message: "Forbidden" });
@@ -66,11 +68,14 @@ describe("Admin hire API behaviour", () => {
 			},
 		];
 
-		vi.spyOn(JobApplicationAdminService.prototype, "findAllAdmin").mockResolvedValueOnce(
-			applications as never,
-		);
+		vi.spyOn(
+			JobApplicationAdminService.prototype,
+			"findAllAdmin",
+		).mockResolvedValueOnce(applications as never);
 
-		const response = await request(app).get("/job-applications/admin").set("Authorization", `Bearer ${adminToken()}`);
+		const response = await request(app)
+			.get("/job-applications/admin")
+			.set("Authorization", `Bearer ${adminToken()}`);
 
 		expect(response.status).toBe(200);
 		expect(response.body).toEqual(applications);
