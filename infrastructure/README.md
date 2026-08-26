@@ -23,6 +23,9 @@ Grant the service principal only the roles it needs:
 - `AcrPush` on the container registry.
 - `Storage Blob Data Contributor` on the Terraform state storage account.
 - `Contributor` on the subscription or resource group Terraform manages.
+- `Role Based Access Control Administrator` on `rg-team3-dev` and the shared
+	container registry so Terraform can manage the Container App identity's role
+	assignments.
 
 The remote-state resource group, storage account, and container must already
 exist before the workflow's first run.
