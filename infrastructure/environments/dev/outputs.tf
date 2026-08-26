@@ -32,3 +32,8 @@ output "container_app_environment_default_domain" {
   description = "Default DNS domain of the dev Container App Environment."
   value       = module.container_app_environment.default_domain
 }
+
+output "backend_container_app_fqdn" {
+  description = "Internal FQDN of the dev backend Container App."
+  value       = module.backend_container_app.fqdn
+}

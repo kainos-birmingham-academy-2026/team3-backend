@@ -27,3 +27,14 @@ variable "acr_resource_group_name" {
   description = "Name of the resource group containing the shared Azure Container Registry."
   type        = string
 }
+
+variable "backend_image_tag" {
+  description = "Immutable ACR image tag for the backend Container App."
+  type        = string
+}
+
+variable "feature_flags_enabled" {
+  description = "Deployment-level feature flag configuration for the backend."
+  type        = bool
+  default     = false
+}
