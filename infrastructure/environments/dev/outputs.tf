@@ -22,3 +22,13 @@ output "managed_identity_principal_id" {
   description = "Principal ID of the backend managed identity for role assignments."
   value       = module.managed_identity.principal_id
 }
+
+output "container_app_environment_id" {
+  description = "Resource ID of the dev Container App Environment."
+  value       = module.container_app_environment.id
+}
+
+output "container_app_environment_default_domain" {
+  description = "Default DNS domain of the dev Container App Environment."
+  value       = module.container_app_environment.default_domain
+}
