@@ -31,7 +31,7 @@ jobs:
     name: Test and lint
     runs-on: ubuntu-latest
     env:
-      DATABASE_URL: file:./dev.db
+      DATABASE_URL: ${{ secrets.DATABASE_URL != '' && secrets.DATABASE_URL || 'file:./dev.db' }}
     steps:
       - name: Check out source
         uses: actions/checkout@v4
