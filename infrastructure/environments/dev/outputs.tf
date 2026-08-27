@@ -37,3 +37,13 @@ output "backend_container_app_fqdn" {
   description = "Internal FQDN of the dev backend Container App."
   value       = module.backend_container_app.fqdn
 }
+
+output "log_analytics_workspace_name" {
+  description = "Name of the dev Log Analytics workspace."
+  value       = module.log_analytics.name
+}
+
+output "grafana_endpoint" {
+  description = "URL of the dev Grafana dashboard."
+  value       = module.grafana.endpoint
+}

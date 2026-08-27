@@ -13,6 +13,12 @@ variable "resource_group_name" {
   type        = string
 }
 
+variable "log_analytics_workspace_id" {
+  description = "Resource ID of the Log Analytics workspace that receives container logs."
+  type        = string
+  default     = null
+}
+
 variable "tags" {
   description = "Tags to apply to the Container App Environment."
   type        = map(string)
