@@ -44,12 +44,6 @@ variable "enable_swagger_docs" {
   default     = false
 }
 
-variable "allowed_ip_ranges" {
-  description = "Named CIDR ranges allowed through external ingress. An empty map keeps ingress internal."
-  type        = map(string)
-  default     = {}
-}
-
 variable "tags" {
   description = "Tags to apply to the Container App."
   type        = map(string)
