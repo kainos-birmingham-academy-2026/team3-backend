@@ -27,6 +27,8 @@ env:
   TF_VAR_backend_image_tag: ${{ github.sha }}
   TF_VAR_enable_swagger_docs: "true"
   TF_VAR_log_retention_in_days: "30"
+  # JSON map of names to CIDR ranges. The repository variable can override the academy network.
+  TF_VAR_backend_allowed_ip_ranges: ${{ vars.BACKEND_ALLOWED_IP_RANGES != '' && vars.BACKEND_ALLOWED_IP_RANGES || '{"academy-network":"147.161.237.0/24"}' }}
   # JSON array of Entra object IDs, set as the GRAFANA_ADMIN_OBJECT_IDS repository variable.
   TF_VAR_grafana_admin_object_ids: ${{ vars.GRAFANA_ADMIN_OBJECT_IDS != '' && vars.GRAFANA_ADMIN_OBJECT_IDS || '[]' }}
 

@@ -116,6 +116,7 @@ module "backend_container_app" {
   database_url_secret_id       = "${module.key_vault.vault_uri}secrets/database-url"
   jwt_secret_id                = "${module.key_vault.vault_uri}secrets/jwt-secret"
   enable_swagger_docs          = var.enable_swagger_docs
+  allowed_ip_ranges            = var.backend_allowed_ip_ranges
   tags = {
     environment = var.environment
     managed_by  = "terraform"

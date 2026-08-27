@@ -28,9 +28,19 @@ resource "azurerm_container_app" "this" {
   }
 
   ingress {
-    external_enabled = false
+    external_enabled = length(var.allowed_ip_ranges) > 0
     target_port      = 4000
     transport        = "http"
+
+    dynamic "ip_security_restriction" {
+      for_each = var.allowed_ip_ranges
+
+      content {
+        action           = "Allow"
+        ip_address_range = ip_security_restriction.value
+        name             = ip_security_restriction.key
+      }
+    }
 
     traffic_weight {
       latest_revision = true
