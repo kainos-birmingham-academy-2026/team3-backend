@@ -5,6 +5,7 @@ import authRouter from "./routes/authRouter";
 import jobApplicationRouter from "./routes/jobApplicationsAdminRouter";
 import jobRolesRouter from "./routes/jobRolesRouter";
 import teapotRouter from "./routes/teapotRouter";
+import { requestLogger } from "./middleware/requestLogger.js";
 
 const app = express();
 const PORT = 4000;
@@ -12,6 +13,7 @@ const swaggerDocsEnabled = process.env.ENABLE_SWAGGER_DOCS === "true";
 
 // Middleware
 app.use(express.json());
+app.use(requestLogger);
 registerSwaggerRoutes(app, swaggerDocsEnabled);
 
 app.use("/job-roles", jobRolesRouter);
