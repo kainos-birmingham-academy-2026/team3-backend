@@ -21,7 +21,7 @@ variable "resource_group_name" {
 variable "grafana_major_version" {
   description = "Major version of Grafana to deploy."
   type        = string
-  default     = "11"
+  default     = "12"
 }
 
 variable "monitoring_reader_scope" {
