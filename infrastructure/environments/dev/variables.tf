@@ -39,6 +39,14 @@ variable "enable_swagger_docs" {
   default     = false
 }
 
+variable "backend_allowed_ip_ranges" {
+  description = "Named CIDR ranges allowed to access the dev backend externally. An empty map keeps ingress internal."
+  type        = map(string)
+  default = {
+    academy-network = "147.161.237.0/24"
+  }
+}
+
 variable "log_retention_in_days" {
   description = "Number of days to retain container logs in Log Analytics."
   type        = number
