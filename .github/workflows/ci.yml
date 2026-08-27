@@ -120,6 +120,8 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      issues: write
+      pull-requests: write
     defaults:
       run:
         working-directory: infrastructure/environments/dev
@@ -134,6 +136,21 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
+      - name: Install tfcmt
+        env:
+          TFCMT_VERSION: 4.14.18
+        run: |
+          curl --fail --silent --show-error --location \
+            --output /tmp/tfcmt.tar.gz \
+            "https://github.com/suzuki-shunsuke/tfcmt/releases/download/v${TFCMT_VERSION}/tfcmt_linux_amd64.tar.gz"
+          curl --fail --silent --show-error --location \
+            --output /tmp/tfcmt_checksums.txt \
+            "https://github.com/suzuki-shunsuke/tfcmt/releases/download/v${TFCMT_VERSION}/tfcmt_${TFCMT_VERSION}_checksums.txt"
+          grep '  tfcmt_linux_amd64.tar.gz$' /tmp/tfcmt_checksums.txt \
+            | sed 's#tfcmt_linux_amd64.tar.gz#/tmp/tfcmt.tar.gz#' \
+            | sha256sum --check
+          tar --extract --gzip --file /tmp/tfcmt.tar.gz --directory /tmp tfcmt
+          sudo install /tmp/tfcmt /usr/local/bin/tfcmt
       - name: Check Terraform formatting
         run: terraform fmt -check -recursive ../..
       - name: Initialize Terraform
@@ -147,7 +164,9 @@ jobs:
       - name: Validate Terraform
         run: terraform validate
       - name: Plan Terraform changes
-        run: terraform plan -no-color
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: tfcmt -var "target:backend-dev" plan -- terraform plan -no-color
 
   terraform-deploy:
     name: Deploy dev infrastructure
