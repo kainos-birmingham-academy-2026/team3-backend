@@ -33,8 +33,8 @@ variable "backend_image_tag" {
   type        = string
 }
 
-variable "feature_flags_enabled" {
-  description = "Deployment-level feature flag configuration for the backend."
+variable "enable_swagger_docs" {
+  description = "Whether Swagger documentation routes are enabled in the backend."
   type        = bool
   default     = false
 }

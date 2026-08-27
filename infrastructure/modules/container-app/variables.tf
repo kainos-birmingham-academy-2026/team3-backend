@@ -38,8 +38,8 @@ variable "jwt_secret_id" {
   type        = string
 }
 
-variable "feature_flags_enabled" {
-  description = "Deployment-level feature flag configuration."
+variable "enable_swagger_docs" {
+  description = "Whether Swagger documentation routes are enabled."
   type        = bool
   default     = false
 }

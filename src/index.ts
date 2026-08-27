@@ -1,7 +1,6 @@
 import { fileURLToPath } from "node:url";
 import express from "express";
-import swaggerUi from "swagger-ui-express";
-import { swaggerSpec } from "./config/swagger";
+import { registerSwaggerRoutes } from "./config/swaggerRoutes.js";
 import authRouter from "./routes/authRouter";
 import jobApplicationRouter from "./routes/jobApplicationsAdminRouter";
 import jobRolesRouter from "./routes/jobRolesRouter";
@@ -9,13 +8,11 @@ import teapotRouter from "./routes/teapotRouter";
 
 const app = express();
 const PORT = 4000;
+const swaggerDocsEnabled = process.env.ENABLE_SWAGGER_DOCS === "true";
 
 // Middleware
 app.use(express.json());
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-app.get("/docs.json", (_req, res) => {
-	res.json(swaggerSpec);
-});
+registerSwaggerRoutes(app, swaggerDocsEnabled);
 
 app.use("/job-roles", jobRolesRouter);
 app.use("/api", authRouter);
@@ -71,7 +68,9 @@ if (isMainModule) {
 	app.listen(PORT, () => {
 		console.log(`Server running on http://localhost:${PORT}`);
 		console.log(`Try: http://localhost:${PORT}/health`);
-		console.log(`Swagger docs available at: http://localhost:${PORT}/docs`);
+		if (swaggerDocsEnabled) {
+			console.log(`Swagger docs available at: http://localhost:${PORT}/docs`);
+		}
 	});
 }
 

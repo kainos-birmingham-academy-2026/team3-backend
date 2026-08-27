@@ -83,7 +83,7 @@ module "backend_container_app" {
   image                        = "${data.azurerm_container_registry.shared.login_server}/team3-backend:${var.backend_image_tag}"
   database_url_secret_id       = "${module.key_vault.vault_uri}secrets/database-url"
   jwt_secret_id                = "${module.key_vault.vault_uri}secrets/jwt-secret"
-  feature_flags_enabled        = var.feature_flags_enabled
+  enable_swagger_docs          = var.enable_swagger_docs
   tags = {
     environment = var.environment
     managed_by  = "terraform"
