@@ -1,8 +1,8 @@
 # Infrastructure
 
-Terraform deploys the backend's Azure resources. Environment roots live under
-`environments/` and reuse modules from `modules/`; add a separate `prod` root
-rather than sharing state with `dev`.
+Terraform deploys the backend's Azure resources. The independent `dev` and
+`prod` roots live under `environments/` and reuse modules from `modules/`.
+Each root must use a separate remote-state key.
 
 ## Dev architecture
 
@@ -25,14 +25,41 @@ Terraform configuration.
 The container runs `prisma migrate deploy` before starting the API, so pending
 database migrations are applied when a new revision starts.
 
+## Production architecture
+
+The `prod` root defines the equivalent isolated production resources using the
+`prod` name suffix. Unlike dev, it creates `rg-team3-prod` and has no resource
+group import block. Swagger defaults to disabled and backend ingress remains
+internal-only.
+
+Production is not deployed by the current workflow. Before its first apply,
+create the production database, establish the production secret bootstrap
+process, grant production-scoped deployment permissions, and add a protected
+production deployment job.
+
+The first production deployment is a two-stage bootstrap because
+`kv-team3-prod` must exist before its secrets can be populated:
+
+1. Apply only `module.key_vault` to create the production resource group and
+	Key Vault.
+2. Add `database-url` and `jwt-secret` through the Azure portal or an approved
+	secret-management process. Do not put secret values in Terraform variables,
+	state, committed files, or command history.
+3. Run and review a complete production plan before applying the remaining
+	resources.
+
+The person or bootstrap identity adding secrets needs temporary permission to
+write production Key Vault secrets. Remove that permission after bootstrap.
+
 ## Prerequisites
 
-Before the first deployment:
+Before deploying either environment:
 
 - Create the remote-state resource group, storage account, and blob container.
-- Create the Azure PostgreSQL database referenced by `database-url`.
+- Create a separate Azure PostgreSQL database for the environment.
 - Ensure `database-url` and `jwt-secret` exist in `kv-team3-dev` before
-	deploying a backend revision.
+	deploying a dev backend revision. Use the production bootstrap sequence above
+	for `kv-team3-prod`.
 - Configure the GitHub Actions secrets listed below.
 
 ## GitHub configuration
@@ -67,9 +94,9 @@ group rather than across the subscription.
 | Variable | Purpose |
 | --- | --- |
 | `project_name` | Short name used in Azure resource names |
-| `environment` | Deployment environment, currently `dev` |
-| `location` | Azure region, currently `uksouth` |
-| `subscription_id` | Subscription containing the dev resource group |
+| `environment` | Deployment environment: `dev` or `prod` for the matching root |
+| `location` | Azure region, currently `uksouth` for dev |
+| `subscription_id` | Subscription containing the imported dev resource group (dev only) |
 | `acr_name` | Existing shared ACR name |
 | `acr_resource_group_name` | Resource group containing the shared ACR |
 | `backend_image_tag` | Immutable backend image tag, normally the commit SHA |
@@ -107,3 +134,37 @@ terraform -chdir=infrastructure/environments/dev plan
 
 Terraform outputs include the resource names and IDs, the Container App
 Environment domain, and the backend's internal FQDN.
+
+Initialize production with the same backend storage but its own state key:
+
+```bash
+export TF_VAR_project_name=team3
+export TF_VAR_environment=prod
+export TF_VAR_location=uksouth
+export TF_VAR_acr_name=acraiacademy26
+export TF_VAR_acr_resource_group_name=rg-ai-academy-26
+export TF_VAR_backend_image_tag=<existing-tested-image-sha>
+export TF_VAR_enable_swagger_docs=false
+
+terraform -chdir=infrastructure/environments/prod init \
+	-backend-config="resource_group_name=rg-team3-tfstate" \
+	-backend-config="storage_account_name=stteam3tfstate26" \
+	-backend-config="container_name=tfstate" \
+	-backend-config="key=team3-backend-prod.tfstate" \
+	-backend-config="use_azuread_auth=true"
+terraform -chdir=infrastructure/environments/prod validate
+terraform -chdir=infrastructure/environments/prod plan
+```
+
+For the one-time Key Vault bootstrap, review a targeted plan before applying
+it:
+
+```bash
+terraform -chdir=infrastructure/environments/prod plan \
+	-target=module.key_vault \
+	-out=key-vault-bootstrap.tfplan
+terraform -chdir=infrastructure/environments/prod apply key-vault-bootstrap.tfplan
+```
+
+Targeted apply is only for this bootstrap dependency. After the secrets exist,
+return to normal full plans and applies.

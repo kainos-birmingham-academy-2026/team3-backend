@@ -8,6 +8,12 @@ An API framework built in Express + TypeScript.
 - TypeScript
 - Express
 
+## Infrastructure
+
+Azure architecture, Terraform setup, and separate dev and production
+environment instructions are documented in
+[infrastructure/README.md](infrastructure/README.md).
+
 ## Getting Started
 
 ### 1. Install dependencies
