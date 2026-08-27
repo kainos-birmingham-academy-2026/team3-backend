@@ -29,8 +29,15 @@ variable "acr_resource_group_name" {
 }
 
 variable "backend_image_tag" {
-  description = "Immutable ACR image tag for the backend Container App."
+  description = "ACR image tag for the backend Container App."
   type        = string
+  default     = "dev-latest"
+}
+
+variable "container_revision_suffix" {
+  description = "Optional unique suffix that forces a new Container App revision."
+  type        = string
+  default     = null
 }
 
 variable "enable_swagger_docs" {

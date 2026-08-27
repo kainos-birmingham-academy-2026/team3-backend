@@ -113,6 +113,7 @@ module "backend_container_app" {
   managed_identity_id          = module.managed_identity.id
   registry_server              = data.azurerm_container_registry.shared.login_server
   image                        = "${data.azurerm_container_registry.shared.login_server}/team3-backend:${var.backend_image_tag}"
+  revision_suffix              = var.container_revision_suffix
   database_url_secret_id       = "${module.key_vault.vault_uri}secrets/database-url"
   jwt_secret_id                = "${module.key_vault.vault_uri}secrets/jwt-secret"
   enable_swagger_docs          = var.enable_swagger_docs

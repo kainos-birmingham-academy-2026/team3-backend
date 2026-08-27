@@ -31,6 +31,11 @@ variable "acr_resource_group_name" {
 variable "backend_image_tag" {
   description = "Immutable ACR image tag for the backend Container App."
   type        = string
+
+  validation {
+    condition     = !contains(["latest", "dev-latest"], lower(var.backend_image_tag))
+    error_message = "Production requires an immutable image tag, such as a commit SHA or release version."
+  }
 }
 
 variable "enable_swagger_docs" {
