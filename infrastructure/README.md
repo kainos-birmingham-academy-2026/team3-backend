@@ -99,7 +99,8 @@ group rather than across the subscription.
 | `subscription_id` | Subscription containing the imported dev resource group (dev only) |
 | `acr_name` | Existing shared ACR name |
 | `acr_resource_group_name` | Resource group containing the shared ACR |
-| `backend_image_tag` | Immutable backend image tag, normally the commit SHA |
+| `backend_image_tag` | `dev-latest` in dev; an immutable commit SHA or release version in prod |
+| `container_revision_suffix` | Optional dev revision suffix; CI sets this from the commit SHA |
 | `enable_swagger_docs` | Exposes `/docs` and `/docs.json` when `true`; defaults to `false` |
 
 GitHub Actions currently sets `enable_swagger_docs` to `true` for dev.
@@ -112,7 +113,7 @@ to `main` additionally:
 
 1. Builds and pushes SHA-tagged and `dev-latest` images to ACR.
 2. Creates and applies a Terraform plan for dev.
-3. Deploys a new Container App revision using the SHA-tagged image.
+3. Deploys `dev-latest` in a new Container App revision identified by the commit SHA.
 
 Feature branches do not push images or deploy infrastructure.
 
@@ -136,6 +137,8 @@ Terraform outputs include the resource names and IDs, the Container App
 Environment domain, and the backend's internal FQDN.
 
 Initialize production with the same backend storage but its own state key:
+Production rejects the mutable `latest` and `dev-latest` tags, so provide an
+immutable commit SHA or release version.
 
 ```bash
 export TF_VAR_project_name=team3

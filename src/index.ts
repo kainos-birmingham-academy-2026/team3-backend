@@ -1,11 +1,11 @@
 import { fileURLToPath } from "node:url";
 import express from "express";
 import { registerSwaggerRoutes } from "./config/swaggerRoutes.js";
+import { requestLogger } from "./middleware/requestLogger.js";
 import authRouter from "./routes/authRouter";
 import jobApplicationRouter from "./routes/jobApplicationsAdminRouter";
 import jobRolesRouter from "./routes/jobRolesRouter";
 import teapotRouter from "./routes/teapotRouter";
-import { requestLogger } from "./middleware/requestLogger.js";
 
 const app = express();
 const PORT = 4000;

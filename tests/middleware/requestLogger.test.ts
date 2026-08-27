@@ -9,7 +9,9 @@ describe("requestLogger", () => {
 	});
 
 	it("logs structured request telemetry after the response finishes", async () => {
-		const logSpy = vi.spyOn(console, "info").mockImplementation(() => undefined);
+		const logSpy = vi
+			.spyOn(console, "info")
+			.mockImplementation(() => undefined);
 		const app = express();
 		app.use(requestLogger);
 		app.get("/jobs", (_req, res) => res.status(200).json({ ok: true }));

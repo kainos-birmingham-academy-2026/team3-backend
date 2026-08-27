@@ -24,8 +24,14 @@ variable "registry_server" {
 }
 
 variable "image" {
-  description = "Fully qualified container image including its immutable tag."
+  description = "Fully qualified tagged container image."
   type        = string
+}
+
+variable "revision_suffix" {
+  description = "Optional suffix used to create a distinct Container App revision."
+  type        = string
+  default     = null
 }
 
 variable "database_url_secret_id" {
