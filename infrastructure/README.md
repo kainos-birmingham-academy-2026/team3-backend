@@ -12,15 +12,13 @@ The `dev` root manages:
 - Key Vault `kv-team3-dev`.
 - User-assigned managed identity `id-team3-backend-dev`.
 - Container App Environment `cae-team3-dev`.
-- Backend Container App `ca-team3-backend-dev` on port `4000`, internal by
-	default or externally restricted to configured CIDR ranges.
+- Internal-only backend Container App `ca-team3-backend-dev` on port `4000`.
 - `AcrPull` and `Key Vault Secrets User` role assignments for the managed
 	identity.
 
 The Container App pulls `team3-backend:<commit-sha>` from the shared ACR. It
 reads `database-url` and `jwt-secret` from Key Vault without storing their
-values in Terraform. External ingress is enabled only when
-`backend_allowed_ip_ranges` is non-empty, and unmatched addresses are denied.
+values in Terraform. The backend is not exposed through public ingress.
 Azure PostgreSQL and the Key Vault secret values are not managed by this
 Terraform configuration.
 
@@ -103,23 +101,8 @@ group rather than across the subscription.
 | `acr_resource_group_name` | Resource group containing the shared ACR |
 | `backend_image_tag` | Immutable backend image tag, normally the commit SHA |
 | `enable_swagger_docs` | Exposes `/docs` and `/docs.json` when `true`; defaults to `false` |
-| `backend_allowed_ip_ranges` | Map of names to CIDR ranges allowed through dev backend ingress; empty keeps it internal |
 
 GitHub Actions currently sets `enable_swagger_docs` to `true` for dev.
-
-To run the frontend E2E suite against deployed dev services, set the
-`BACKEND_ALLOWED_IP_RANGES` repository variable to a JSON map. Use `/32` for a
-single public IPv4 address:
-
-```json
-{"academy-network":"147.161.237.0/24"}
-```
-
-Add the same public IP to the dev Azure PostgreSQL firewall separately, because
-the E2E setup and assertions connect directly to PostgreSQL. Set the frontend
-test environment's `API_BASE_URL` to the backend's public FQDN and
-`DATABASE_URL` to the dev database connection string. Do not commit database
-credentials.
 
 ## CI/CD behaviour
 
