@@ -38,3 +38,15 @@ variable "enable_swagger_docs" {
   type        = bool
   default     = false
 }
+
+variable "log_retention_in_days" {
+  description = "Number of days to retain container logs in Log Analytics."
+  type        = number
+  default     = 30
+}
+
+variable "grafana_admin_object_ids" {
+  description = "Entra ID object IDs granted the Grafana Admin role on the dashboard."
+  type        = list(string)
+  default     = []
+}

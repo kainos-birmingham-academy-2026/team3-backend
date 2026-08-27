@@ -36,12 +36,44 @@ module "managed_identity" {
   }
 }
 
+module "log_analytics" {
+  source = "../../modules/log-analytics"
+
+  name                = "log-${var.project_name}-${var.environment}"
+  location            = var.location
+  resource_group_name = module.resource_group.name
+  retention_in_days   = var.log_retention_in_days
+  tags = {
+    environment = var.environment
+    managed_by  = "terraform"
+    project     = var.project_name
+  }
+}
+
+module "grafana" {
+  source = "../../modules/grafana"
+
+  name                    = "graf-${var.project_name}-${var.environment}"
+  location                = var.location
+  resource_group_name     = module.resource_group.name
+  monitoring_reader_scope = module.resource_group.id
+  admin_object_ids        = var.grafana_admin_object_ids
+  tags = {
+    environment = var.environment
+    managed_by  = "terraform"
+    project     = var.project_name
+  }
+
+  depends_on = [module.log_analytics]
+}
+
 module "container_app_environment" {
   source = "../../modules/container-app-environment"
 
-  name                = "cae-${var.project_name}-${var.environment}"
-  location            = var.location
-  resource_group_name = module.resource_group.name
+  name                       = "cae-${var.project_name}-${var.environment}"
+  location                   = var.location
+  resource_group_name        = module.resource_group.name
+  log_analytics_workspace_id = module.log_analytics.id
   tags = {
     environment = var.environment
     managed_by  = "terraform"
