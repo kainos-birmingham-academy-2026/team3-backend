@@ -43,4 +43,4 @@ EXPOSE 4000
 
 USER node
 
-CMD ["./node_modules/.bin/tsx", "dist/index.js"]
+CMD ["sh", "-c", "./node_modules/.bin/prisma migrate deploy && exec ./node_modules/.bin/tsx dist/index.js"]
