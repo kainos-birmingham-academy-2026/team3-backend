@@ -59,8 +59,8 @@ resource "azurerm_container_app" "this" {
       }
 
       env {
-        name  = "FEATURE_FLAGS_ENABLED"
-        value = tostring(var.feature_flags_enabled)
+        name  = "ENABLE_SWAGGER_DOCS"
+        value = tostring(var.enable_swagger_docs)
       }
 
       liveness_probe {

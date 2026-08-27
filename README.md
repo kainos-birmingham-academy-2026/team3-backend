@@ -29,6 +29,7 @@ Then set these values in `.env`:
 
 - `DATABASE_URL` for your local Postgres instance
 - `JWT_SECRET` for signing login tokens
+- `ENABLE_SWAGGER_DOCS` to `true` when you want to expose the Swagger routes
 
 Generate a strong JWT secret in your terminal:
 
@@ -41,6 +42,7 @@ Example:
 ```env
 DATABASE_URL="postgresql://YOUR_USER:password@localhost:5432/jobRoles?schema=public"
 JWT_SECRET="replace-with-a-strong-local-secret"
+ENABLE_SWAGGER_DOCS=false
 ```
 
 ### 3. Ensure Docker is running and start Postgres
@@ -95,7 +97,13 @@ http://localhost:4000
 
 ### 6.1 Open Swagger docs
 
-Swagger UI is served by the same backend process. Once `npm run dev` is running, open:
+Swagger is disabled by default. Enable it in `.env`:
+
+```env
+ENABLE_SWAGGER_DOCS=true
+```
+
+Then start the backend with `npm run dev` and open:
 
 ```text
 http://localhost:4000/docs
@@ -174,9 +182,11 @@ On a machine that is not behind Kainos/Zscaler HTTPS inspection, this should be 
 docker build -t backend:1.0.0 .
 ```
 
-### 4. Apply migrations and seed data
+### 4. Apply migrations and seed data (optional)
 
-From the host machine, use the database port exposed on `localhost:5432`:
+The backend image automatically runs `prisma migrate deploy` before starting the
+server. To seed local data before the first container start, use the database
+port exposed on `localhost:5432`:
 
 ```bash
 npx prisma migrate deploy
@@ -581,7 +591,7 @@ Authentication error (`401`) example:
 
 ### Admin Job Applications Endpoints
 
-#### `GET /job-applications`
+#### `GET /job-applications/admin`
 
 Retrieves all job applications across all job roles (admin only).
 
@@ -611,7 +621,7 @@ Success response (`200`):
 ]
 ```
 
-#### `GET /job-applications/:jobRoleId/applications`
+#### `GET /job-applications/admin/:jobRoleId/applications`
 
 Retrieves all applications for a specific job role (admin only).
 
@@ -653,7 +663,7 @@ Not found error (`404`) example:
 }
 ```
 
-#### `PATCH /job-applications/:applicationId/status`
+#### `PATCH /job-applications/admin/:applicationId/status`
 
 Updates the status of a job application (admin only).
 
