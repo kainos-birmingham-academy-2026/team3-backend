@@ -4,6 +4,61 @@ Terraform deploys the backend's Azure resources. The independent `dev` and
 `prod` roots live under `environments/` and reuse modules from `modules/`.
 Each root must use a separate remote-state key.
 
+## Platform architecture
+
+The diagram represents either environment; replace `<env>` with `dev` or
+`prod`. The monitoring resources shown with dashed borders are deployed only
+in dev. Azure PostgreSQL, the shared container registry, and secret values are
+managed outside these Terraform roots.
+
+```mermaid
+flowchart LR
+	user[Browser]
+
+	subgraph azure[Azure subscription]
+		acr["Shared Azure Container Registry<br/>acraiacademy26"]
+		postgres[("Azure PostgreSQL<br/>externally managed")]
+
+		subgraph rg["Resource Group: rg-team3-&lt;env&gt;"]
+			vault["Key Vault<br/>kv-team3-&lt;env&gt;"]
+
+			subgraph cae["Container Apps Environment: cae-team3-&lt;env&gt;"]
+				frontend["Frontend Container App<br/>ca-team3-frontend-&lt;env&gt;<br/>public :3000"]
+				backend["Backend Container App<br/>ca-team3-backend-&lt;env&gt;<br/>internal :4000"]
+			end
+
+			frontendIdentity["Frontend managed identity<br/>id-team3-frontend-&lt;env&gt;"]
+			backendIdentity["Backend managed identity<br/>id-team3-backend-&lt;env&gt;"]
+			logs["Log Analytics Workspace<br/>dev only"]
+			grafana["Azure Managed Grafana<br/>dev only"]
+		end
+	end
+
+	user -->|HTTPS| frontend
+	frontend -->|"API_BASE_URL<br/>internal FQDN"| backend
+	backend -->|DATABASE_URL| postgres
+
+	frontend -->|uses| frontendIdentity
+	backend -->|uses| backendIdentity
+	frontendIdentity -->|"AcrPull<br/>frontend image"| acr
+	backendIdentity -->|"AcrPull<br/>backend image"| acr
+	frontendIdentity -->|"Key Vault Secrets User<br/>session-secret"| vault
+	backendIdentity -->|"Key Vault Secrets User<br/>database-url, jwt-secret"| vault
+
+	frontend -. platform logs .-> logs
+	backend -. platform logs .-> logs
+	grafana -. Monitoring Reader .-> logs
+
+	classDef public fill:#d8f3dc,stroke:#2d6a4f,color:#1b4332
+	classDef private fill:#dbeafe,stroke:#1d4ed8,color:#1e3a8a
+	classDef external fill:#f3f4f6,stroke:#4b5563,color:#1f2937
+	classDef devOnly fill:#fff7ed,stroke:#c2410c,stroke-dasharray:5 5,color:#7c2d12
+	class frontend public
+	class backend,vault private
+	class acr,postgres external
+	class logs,grafana devOnly
+```
+
 ## Dev architecture
 
 The `dev` root manages:
