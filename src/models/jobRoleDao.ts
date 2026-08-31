@@ -59,15 +59,15 @@ export class JobRoleDao {
 				roleName: filters.roleName
 					? { contains: filters.roleName, mode: "insensitive" }
 					: undefined,
-				locationId: filters.locationId
-					? { in: filters.locationId }
-					: undefined,
+				locationId: filters.locationId ? { in: filters.locationId } : undefined,
 				capabilityId: filters.capabilityId
 					? { in: filters.capabilityId }
 					: undefined,
 				bandId: filters.bandId ? { in: filters.bandId } : undefined,
 				closingDate:
-					closingDate && nextDay ? { gte: closingDate, lt: nextDay } : undefined,
+					closingDate && nextDay
+						? { gte: closingDate, lt: nextDay }
+						: undefined,
 			},
 			relationLoadStrategy: "join",
 			include: {

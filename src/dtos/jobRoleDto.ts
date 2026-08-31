@@ -1,11 +1,9 @@
 import { z } from "zod";
 
 const optionalIdList = z.preprocess(
-	(value) => (value === undefined ? undefined : Array.isArray(value) ? value : [value]),
-	z
-		.array(z.coerce.number().int().positive())
-		.min(1)
-		.optional(),
+	(value) =>
+		value === undefined ? undefined : Array.isArray(value) ? value : [value],
+	z.array(z.coerce.number().int().positive()).min(1).optional(),
 );
 
 export const JobRoleFiltersSchema = z.object({

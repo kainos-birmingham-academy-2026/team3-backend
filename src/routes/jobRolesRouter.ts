@@ -210,9 +210,13 @@ jobRolesRouter.get("/locations", (req: R, res: Res) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-jobRolesRouter.get("", validateQuery(JobRoleFiltersSchema), (req: R, res: Res) => {
-	controller.getAll(req, res);
-});
+jobRolesRouter.get(
+	"",
+	validateQuery(JobRoleFiltersSchema),
+	(req: R, res: Res) => {
+		controller.getAll(req, res);
+	},
+);
 
 /**
  * @openapi
