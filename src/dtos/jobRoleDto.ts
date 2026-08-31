@@ -6,29 +6,43 @@ const optionalIdList = z.preprocess(
 	z.array(z.coerce.number().int().positive()).min(1).optional(),
 );
 
-export const JobRoleFiltersSchema = z.object({
-	roleName: z.preprocess(
-		(value) => (value === "" ? undefined : value),
-		z.string().trim().max(100).optional(),
-	),
-	locationId: optionalIdList,
-	capabilityId: optionalIdList,
-	bandId: optionalIdList,
-	closingDate: z.preprocess(
-		(value) => (value === "" ? undefined : value),
-		z
-			.string()
-			.regex(/^\d{4}-\d{2}-\d{2}$/, "Closing date must use YYYY-MM-DD")
-			.refine((value) => {
-				const date = new Date(`${value}T00:00:00.000Z`);
-				return (
-					!Number.isNaN(date.getTime()) &&
-					date.toISOString().slice(0, 10) === value
-				);
-			}, "Closing date must be a valid date")
-			.optional(),
-	),
-});
+const optionalFilterDate = z.preprocess(
+	(value) => (value === "" ? undefined : value),
+	z
+		.string()
+		.regex(/^\d{4}-\d{2}-\d{2}$/, "Closing date must use YYYY-MM-DD")
+		.refine((value) => {
+			const date = new Date(`${value}T00:00:00.000Z`);
+			return (
+				!Number.isNaN(date.getTime()) &&
+				date.toISOString().slice(0, 10) === value
+			);
+		}, "Closing date must be a valid date")
+		.optional(),
+);
+
+export const JobRoleFiltersSchema = z
+	.object({
+		roleName: z.preprocess(
+			(value) => (value === "" ? undefined : value),
+			z.string().trim().max(100).optional(),
+		),
+		locationId: optionalIdList,
+		capabilityId: optionalIdList,
+		bandId: optionalIdList,
+		closingFrom: optionalFilterDate,
+		closingBy: optionalFilterDate,
+	})
+	.refine(
+		(filters) =>
+			!filters.closingFrom ||
+			!filters.closingBy ||
+			filters.closingFrom <= filters.closingBy,
+		{
+			message: "Closing from must be on or before closing by",
+			path: ["closingBy"],
+		},
+	);
 
 export const IdParamSchema = z.object({
 	id: z.coerce

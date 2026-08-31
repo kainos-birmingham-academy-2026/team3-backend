@@ -140,7 +140,8 @@ describe("JobRoleDao", () => {
 				locationId: [1, 2],
 				capabilityId: [3],
 				bandId: [4],
-				closingDate: "2026-12-31",
+				closingFrom: "2026-09-01",
+				closingBy: "2026-12-31",
 			});
 
 			expect(prisma.jobRole.findMany).toHaveBeenCalledWith(
@@ -151,7 +152,7 @@ describe("JobRoleDao", () => {
 						capabilityId: { in: [3] },
 						bandId: { in: [4] },
 						closingDate: {
-							gte: new Date("2026-12-31T00:00:00.000Z"),
+							gte: new Date("2026-09-01T00:00:00.000Z"),
 							lt: new Date("2027-01-01T00:00:00.000Z"),
 						},
 					},

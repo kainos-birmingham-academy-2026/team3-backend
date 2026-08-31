@@ -39,7 +39,7 @@ describe("Job role route auth protection", () => {
 			.mockResolvedValueOnce([]);
 
 		const response = await request(app).get(
-			"/job-roles?roleName=engineer&locationId=1&locationId=2&capabilityId=3&bandId=4&closingDate=2026-12-31",
+			"/job-roles?roleName=engineer&locationId=1&locationId=2&capabilityId=3&bandId=4&closingFrom=2026-09-01&closingBy=2026-12-31",
 		);
 
 		expect(response.status).toBe(200);
@@ -48,7 +48,8 @@ describe("Job role route auth protection", () => {
 			locationId: [1, 2],
 			capabilityId: [3],
 			bandId: [4],
-			closingDate: "2026-12-31",
+			closingFrom: "2026-09-01",
+			closingBy: "2026-12-31",
 		});
 	});
 

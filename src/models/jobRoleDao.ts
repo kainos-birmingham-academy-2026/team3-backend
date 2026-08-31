@@ -48,11 +48,14 @@ function toApplicationDomain(
 
 export class JobRoleDao {
 	async findAll(filters: JobRoleFiltersDto = {}): Promise<JobRole[]> {
-		const closingDate = filters.closingDate
-			? new Date(`${filters.closingDate}T00:00:00.000Z`)
+		const closingFrom = filters.closingFrom
+			? new Date(`${filters.closingFrom}T00:00:00.000Z`)
 			: undefined;
-		const nextDay = closingDate
-			? new Date(closingDate.getTime() + 24 * 60 * 60 * 1000)
+		const closingBy = filters.closingBy
+			? new Date(`${filters.closingBy}T00:00:00.000Z`)
+			: undefined;
+		const dayAfterClosingBy = closingBy
+			? new Date(closingBy.getTime() + 24 * 60 * 60 * 1000)
 			: undefined;
 		const rows = await prisma.jobRole.findMany({
 			where: {
@@ -65,8 +68,8 @@ export class JobRoleDao {
 					: undefined,
 				bandId: filters.bandId ? { in: filters.bandId } : undefined,
 				closingDate:
-					closingDate && nextDay
-						? { gte: closingDate, lt: nextDay }
+					closingFrom || dayAfterClosingBy
+						? { gte: closingFrom, lt: dayAfterClosingBy }
 						: undefined,
 			},
 			relationLoadStrategy: "join",

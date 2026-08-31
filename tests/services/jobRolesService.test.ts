@@ -88,7 +88,8 @@ describe("JobRolesService", () => {
 				locationId: [1, 2],
 				capabilityId: [3],
 				bandId: [4],
-				closingDate: "2026-12-31",
+				closingFrom: "2026-09-01",
+				closingBy: "2026-12-31",
 			};
 			mockDao.findAll.mockResolvedValue([]);
 
