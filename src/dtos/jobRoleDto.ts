@@ -1,5 +1,37 @@
 import { z } from "zod";
 
+const optionalIdList = z.preprocess(
+	(value) => (value === undefined ? undefined : Array.isArray(value) ? value : [value]),
+	z
+		.array(z.coerce.number().int().positive())
+		.min(1)
+		.optional(),
+);
+
+export const JobRoleFiltersSchema = z.object({
+	roleName: z.preprocess(
+		(value) => (value === "" ? undefined : value),
+		z.string().trim().max(100).optional(),
+	),
+	locationId: optionalIdList,
+	capabilityId: optionalIdList,
+	bandId: optionalIdList,
+	closingDate: z.preprocess(
+		(value) => (value === "" ? undefined : value),
+		z
+			.string()
+			.regex(/^\d{4}-\d{2}-\d{2}$/, "Closing date must use YYYY-MM-DD")
+			.refine((value) => {
+				const date = new Date(`${value}T00:00:00.000Z`);
+				return (
+					!Number.isNaN(date.getTime()) &&
+					date.toISOString().slice(0, 10) === value
+				);
+			}, "Closing date must be a valid date")
+			.optional(),
+	),
+});
+
 export const IdParamSchema = z.object({
 	id: z.coerce
 		.number("ID must be a number")
@@ -67,6 +99,7 @@ export const CreateJobRoleSchema = z.object({
 export const UpdateJobRoleSchema = CreateJobRoleSchema;
 
 export type IdParamDto = z.infer<typeof IdParamSchema>;
+export type JobRoleFiltersDto = z.infer<typeof JobRoleFiltersSchema>;
 
 export const CreateApplicationSchema = z.object({
 	//user id validation is handled by the auth middleware, validation not required here

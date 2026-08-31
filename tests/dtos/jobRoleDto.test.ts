@@ -3,9 +3,41 @@ import {
 	CreateApplicationSchema,
 	CreateJobRoleSchema,
 	IdParamSchema,
+	JobRoleFiltersSchema,
 } from "../../src/dtos/jobRoleDto.js";
 
 describe("job role DTO schemas", () => {
+	describe("JobRoleFiltersSchema", () => {
+		it("should trim text and coerce single and repeated IDs", () => {
+			const result = JobRoleFiltersSchema.safeParse({
+				roleName: "  engineer  ",
+				locationId: ["1", "2"],
+				capabilityId: "3",
+				bandId: "4",
+				closingDate: "2026-12-31",
+			});
+
+			expect(result.success).toBe(true);
+			if (result.success) {
+				expect(result.data).toEqual({
+					roleName: "engineer",
+					locationId: [1, 2],
+					capabilityId: [3],
+					bandId: [4],
+					closingDate: "2026-12-31",
+				});
+			}
+		});
+
+		it.each([
+			["a non-numeric ID", { locationId: "unknown" }],
+			["a non-positive ID", { bandId: "0" }],
+			["an invalid date", { closingDate: "2026-02-30" }],
+		])("should reject %s", (_name, filters) => {
+			expect(JobRoleFiltersSchema.safeParse(filters).success).toBe(false);
+		});
+	});
+
 	describe("IdParamSchema", () => {
 		it("should coerce a positive integer string to a number", () => {
 			const result = IdParamSchema.safeParse({ id: "42" });

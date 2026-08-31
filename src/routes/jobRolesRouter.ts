@@ -4,11 +4,16 @@ import {
 	CreateApplicationSchema,
 	CreateJobRoleSchema,
 	IdParamSchema,
+	JobRoleFiltersSchema,
 	UpdateJobRoleSchema,
 } from "../dtos/jobRoleDto";
 import { allowRoles, USER_ROLES } from "../middleware/authorise";
 import { requireAuth } from "../middleware/requireAuth";
-import { validateBody, validateParams } from "../middleware/validate";
+import {
+	validateBody,
+	validateParams,
+	validateQuery,
+} from "../middleware/validate";
 import { JobRolesService } from "../services/jobRolesService";
 
 const jobRolesRouter = Router();
@@ -148,6 +153,41 @@ jobRolesRouter.get("/locations", (req: R, res: Res) => {
  *   get:
  *     tags: [Job Roles]
  *     summary: Get all job roles
+ *     parameters:
+ *       - in: query
+ *         name: roleName
+ *         schema:
+ *           type: string
+ *         description: Case-insensitive partial role name
+ *       - in: query
+ *         name: locationId
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: integer
+ *         style: form
+ *         explode: true
+ *       - in: query
+ *         name: capabilityId
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: integer
+ *         style: form
+ *         explode: true
+ *       - in: query
+ *         name: bandId
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: integer
+ *         style: form
+ *         explode: true
+ *       - in: query
+ *         name: closingDate
+ *         schema:
+ *           type: string
+ *           format: date
  *     responses:
  *       200:
  *         description: List of job role summaries
@@ -157,6 +197,12 @@ jobRolesRouter.get("/locations", (req: R, res: Res) => {
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/JobRoleSummary'
+ *       400:
+ *         description: Invalid filter parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
  *       500:
  *         description: Internal server error
  *         content:
@@ -164,7 +210,7 @@ jobRolesRouter.get("/locations", (req: R, res: Res) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-jobRolesRouter.get("", (req: R, res: Res) => {
+jobRolesRouter.get("", validateQuery(JobRoleFiltersSchema), (req: R, res: Res) => {
 	controller.getAll(req, res);
 });
 

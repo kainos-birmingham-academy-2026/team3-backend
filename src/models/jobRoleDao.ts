@@ -1,6 +1,7 @@
 import type {
 	CreateApplicationRequestDto,
 	CreateJobRoleRequestDto,
+	JobRoleFiltersDto,
 	UpdateJobRoleRequestDto,
 } from "../dtos/jobRoleDto.js";
 import type { Prisma } from "../generated/prisma/client.js";
@@ -46,8 +47,28 @@ function toApplicationDomain(
 }
 
 export class JobRoleDao {
-	async findAll(): Promise<JobRole[]> {
+	async findAll(filters: JobRoleFiltersDto = {}): Promise<JobRole[]> {
+		const closingDate = filters.closingDate
+			? new Date(`${filters.closingDate}T00:00:00.000Z`)
+			: undefined;
+		const nextDay = closingDate
+			? new Date(closingDate.getTime() + 24 * 60 * 60 * 1000)
+			: undefined;
 		const rows = await prisma.jobRole.findMany({
+			where: {
+				roleName: filters.roleName
+					? { contains: filters.roleName, mode: "insensitive" }
+					: undefined,
+				locationId: filters.locationId
+					? { in: filters.locationId }
+					: undefined,
+				capabilityId: filters.capabilityId
+					? { in: filters.capabilityId }
+					: undefined,
+				bandId: filters.bandId ? { in: filters.bandId } : undefined,
+				closingDate:
+					closingDate && nextDay ? { gte: closingDate, lt: nextDay } : undefined,
+			},
 			relationLoadStrategy: "join",
 			include: {
 				status: true,
