@@ -2,6 +2,7 @@ import { NotFoundError } from "error-lib";
 import type {
 	CreateApplicationRequestDto,
 	CreateJobRoleRequestDto,
+	JobRoleFiltersDto,
 	UpdateJobRoleRequestDto,
 } from "../dtos/jobRoleDto.js";
 import { ConflictError } from "../errors/conflictError.js";
@@ -24,8 +25,8 @@ export class JobRolesService {
 		this.jobRoleMapper = new JobRoleMapper();
 	}
 
-	async findAll(): Promise<JobRoleResponse[]> {
-		const jobRoles = await this.jobRoleDao.findAll();
+	async findAll(filters: JobRoleFiltersDto = {}): Promise<JobRoleResponse[]> {
+		const jobRoles = await this.jobRoleDao.findAll(filters);
 		return jobRoles.map((jobRole) =>
 			this.jobRoleMapper.jobRoleToResponse(jobRole),
 		);

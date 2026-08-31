@@ -82,6 +82,22 @@ describe("JobRolesService", () => {
 	});
 
 	describe("findAll", () => {
+		it("should pass filters to the data access layer", async () => {
+			const filters = {
+				roleName: "engineer",
+				locationId: [1, 2],
+				capabilityId: [3],
+				bandId: [4],
+				closingFrom: "2026-09-01",
+				closingBy: "2026-12-31",
+			};
+			mockDao.findAll.mockResolvedValue([]);
+
+			await service.findAll(filters);
+
+			expect(mockDao.findAll).toHaveBeenCalledWith(filters);
+		});
+
 		it("should return an array", async () => {
 			const mockResponse = {
 				jobRoleId: 1,

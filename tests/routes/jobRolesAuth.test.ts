@@ -33,6 +33,33 @@ describe("Job role route auth protection", () => {
 		expect(response.body).toEqual([]);
 	});
 
+	it("should validate and pass list filters to the service", async () => {
+		const findAll = vi
+			.spyOn(JobRolesService.prototype, "findAll")
+			.mockResolvedValueOnce([]);
+
+		const response = await request(app).get(
+			"/job-roles?roleName=engineer&locationId=1&locationId=2&capabilityId=3&bandId=4&closingFrom=2026-09-01&closingBy=2026-12-31",
+		);
+
+		expect(response.status).toBe(200);
+		expect(findAll).toHaveBeenCalledWith({
+			roleName: "engineer",
+			locationId: [1, 2],
+			capabilityId: [3],
+			bandId: [4],
+			closingFrom: "2026-09-01",
+			closingBy: "2026-12-31",
+		});
+	});
+
+	it("should return 400 for invalid list filters", async () => {
+		const response = await request(app).get("/job-roles?locationId=invalid");
+
+		expect(response.status).toBe(400);
+		expect(response.body.errors[0].field).toBe("locationId.0");
+	});
+
 	it("should return 200 without bearer token on detail endpoint", async () => {
 		vi.spyOn(JobRolesService.prototype, "findById").mockResolvedValueOnce({
 			jobRoleId: 1,

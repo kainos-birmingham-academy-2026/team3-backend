@@ -2,6 +2,7 @@ import { NotFoundError } from "error-lib";
 import type { Request, Response } from "express";
 import type {
 	CreateJobRoleRequestDto,
+	JobRoleFiltersDto,
 	UpdateJobRoleRequestDto,
 } from "../dtos/jobRoleDto.js";
 import { TOKEN_ERROR } from "../errors/authError.js";
@@ -17,7 +18,8 @@ export class JobRolesController {
 
 	async getAll(_req: Request, res: Response) {
 		try {
-			const jobRoles = await this.service.findAll();
+			const filters = res.locals.validatedQuery as JobRoleFiltersDto;
+			const jobRoles = await this.service.findAll(filters);
 			return res.status(200).send(jobRoles);
 		} catch {
 			return res.status(500).json({ error: "Internal Server Error" });

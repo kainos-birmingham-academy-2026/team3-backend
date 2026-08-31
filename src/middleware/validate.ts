@@ -40,3 +40,18 @@ export const validateParams = <T>(schema: ZodSchema<T>): RequestHandler => {
 		next();
 	};
 };
+
+export const validateQuery = <T>(schema: ZodSchema<T>): RequestHandler => {
+	return (req, res, next) => {
+		const result = schema.safeParse(req.query);
+
+		if (!result.success) {
+			return res
+				.status(400)
+				.json({ errors: formatErrors(result.error.issues) });
+		}
+
+		res.locals.validatedQuery = result.data;
+		next();
+	};
+};

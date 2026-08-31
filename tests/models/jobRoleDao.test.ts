@@ -113,6 +113,13 @@ describe("JobRoleDao", () => {
 
 			expect(prisma.jobRole.findMany).toHaveBeenCalledTimes(1);
 			expect(prisma.jobRole.findMany).toHaveBeenCalledWith({
+				where: {
+					roleName: undefined,
+					locationId: undefined,
+					capabilityId: undefined,
+					bandId: undefined,
+					closingDate: undefined,
+				},
 				relationLoadStrategy: "join",
 				include: {
 					status: true,
@@ -121,6 +128,36 @@ describe("JobRoleDao", () => {
 					band: true,
 				},
 			});
+		});
+
+		it("should translate filters into Prisma conditions", async () => {
+			vi.mocked(
+				prisma.jobRole.findMany as unknown as typeof prisma.jobRole.findMany,
+			).mockResolvedValue([]);
+
+			await dao.findAll({
+				roleName: "engineer",
+				locationId: [1, 2],
+				capabilityId: [3],
+				bandId: [4],
+				closingFrom: "2026-09-01",
+				closingBy: "2026-12-31",
+			});
+
+			expect(prisma.jobRole.findMany).toHaveBeenCalledWith(
+				expect.objectContaining({
+					where: {
+						roleName: { contains: "engineer", mode: "insensitive" },
+						locationId: { in: [1, 2] },
+						capabilityId: { in: [3] },
+						bandId: { in: [4] },
+						closingDate: {
+							gte: new Date("2026-09-01T00:00:00.000Z"),
+							lt: new Date("2027-01-01T00:00:00.000Z"),
+						},
+					},
+				}),
+			);
 		});
 
 		it("should return array of JobRole objects", async () => {
