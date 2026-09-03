@@ -33,16 +33,10 @@ export const JobRoleFiltersSchema = z
 		closingFrom: optionalFilterDate,
 		closingBy: optionalFilterDate,
 	})
-	.refine(
-		(filters) =>
-			!filters.closingFrom ||
-			!filters.closingBy ||
-			filters.closingFrom <= filters.closingBy,
-		{
-			message: "Closing from must be on or before closing by",
-			path: ["closingBy"],
-		},
-	);
+	.refine((filters) => !filters.closingFrom || !filters.closingBy, {
+		message: "Choose either closing on or after or closing on or before",
+		path: ["closingBy"],
+	});
 
 export const IdParamSchema = z.object({
 	id: z.coerce
