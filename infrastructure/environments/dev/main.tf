@@ -81,6 +81,28 @@ module "container_app_environment" {
   }
 }
 
+module "postgresql" {
+  source = "../../modules/postgresql"
+
+  name                           = "psql-${var.project_name}-${var.environment}"
+  resource_group_name            = module.resource_group.name
+  location                       = var.location
+  postgresql_version             = "18"
+  administrator_login            = "dino_admin_team3"
+  administrator_password         = var.postgresql_administrator_password
+  administrator_password_version = var.postgresql_administrator_password_version
+  sku_name                       = "B_Standard_B1ms"
+  storage_mb                     = 32768
+  backup_retention_days          = 7
+  zone                           = "2"
+  database_name                  = "jobRoles"
+  tags = {
+    environment = var.environment
+    managed_by  = "terraform"
+    project     = var.project_name
+  }
+}
+
 data "azurerm_container_registry" "shared" {
   name                = var.acr_name
   resource_group_name = var.acr_resource_group_name
@@ -117,6 +139,7 @@ module "backend_container_app" {
   database_url_secret_id       = "${module.key_vault.vault_uri}secrets/database-url"
   jwt_secret_id                = "${module.key_vault.vault_uri}secrets/jwt-secret"
   enable_swagger_docs          = var.enable_swagger_docs
+  seed_database                = true
   tags = {
     environment = var.environment
     managed_by  = "terraform"
@@ -129,7 +152,29 @@ module "backend_container_app" {
   ]
 }
 
+resource "azurerm_postgresql_flexible_server_firewall_rule" "backend_container_app" {
+  name             = "allow-team3-backend-container-app"
+  server_id        = module.postgresql.id
+  start_ip_address = one(module.backend_container_app.outbound_ip_addresses)
+  end_ip_address   = one(module.backend_container_app.outbound_ip_addresses)
+}
+
 import {
   to = module.resource_group.azurerm_resource_group.this
   id = "/subscriptions/${var.subscription_id}/resourceGroups/rg-${var.project_name}-${var.environment}"
+}
+
+import {
+  to = module.postgresql.azurerm_postgresql_flexible_server.this
+  id = "/subscriptions/${var.subscription_id}/resourceGroups/rg-${var.project_name}-${var.environment}/providers/Microsoft.DBforPostgreSQL/flexibleServers/psql-${var.project_name}-${var.environment}"
+}
+
+import {
+  to = module.postgresql.azurerm_postgresql_flexible_server_database.this
+  id = "/subscriptions/${var.subscription_id}/resourceGroups/rg-${var.project_name}-${var.environment}/providers/Microsoft.DBforPostgreSQL/flexibleServers/psql-${var.project_name}-${var.environment}/databases/jobRoles"
+}
+
+import {
+  to = azurerm_postgresql_flexible_server_firewall_rule.backend_container_app
+  id = "/subscriptions/${var.subscription_id}/resourceGroups/rg-${var.project_name}-${var.environment}/providers/Microsoft.DBforPostgreSQL/flexibleServers/psql-${var.project_name}-${var.environment}/firewallRules/allow-team3-backend-container-app"
 }

@@ -64,6 +64,11 @@ resource "azurerm_container_app" "this" {
         value = tostring(var.enable_swagger_docs)
       }
 
+      env {
+        name  = "SEED_DATABASE"
+        value = tostring(var.seed_database)
+      }
+
       liveness_probe {
         transport = "HTTP"
         port      = 4000

@@ -37,10 +37,11 @@ COPY prisma.config.ts ./
 RUN npm ci --omit=dev && npm install --omit=dev --no-save tsx@4.23.5
 
 COPY --chown=node:node --from=build /app/dist ./dist
+COPY --chown=node:node --from=build /app/src/generated/prisma ./src/generated/prisma
 COPY --chown=node:node --from=build /app/src/generated/prisma/*.node ./dist/generated/prisma/
 
 EXPOSE 4000
 
 USER node
 
-CMD ["sh", "-c", "./node_modules/.bin/prisma migrate deploy && exec ./node_modules/.bin/tsx dist/index.js"]
+CMD ["sh", "-c", "./node_modules/.bin/prisma migrate deploy && if [ \"$SEED_DATABASE\" = \"true\" ]; then npm run seed; fi && exec ./node_modules/.bin/tsx dist/index.js"]

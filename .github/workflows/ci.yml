@@ -125,6 +125,8 @@ jobs:
       id-token: write
       issues: write
       pull-requests: write
+    env:
+      TF_VAR_postgresql_administrator_password: ${{ secrets.POSTGRESQL_ADMINISTRATOR_PASSWORD }}
     defaults:
       run:
         working-directory: infrastructure/environments/dev
@@ -179,6 +181,8 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    env:
+      TF_VAR_postgresql_administrator_password: ${{ secrets.POSTGRESQL_ADMINISTRATOR_PASSWORD }}
     defaults:
       run:
         working-directory: infrastructure/environments/dev
