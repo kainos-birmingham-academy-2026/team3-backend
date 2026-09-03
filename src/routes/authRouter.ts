@@ -9,7 +9,7 @@ const controller = new AuthController(new AuthService());
 
 /**
  * @openapi
- * /api/login:
+ * /api/auth/login:
  *   post:
  *     tags: [Auth]
  *     summary: Login and receive JWT
@@ -39,7 +39,7 @@ const controller = new AuthController(new AuthService());
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/MessageErrorResponse'
+ *               $ref: '#/components/schemas/MessageResponse'
  *       500:
  *         description: Internal server error
  *         content:
@@ -56,7 +56,7 @@ router.post(
 
 /**
  * @openapi
- * /api/register:
+ * /api/auth/register:
  *   post:
  *     tags: [Auth]
  *     summary: Register a new user account
@@ -86,7 +86,7 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/MessageErrorResponse'
+ *               $ref: '#/components/schemas/MessageResponse'
  *       500:
  *         description: Internal server error
  *         content:

@@ -1,8 +1,5 @@
 import prisma from "../prismaClient";
 
-const HIRE_STATUSES = ["HIRED", "APPROVED"] as const;
-const REJECT_STATUSES = ["REJECTED", "REJECT"] as const;
-
 type ApplicationListItem = {
 	applicationId: number;
 	jobRoleId: number;
@@ -42,14 +39,9 @@ export class JobApplicationAdminService {
 		return applications.map((application) => ({
 			applicationId: application.applicationId,
 			jobRoleId: application.jobRoleId,
-			applicant: application.user.email,
-			applicantName: application.user.email,
-			email: application.user.email,
-			appliedRole: application.jobRole.roleName,
+			applicantEmail: application.user.email,
 			roleName: application.jobRole.roleName,
 			applicationDate: application.createdAt,
-			createdAt: application.createdAt,
-			username: application.user.email,
 			cvText: application.cvText,
 			status: application.applicationStatus,
 			actions:
@@ -59,18 +51,9 @@ export class JobApplicationAdminService {
 		}));
 	}
 
-	async findAllAdmin() {
+	async findAllAdmin(jobRoleId?: number) {
 		const applications = await prisma.application.findMany({
-			orderBy: { createdAt: "desc" },
-			select: this.applicationListSelect,
-		});
-
-		return this.mapApplications(applications);
-	}
-
-	async findAll(jobRoleId: number) {
-		const applications = await prisma.application.findMany({
-			where: { jobRoleId },
+			...(jobRoleId === undefined ? {} : { where: { jobRoleId } }),
 			orderBy: { createdAt: "desc" },
 			select: this.applicationListSelect,
 		});
@@ -140,7 +123,7 @@ export class JobApplicationAdminService {
 				message: "Applicant hired",
 				application: {
 					applicationId: updatedApplication.applicationId,
-					username: updatedApplication.user.email,
+					applicantEmail: updatedApplication.user.email,
 					status: updatedApplication.applicationStatus,
 				},
 			};
@@ -203,7 +186,7 @@ export class JobApplicationAdminService {
 			message: "Applicant rejected",
 			application: {
 				applicationId: updatedApplication.applicationId,
-				username: updatedApplication.user.email,
+				applicantEmail: updatedApplication.user.email,
 				status: updatedApplication.applicationStatus,
 			},
 		};
@@ -223,19 +206,11 @@ export class JobApplicationAdminService {
 	}
 
 	async updateApplicationStatusById(applicationId: number, status: string) {
-		const normalisedStatus = status.trim().toUpperCase();
-
-		if (
-			HIRE_STATUSES.includes(normalisedStatus as (typeof HIRE_STATUSES)[number])
-		) {
+		if (status === "HIRED") {
 			return this.hireApplicantById(applicationId);
 		}
 
-		if (
-			REJECT_STATUSES.includes(
-				normalisedStatus as (typeof REJECT_STATUSES)[number],
-			)
-		) {
+		if (status === "REJECTED") {
 			return this.rejectApplicantById(applicationId);
 		}
 

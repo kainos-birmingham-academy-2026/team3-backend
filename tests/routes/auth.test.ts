@@ -20,13 +20,13 @@ vi.mock("../../src/services/authService.js", () => ({
 import { AuthError } from "../../src/errors/authError.ts";
 import { ConflictError } from "../../src/errors/conflictError.ts";
 
-describe("POST /api/register", () => {
+describe("POST /api/auth/register", () => {
 	beforeEach(() => {
 		vi.resetAllMocks();
 	});
 
 	it("should return 400 for invalid email format", async () => {
-		const response = await request(app).post("/api/register").send({
+		const response = await request(app).post("/api/auth/register").send({
 			email: "not-an-email",
 			password: "Password123!",
 		});
@@ -43,7 +43,7 @@ describe("POST /api/register", () => {
 	});
 
 	it("should return 400 for weak registration password", async () => {
-		const response = await request(app).post("/api/register").send({
+		const response = await request(app).post("/api/auth/register").send({
 			email: "new@example.com",
 			password: "password123",
 		});
@@ -62,7 +62,7 @@ describe("POST /api/register", () => {
 	it("should return 201 when registration succeeds", async () => {
 		serviceMock.register.mockResolvedValueOnce(undefined);
 
-		const response = await request(app).post("/api/register").send({
+		const response = await request(app).post("/api/auth/register").send({
 			email: "new@example.com",
 			password: "Password123!",
 		});
@@ -76,7 +76,7 @@ describe("POST /api/register", () => {
 			new ConflictError(409, "Email already in use"),
 		);
 
-		const response = await request(app).post("/api/register").send({
+		const response = await request(app).post("/api/auth/register").send({
 			email: "existing@example.com",
 			password: "Password123!",
 		});
@@ -86,13 +86,13 @@ describe("POST /api/register", () => {
 	});
 });
 
-describe("POST /api/login", () => {
+describe("POST /api/auth/login", () => {
 	beforeEach(() => {
 		vi.resetAllMocks();
 	});
 
 	it("should return 400 for invalid email format", async () => {
-		const response = await request(app).post("/api/login").send({
+		const response = await request(app).post("/api/auth/login").send({
 			email: "not-an-email",
 			password: "password123",
 		});
@@ -109,7 +109,7 @@ describe("POST /api/login", () => {
 	});
 
 	it("should return 400 when password is missing", async () => {
-		const response = await request(app).post("/api/login").send({
+		const response = await request(app).post("/api/auth/login").send({
 			email: "user@example.com",
 		});
 
@@ -129,7 +129,7 @@ describe("POST /api/login", () => {
 			new AuthError(401, "Invalid email or password"),
 		);
 
-		const response = await request(app).post("/api/login").send({
+		const response = await request(app).post("/api/auth/login").send({
 			email: "user@example.com",
 			password: "wrong-password",
 		});
@@ -141,7 +141,7 @@ describe("POST /api/login", () => {
 	it("should return token for valid credentials", async () => {
 		serviceMock.login.mockResolvedValueOnce("mock-jwt-token");
 
-		const response = await request(app).post("/api/login").send({
+		const response = await request(app).post("/api/auth/login").send({
 			email: "user@example.com",
 			password: "password123",
 		});

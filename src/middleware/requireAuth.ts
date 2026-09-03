@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
 import { TOKEN_ERROR } from "../errors/authError.js";
+import { INTERNAL_SERVER_ERROR } from "../errors/serverError.js";
 import { USER_ROLES, type UserRole } from "./authorise.js";
 
 interface AuthTokenPayload {
@@ -29,7 +30,7 @@ export const requireAuth: RequestHandler = (req, res, next) => {
 	const secret = process.env.JWT_SECRET;
 
 	if (!secret) {
-		return res.status(500).json({ error: "Internal server error" });
+		return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
 	}
 
 	try {

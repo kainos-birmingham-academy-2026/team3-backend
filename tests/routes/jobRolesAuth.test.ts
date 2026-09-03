@@ -27,7 +27,7 @@ describe("Job role route auth protection", () => {
 	it("should return 200 without bearer token on list endpoint", async () => {
 		vi.spyOn(JobRolesService.prototype, "findAll").mockResolvedValueOnce([]);
 
-		const response = await request(app).get("/job-roles");
+		const response = await request(app).get("/api/job-roles");
 
 		expect(response.status).toBe(200);
 		expect(response.body).toEqual([]);
@@ -39,7 +39,7 @@ describe("Job role route auth protection", () => {
 			.mockResolvedValueOnce([]);
 
 		const response = await request(app).get(
-			"/job-roles?roleName=engineer&locationId=1&locationId=2&capabilityId=3&bandId=4&closingFrom=2026-09-01",
+			"/api/job-roles?roleName=engineer&locationId=1&locationId=2&capabilityId=3&bandId=4&closingDateFrom=2026-09-01",
 		);
 
 		expect(response.status).toBe(200);
@@ -48,26 +48,26 @@ describe("Job role route auth protection", () => {
 			locationId: [1, 2],
 			capabilityId: [3],
 			bandId: [4],
-			closingFrom: "2026-09-01",
+			closingDateFrom: "2026-09-01",
 		});
 	});
 
 	it("should return 400 when both closing date filters are supplied", async () => {
 		const response = await request(app).get(
-			"/job-roles?closingFrom=2026-09-01&closingBy=2026-12-31",
+			"/api/job-roles?closingDateFrom=2026-09-01&closingDateTo=2026-12-31",
 		);
 
 		expect(response.status).toBe(400);
 		expect(response.body.errors[0]).toEqual(
 			expect.objectContaining({
-				field: "closingBy",
+				field: "closingDateTo",
 				message: "Choose either closing on or after or closing on or before",
 			}),
 		);
 	});
 
 	it("should return 400 for invalid list filters", async () => {
-		const response = await request(app).get("/job-roles?locationId=invalid");
+		const response = await request(app).get("/api/job-roles?locationId=invalid");
 
 		expect(response.status).toBe(400);
 		expect(response.body.errors[0].field).toBe("locationId.0");
@@ -91,7 +91,7 @@ describe("Job role route auth protection", () => {
 			postcode: "S1 1AA",
 		});
 
-		const response = await request(app).get("/job-roles/1");
+		const response = await request(app).get("/api/job-roles/1");
 
 		expect(response.status).toBe(200);
 		expect(response.body.jobRoleId).toBe(1);
@@ -112,13 +112,13 @@ describe("Job role route auth protection", () => {
 			[{ locationId: 4, locationName: "Birmingham" }],
 		],
 	] as const)(
-		"should return lookup data from the /job-roles/%s endpoint",
+		"should return lookup data from the /api/job-roles/%s endpoint",
 		async (path, method, data) => {
 			vi.spyOn(JobRolesService.prototype, method).mockResolvedValueOnce(
 				data as never,
 			);
 
-			const response = await request(app).get(`/job-roles/${path}`);
+			const response = await request(app).get(`/api/job-roles/${path}`);
 
 			expect(response.status).toBe(200);
 			expect(response.body).toEqual(data);
@@ -161,7 +161,7 @@ describe("Job role route auth protection", () => {
 		);
 
 		const response = await request(app)
-			.get("/job-roles")
+			.get("/api/job-roles")
 			.set("Authorization", `Bearer ${token}`);
 
 		expect(response.status).toBe(200);
@@ -182,7 +182,7 @@ describe("Job role route auth protection", () => {
 		);
 
 		const response = await request(app)
-			.get("/job-roles")
+			.get("/api/job-roles")
 			.set("Authorization", `Bearer ${token}`);
 
 		expect(response.status).toBe(200);
@@ -208,7 +208,7 @@ describe("Job role route auth protection", () => {
 		};
 
 		const response = await request(app)
-			.post("/job-roles/create")
+			.post("/api/job-roles")
 			.set("Authorization", `Bearer ${token}`)
 			.send(payload);
 
@@ -248,7 +248,7 @@ describe("Job role route auth protection", () => {
 		);
 
 		const response = await request(app)
-			.post("/job-roles/create")
+			.post("/api/job-roles")
 			.set("Authorization", `Bearer ${token}`)
 			.send(payload);
 
@@ -267,7 +267,7 @@ describe("Job role route auth protection", () => {
 		);
 
 		const response = await request(app)
-			.post("/job-roles/create")
+			.post("/api/job-roles")
 			.set("Authorization", `Bearer ${token}`)
 			.send({ roleName: "" });
 
@@ -307,7 +307,7 @@ describe("Job role route auth protection", () => {
 		});
 
 		const response = await request(app)
-			.patch("/job-roles/1")
+			.patch("/api/job-roles/1")
 			.set("Authorization", `Bearer ${token}`)
 			.send(payload);
 
@@ -324,7 +324,7 @@ describe("Job role route auth protection", () => {
 		const updateSpy = vi.spyOn(JobRolesService.prototype, "updateJobRole");
 
 		const response = await request(app)
-			.patch("/job-roles/1")
+			.patch("/api/job-roles/1")
 			.set("Authorization", `Bearer ${token}`)
 			.send({ roleName: "" });
 
@@ -341,7 +341,7 @@ describe("Job role route auth protection", () => {
 		);
 
 		const response = await request(app)
-			.patch("/job-roles/1")
+			.patch("/api/job-roles/1")
 			.set("Authorization", `Bearer ${token}`)
 			.send({});
 
@@ -359,7 +359,7 @@ describe("Job role route auth protection", () => {
 			.mockResolvedValueOnce();
 
 		const response = await request(app)
-			.delete("/job-roles/1")
+			.delete("/api/job-roles/1")
 			.set("Authorization", `Bearer ${token}`);
 
 		expect(response.status).toBe(204);
@@ -374,14 +374,14 @@ describe("Job role route auth protection", () => {
 		);
 
 		const response = await request(app)
-			.delete("/job-roles/1")
+			.delete("/api/job-roles/1")
 			.set("Authorization", `Bearer ${token}`);
 
 		expect(response.status).toBe(403);
 	});
 });
 
-describe("POST /job-roles/:id/apply", () => {
+describe("POST /api/job-applications", () => {
 	let originalJwtSecret: string | undefined;
 
 	beforeEach(() => {
@@ -400,8 +400,8 @@ describe("POST /job-roles/:id/apply", () => {
 
 	it("should return 401 without bearer token", async () => {
 		const response = await request(app)
-			.post("/job-roles/1/apply")
-			.send({ cvText: "CV-2026-001" });
+			.post("/api/job-applications")
+			.send({ jobRoleId: 1, cvText: "CV-2026-001" });
 
 		expect(response.status).toBe(401);
 		expect(response.body).toEqual({ message: "Invalid token" });
@@ -415,14 +415,17 @@ describe("POST /job-roles/:id/apply", () => {
 		);
 
 		const response = await request(app)
-			.post("/job-roles/abc/apply")
+			.post("/api/job-applications")
 			.set("Authorization", `Bearer ${token}`)
-			.send({ cvText: "CV-2026-001" });
+			.send({ jobRoleId: "abc", cvText: "CV-2026-001" });
 
 		expect(response.status).toBe(400);
 		expect(response.body).toEqual({
 			errors: expect.arrayContaining([
-				expect.objectContaining({ field: "id", message: expect.any(String) }),
+				expect.objectContaining({
+					field: "jobRoleId",
+					message: expect.any(String),
+				}),
 			]),
 		});
 	});
@@ -435,9 +438,9 @@ describe("POST /job-roles/:id/apply", () => {
 		);
 
 		const response = await request(app)
-			.post("/job-roles/1/apply")
+			.post("/api/job-applications")
 			.set("Authorization", `Bearer ${token}`)
-			.send({ cvText: "" });
+			.send({ jobRoleId: 1, cvText: "" });
 
 		expect(response.status).toBe(400);
 		expect(response.body).toEqual({
@@ -468,9 +471,9 @@ describe("POST /job-roles/:id/apply", () => {
 		});
 
 		const response = await request(app)
-			.post("/job-roles/1/apply")
+			.post("/api/job-applications")
 			.set("Authorization", `Bearer ${token}`)
-			.send({ cvText: "CV-2026-001" });
+			.send({ jobRoleId: 1, cvText: "CV-2026-001" });
 
 		expect(response.status).toBe(201);
 		expect(response.body).toSatisfy(
@@ -495,12 +498,12 @@ describe("POST /job-roles/:id/apply", () => {
 		).mockRejectedValueOnce(new NotFoundError("JobRole with id 999 not found"));
 
 		const response = await request(app)
-			.post("/job-roles/999/apply")
+			.post("/api/job-applications")
 			.set("Authorization", `Bearer ${token}`)
-			.send({ cvText: "CV-2026-001" });
+			.send({ jobRoleId: 999, cvText: "CV-2026-001" });
 
 		expect(response.status).toBe(404);
-		expect(response.body).toEqual({ error: "JobRole with id 999 not found" });
+		expect(response.body).toEqual({ message: "JobRole with id 999 not found" });
 	});
 
 	it("should return 409 when user has already applied for the job role", async () => {
@@ -521,13 +524,13 @@ describe("POST /job-roles/:id/apply", () => {
 		);
 
 		const response = await request(app)
-			.post("/job-roles/1/apply")
+			.post("/api/job-applications")
 			.set("Authorization", `Bearer ${token}`)
-			.send({ cvText: "CV-2026-001" });
+			.send({ jobRoleId: 1, cvText: "CV-2026-001" });
 
 		expect(response.status).toBe(409);
 		expect(response.body).toEqual({
-			error: "User with id 1 has already applied for JobRole with id 1",
+			message: "User with id 1 has already applied for JobRole with id 1",
 		});
 	});
 
@@ -549,9 +552,9 @@ describe("POST /job-roles/:id/apply", () => {
 		});
 
 		const response = await request(app)
-			.post("/job-roles/1/apply")
+			.post("/api/job-applications")
 			.set("Authorization", `Bearer ${token}`)
-			.send({ cvText: "CV-2026-002" });
+			.send({ jobRoleId: 1, cvText: "CV-2026-002" });
 
 		expect(response.status).toBe(201);
 		expect(response.body).toSatisfy((value) => value.userId === 2);

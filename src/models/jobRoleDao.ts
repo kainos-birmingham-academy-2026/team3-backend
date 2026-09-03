@@ -48,14 +48,14 @@ function toApplicationDomain(
 
 export class JobRoleDao {
 	async findAll(filters: JobRoleFiltersDto = {}): Promise<JobRole[]> {
-		const closingFrom = filters.closingFrom
-			? new Date(`${filters.closingFrom}T00:00:00.000Z`)
+		const closingDateFrom = filters.closingDateFrom
+			? new Date(`${filters.closingDateFrom}T00:00:00.000Z`)
 			: undefined;
-		const closingBy = filters.closingBy
-			? new Date(`${filters.closingBy}T00:00:00.000Z`)
+		const closingDateTo = filters.closingDateTo
+			? new Date(`${filters.closingDateTo}T00:00:00.000Z`)
 			: undefined;
-		const dayAfterClosingBy = closingBy
-			? new Date(closingBy.getTime() + 24 * 60 * 60 * 1000)
+		const dayAfterClosingDateTo = closingDateTo
+			? new Date(closingDateTo.getTime() + 24 * 60 * 60 * 1000)
 			: undefined;
 		const rows = await prisma.jobRole.findMany({
 			where: {
@@ -68,8 +68,8 @@ export class JobRoleDao {
 					: undefined,
 				bandId: filters.bandId ? { in: filters.bandId } : undefined,
 				closingDate:
-					closingFrom || dayAfterClosingBy
-						? { gte: closingFrom, lt: dayAfterClosingBy }
+					closingDateFrom || dayAfterClosingDateTo
+						? { gte: closingDateFrom, lt: dayAfterClosingDateTo }
 						: undefined,
 			},
 			relationLoadStrategy: "join",
@@ -176,7 +176,7 @@ export class JobRoleDao {
 	async createApplication(
 		jobRoleId: number,
 		userId: number,
-		data: CreateApplicationRequestDto,
+		data: Pick<CreateApplicationRequestDto, "cvText">,
 	): Promise<JobRoleApplication> {
 		const application = await prisma.application.create({
 			data: {

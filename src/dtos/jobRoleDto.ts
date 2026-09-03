@@ -30,16 +30,16 @@ export const JobRoleFiltersSchema = z
 		locationId: optionalIdList,
 		capabilityId: optionalIdList,
 		bandId: optionalIdList,
-		closingFrom: optionalFilterDate,
-		closingBy: optionalFilterDate,
+		closingDateFrom: optionalFilterDate,
+		closingDateTo: optionalFilterDate,
 	})
-	.refine((filters) => !filters.closingFrom || !filters.closingBy, {
+	.refine((filters) => !filters.closingDateFrom || !filters.closingDateTo, {
 		message: "Choose either closing on or after or closing on or before",
-		path: ["closingBy"],
+		path: ["closingDateTo"],
 	});
 
-export const IdParamSchema = z.object({
-	id: z.coerce
+export const JobRoleIdParamSchema = z.object({
+	jobRoleId: z.coerce
 		.number("ID must be a number")
 		.int("ID must be an integer")
 		.positive("ID must be a positive number"),
@@ -104,12 +104,11 @@ export const CreateJobRoleSchema = z.object({
 
 export const UpdateJobRoleSchema = CreateJobRoleSchema;
 
-export type IdParamDto = z.infer<typeof IdParamSchema>;
+export type JobRoleIdParamDto = z.infer<typeof JobRoleIdParamSchema>;
 export type JobRoleFiltersDto = z.infer<typeof JobRoleFiltersSchema>;
 
-export const CreateApplicationSchema = z.object({
-	//user id validation is handled by the auth middleware, validation not required here
-	//job role id validation is handled by the route param validation, validation not required here
+export const CreateApplicationSchema = z.strictObject({
+	jobRoleId: z.coerce.number().int().positive(),
 	cvText: z.string().trim().min(1, "CV reference cannot be empty"),
 });
 

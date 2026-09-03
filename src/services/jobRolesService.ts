@@ -9,10 +9,10 @@ import { ConflictError } from "../errors/conflictError.js";
 import { JobRoleMapper } from "../mappers/jobRoleMapper.js";
 import type { BandResponse } from "../models/bandResponse.js";
 import type { CapabilityResponse } from "../models/capabilityResponse.js";
-import type { JobRoleDetailedResponse } from "../models/JobRoleDetailedResponse.js";
+import type { JobRoleDetailedResponse } from "../models/jobRoleDetailedResponse.js";
 import type { JobRoleApplication } from "../models/jobRoleApplication.js";
 import { JobRoleDao } from "../models/jobRoleDao.js";
-import type { JobRoleResponse } from "../models/jobRoleResponse.ts";
+import type { JobRoleResponse } from "../models/jobRoleResponse.js";
 import type { LocationResponse } from "../models/locationResponse.js";
 import type { StatusResponse } from "../models/statusResponse.js";
 
@@ -70,7 +70,7 @@ export class JobRolesService {
 	async createApplication(
 		jobRoleId: number,
 		userId: number,
-		data: CreateApplicationRequestDto,
+		data: Pick<CreateApplicationRequestDto, "cvText">,
 	): Promise<JobRoleApplication> {
 		const jobRole = await this.jobRoleDao.findById(jobRoleId);
 		if (!jobRole) {

@@ -29,10 +29,8 @@ export class UserApplicationsService {
 		return applications.map((application) => ({
 			applicationId: application.applicationId,
 			jobRoleId: application.jobRoleId,
-			appliedRole: application.jobRole.roleName,
 			roleName: application.jobRole.roleName,
 			applicationDate: application.createdAt,
-			createdAt: application.createdAt,
 			cvText: application.cvText,
 			status: application.applicationStatus,
 		}));

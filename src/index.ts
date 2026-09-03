@@ -17,10 +17,10 @@ app.use(express.json());
 app.use(requestLogger);
 registerSwaggerRoutes(app, swaggerDocsEnabled);
 
-app.use("/job-roles", jobRolesRouter);
-app.use("/api", authRouter);
-app.use("/job-applications/admin", jobApplicationRouter);
-app.use("/job-applications", userApplicationsRouter);
+app.use("/api/job-roles", jobRolesRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/job-applications/admin", jobApplicationRouter);
+app.use("/api/job-applications", userApplicationsRouter);
 app.use("/teapot", teapotRouter);
 
 // Root endpoint

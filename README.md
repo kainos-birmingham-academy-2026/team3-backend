@@ -218,7 +218,7 @@ docker run -d \
 
 ```bash
 curl http://localhost:4000/health
-curl http://localhost:4000/job-roles
+curl http://localhost:4000/api/job-roles
 docker logs team3-backend
 ```
 
@@ -248,7 +248,7 @@ Example response:
 }
 ```
 
-### `GET /job-roles`
+### `GET /api/job-roles`
 
 Returns all job roles in the database (currently seeded with test data).
 
@@ -295,7 +295,7 @@ Example response (`418`):
 }
 ```
 
-### `POST /api/login`
+### `POST /api/auth/login`
 
 Authenticates a user with email and password and returns a JWT token.
 
@@ -330,13 +330,13 @@ Validation error (`400`) example:
 }
 ```
 
-### `GET /job-roles/{id}`
+### `GET /api/job-roles/{jobRoleId}`
 
 Returns the full details for a job role. This endpoint is public and does not require authentication.
 
 Path parameters:
 
-- `id` - A positive integer job role ID
+- `jobRoleId` - A positive integer job role ID
 
 Example response (`200`):
 
@@ -363,14 +363,14 @@ Example response (`200`):
 
 These public endpoints provide the lookup data used when creating a job role. They do not require authentication and do not accept a request body or query parameters.
 
-- `GET /job-roles/statuses` returns `{ "statusId": 1, "statusName": "OPEN" }` objects.
-- `GET /job-roles/bands` returns `{ "bandId": 3, "bandName": "Engineer" }` objects.
-- `GET /job-roles/capabilities` returns `{ "capabilityId": 1, "capabilityName": "Software Engineering" }` objects.
-- `GET /job-roles/locations` returns `{ "locationId": 1, "locationName": "Belfast" }` objects.
+- `GET /api/job-roles/statuses` returns `{ "statusId": 1, "statusName": "OPEN" }` objects.
+- `GET /api/job-roles/bands` returns `{ "bandId": 3, "bandName": "Engineer" }` objects.
+- `GET /api/job-roles/capabilities` returns `{ "capabilityId": 1, "capabilityName": "Software Engineering" }` objects.
+- `GET /api/job-roles/locations` returns `{ "locationId": 1, "locationName": "Belfast" }` objects.
 
 Each endpoint returns an array with status `200`. If no lookup records exist, it returns `404` with an error object; unexpected database or service failures return `500`.
 
-### `DELETE /job-roles/{id}`
+### `DELETE /api/job-roles/{jobRoleId}`
 
 Deletes a job role and its associated applications.
 
@@ -406,7 +406,7 @@ Seeded login users for local and E2E testing all use the password `password`:
 
 Each applicant has at least one application. The seed includes applications across multiple job roles with `IN_PROGRESS`, `HIRED`, and `REJECTED` statuses. Running `npm run seed` again restores these records to their original states.
 
-### `POST /api/register`
+### `POST /api/auth/register`
 
 Registers a new user account.
 
@@ -447,7 +447,7 @@ Role behaviour:
 - Passwords are salted and hashed with Argon2id before storage
 
 
-### `POST /job-roles/create`
+### `POST /api/job-roles`
 
 Creates a new job role.
 
@@ -512,7 +512,7 @@ Authentication error (401):
 
 ```json
 {
-  "error": "Token error"
+  "message": "Token error"
 }
 ```
 
@@ -527,7 +527,7 @@ Authorisation error (403):
 
 
 
-### `POST /job-roles/:id/apply`
+### `POST /api/job-applications`
 
 Allows an authenticated user to apply for a specific job role with their CV.
 
@@ -540,6 +540,7 @@ Request body:
 
 ```json
 {
+  "jobRoleId": 1,
   "cvText": "Lagosuchus. Amtosaurus. Ischyrosaurus. Xixiasaurus. Sinoceratops. Changchunsaurus. Kundurosaurus. Cryptovolans. Sinovenator. Heterosaurus. Lisboasaurus. Borogovia. Gideonmantellia. Apatodon. Aviatyrannis. Saurophaganax. Baotianmansaurus. Teyuwasu. Pachycephalosaurus. Galtonia. Sinornithomimus.
 
  Geminiraptor. Vulcanodon. Banji. Sinucerasaurus. Maiasaura. Osmakasaurus. Inosaurus. Eucercosaurus. Petrobrasaurus. Indosuchus. Anserimimus. Yuanmousaurus. Adeopapposaurus. Abydosaurus. Crichtonsaurus. Prenoceratops. Coronosaurus. Xenoceratops. Shuvuuia. Mirischia. Ojoraptorsaurus. Eotyrannus. Tsaagan. Qinlingosaurus. Epidexipteryx. Gresslyosaurus. Platyceratops. Sinornithoides. Halticosaurus. Siluosaurus. Campylodoniscus. Eocarcharia.
@@ -551,12 +552,9 @@ Request body:
 }
 ```
 
-URL parameters:
-
-- `id` - The job role ID (integer)
-
 Validation rules:
 
+- `jobRoleId` must be a positive integer
 - `cvText` must be a non-empty string
 
 Success response (`201`):
@@ -575,7 +573,7 @@ Not found error (`404`) example:
 
 ```json
 {
-  "error": "JobRole with id 999 not found"
+  "message": "JobRole with id 999 not found"
 }
 ```
 
@@ -583,7 +581,7 @@ Conflict error (`409`) example:
 
 ```json
 {
-  "error": "User has already applied for this job role"
+  "message": "User has already applied for this job role"
 }
 ```
 
@@ -591,54 +589,39 @@ Authentication error (`401`) example:
 
 ```json
 {
-  "error": "Token error"
+  "message": "Token error"
 }
 ```
 
-### Admin Job Applications Endpoints
+### `PATCH /api/job-applications/:applicationId/status`
 
-#### `GET /job-applications/admin`
+Withdraws an authenticated user's in-progress application.
 
-Retrieves all job applications across all job roles (admin only).
-
-Authentication:
-
-- Requires `Authorization: Bearer <jwt>`
-- Admin role required
-
-Success response (`200`):
+Request body:
 
 ```json
-[
-  {
-    "applicationId": 1,
-    "jobRoleId": 1,
-    "applicant": "test@example.com",
-    "email": "test@example.com",
-    "appliedRole": "Software Engineer",
-    "applicationDate": "2026-08-15T10:30:00.000Z",
-    "status": "IN_PROGRESS",
-    "cvText": "Lorem ipsum dolor sit amet...",
-    "actions": {
-      "canHire": true,
-      "canReject": true
-    }
-  }
-]
+{
+  "status": "WITHDRAWN"
+}
 ```
 
-#### `GET /job-applications/admin/:jobRoleId/applications`
+Only `WITHDRAWN` is accepted for user-owned application status updates.
 
-Retrieves all applications for a specific job role (admin only).
+### Admin Job Applications Endpoints
+
+#### `GET /api/job-applications/admin`
+
+Retrieves job applications for administrators. Use the optional `jobRoleId`
+query parameter to filter the collection to a specific job role.
 
 Authentication:
 
 - Requires `Authorization: Bearer <jwt>`
 - Admin role required
 
-Path parameters:
+Query parameters:
 
-- `jobRoleId` - The job role ID (positive integer)
+- `jobRoleId` - Optional positive integer job role ID
 
 Success response (`200`):
 
@@ -647,9 +630,8 @@ Success response (`200`):
   {
     "applicationId": 1,
     "jobRoleId": 1,
-    "applicant": "test@example.com",
-    "email": "test@example.com",
-    "appliedRole": "Software Engineer",
+    "applicantEmail": "test@example.com",
+    "roleName": "Software Engineer",
     "applicationDate": "2026-08-15T10:30:00.000Z",
     "status": "IN_PROGRESS",
     "cvText": "Lorem ipsum dolor sit amet...",
@@ -665,11 +647,11 @@ Not found error (`404`) example:
 
 ```json
 {
-  "error": "JobRole with id 999 not found"
+  "message": "JobRole with id 999 not found"
 }
 ```
 
-#### `PATCH /job-applications/admin/:applicationId/status`
+#### `PATCH /api/job-applications/admin/:applicationId/status`
 
 Updates the status of a job application (admin only).
 
@@ -692,21 +674,19 @@ Request body:
 
 Allowed status values:
 
-- `HIRED` or `APPROVED` - Mark applicant as hired
-- `REJECTED` or `REJECT` - Reject the application
+- `HIRED` - Mark applicant as hired
+- `REJECTED` - Reject the application
 
 Success response (`200`):
 
 ```json
 {
-  "applicationId": 1,
-  "jobRoleId": 1,
-  "applicant": "test@example.com",
-  "email": "test@example.com",
-  "appliedRole": "Software Engineer",
-  "applicationDate": "2026-08-15T10:30:00.000Z",
-  "status": "HIRED",
-  "cvText": "Lorem ipsum dolor sit amet..."
+	"message": "Applicant hired",
+	"application": {
+		"applicationId": 1,
+		"applicantEmail": "test@example.com",
+		"status": "HIRED"
+	}
 }
 ```
 
@@ -714,7 +694,12 @@ Validation error (`400`) example:
 
 ```json
 {
-  "message": "Unsupported status. Use HIRED/APPROVED or REJECTED"
+  "errors": [
+    {
+      "field": "status",
+      "message": "Invalid option: expected one of HIRED or REJECTED"
+    }
+  ]
 }
 ```
 
@@ -741,17 +726,17 @@ After starting the app, you can verify endpoints with:
 ```bash
 curl http://localhost:4000/
 curl http://localhost:4000/health
-curl -X POST http://localhost:4000/api/login \
+curl -X POST http://localhost:4000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"password"}'
-curl -X POST http://localhost:4000/api/register \
+curl -X POST http://localhost:4000/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"new.user@example.com","password":"Password123!"}'
-curl -X POST http://localhost:4000/job-roles/1/apply \
+curl -X POST http://localhost:4000/api/job-applications \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <jwt-token>" \
-  -d '{"cvText":"Lorem ipsum dolor sit amet. Qui repellendus exercitationem sed reiciendis..."}'
-curl -X POST http://localhost:4000/job-roles/create \
+  -d '{"jobRoleId":1,"cvText":"Lorem ipsum dolor sit amet. Qui repellendus exercitationem sed reiciendis..."}'
+curl -X POST http://localhost:4000/api/job-roles \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <admin-jwt-token>" \
   -d '{

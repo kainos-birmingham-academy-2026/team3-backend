@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Prisma } from "../../src/generated/prisma/client.js";
 import { JobApplicationAdminService } from "../../src/services/jobApplicationAdminService";
 
 const {
@@ -19,6 +18,17 @@ const {
 		mockTransaction: vi.fn(),
 	};
 });
+
+type TransactionTestClient = {
+	application: {
+		findFirst: typeof mockFindFirst;
+		update: typeof mockUpdate;
+		findUnique: typeof mockFindUnique;
+	};
+	jobRole: {
+		updateMany: typeof mockUpdateMany;
+	};
+};
 
 vi.mock("../../src/prismaClient.ts", () => {
 	return {
@@ -44,8 +54,8 @@ describe("jobApplicationAdminService", () => {
 		vi.clearAllMocks();
 
 		mockTransaction.mockImplementation(
-			async (callback: (tx: Prisma.TransactionClient) => Promise<unknown>) =>
-				callback({
+			async (callback: (tx: TransactionTestClient) => Promise<unknown>) => {
+				const transactionClient: TransactionTestClient = {
 					application: {
 						findFirst: mockFindFirst,
 						update: mockUpdate,
@@ -54,7 +64,10 @@ describe("jobApplicationAdminService", () => {
 					jobRole: {
 						updateMany: mockUpdateMany,
 					},
-				}),
+				};
+
+				return callback(transactionClient);
+			},
 		);
 
 		service = new JobApplicationAdminService();
@@ -78,21 +91,16 @@ describe("jobApplicationAdminService", () => {
 			},
 		]);
 
-		const result = await service.findAll(1);
+		const result = await service.findAllAdmin(1);
 
 		expect(Array.isArray(result)).toBe(true);
 		expect(result).toEqual([
 			{
 				applicationId: 1,
 				jobRoleId: 1,
-				applicant: "candidate@example.com",
-				applicantName: "candidate@example.com",
-				email: "candidate@example.com",
-				appliedRole: "Software Engineer",
+				applicantEmail: "candidate@example.com",
 				roleName: "Software Engineer",
 				applicationDate: new Date("2026-08-12T10:00:00.000Z"),
-				createdAt: new Date("2026-08-12T10:00:00.000Z"),
-				username: "candidate@example.com",
 				cvText: "cv-1.pdf",
 				status: "IN_PROGRESS",
 				actions: {
@@ -143,30 +151,48 @@ describe("jobApplicationAdminService", () => {
 			},
 		]);
 
-		const result = await service.findAll(1);
+		const result = await service.findAllAdmin(1);
 
 		expect(result[0]?.actions).toBeUndefined();
 	});
 
-	it("should map APPROVED status to hire flow", async () => {
+	it("should omit the job role filter when none is supplied", async () => {
+		mockFindMany.mockResolvedValueOnce([]);
+
+		await service.findAllAdmin();
+
+		const [query] = mockFindMany.mock.calls[0] ?? [];
+		expect(query).not.toHaveProperty("where");
+	});
+
+	it("should map HIRED status to hire flow", async () => {
 		const hireSpy = vi
 			.spyOn(service, "hireApplicantById")
 			.mockResolvedValueOnce({ message: "Applicant hired" } as never);
 
-		await service.updateApplicationStatusById(9, "APPROVED");
+		await service.updateApplicationStatusById(9, "HIRED");
 
 		expect(hireSpy).toHaveBeenCalledWith(9);
 	});
 
-	it("should map REJECT alias to reject flow", async () => {
+	it("should map REJECTED status to reject flow", async () => {
 		const rejectSpy = vi
 			.spyOn(service, "rejectApplicantById")
 			.mockResolvedValueOnce({ message: "Applicant rejected" } as never);
 
-		await service.updateApplicationStatusById(10, "REJECT");
+		await service.updateApplicationStatusById(10, "REJECTED");
 
 		expect(rejectSpy).toHaveBeenCalledWith(10);
 	});
+
+	it.each(["APPROVED", "REJECT", "hired", "rejected"])(
+		"should reject non-canonical status %s",
+		async (status) => {
+			await expect(
+				service.updateApplicationStatusById(10, status),
+			).rejects.toThrow("Unsupported application status");
+		},
+	);
 
 	it("should hire applicant when application is in progress and positions remain", async () => {
 		mockFindFirst.mockResolvedValueOnce({
@@ -200,7 +226,7 @@ describe("jobApplicationAdminService", () => {
 			message: "Applicant hired",
 			application: {
 				applicationId: 7,
-				username: "candidate@example.com",
+				applicantEmail: "candidate@example.com",
 				status: "HIRED",
 			},
 		});
@@ -282,7 +308,7 @@ describe("jobApplicationAdminService", () => {
 			message: "Applicant rejected",
 			application: {
 				applicationId: 11,
-				username: "candidate@example.com",
+				applicantEmail: "candidate@example.com",
 				status: "REJECTED",
 			},
 		});

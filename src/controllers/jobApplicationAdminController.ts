@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { INTERNAL_SERVER_ERROR } from "../errors/serverError.js";
 import type { JobApplicationAdminService } from "../services/jobApplicationAdminService";
 
 export class JobApplicationAdminController {
@@ -10,18 +11,11 @@ export class JobApplicationAdminController {
 
 	async getAllAdmin(_req: Request, res: Response) {
 		try {
-			const jobApplications = await this.service.findAllAdmin();
-			return res.status(200).send(jobApplications);
-		} catch (error) {
-			return this.handleStatusErrors(error, res);
-		}
-	}
-
-	async getAll(req: Request, res: Response) {
-		try {
-			const jobRoleId = Number(req.params.jobRoleId);
-			const jobApplications = await this.service.findAll(jobRoleId);
-			return res.status(200).send(jobApplications);
+			const { jobRoleId } = res.locals.validatedQuery as {
+				jobRoleId?: number;
+			};
+			const jobApplications = await this.service.findAllAdmin(jobRoleId);
+			return res.status(200).json(jobApplications);
 		} catch (error) {
 			return this.handleStatusErrors(error, res);
 		}
@@ -30,30 +24,11 @@ export class JobApplicationAdminController {
 	async updateStatus(req: Request, res: Response) {
 		try {
 			const applicationId = Number(req.params.applicationId);
-			const body = req.body as {
-				status?: string;
-				applicationStatus?: string;
-				action?: string;
-				decision?: string;
-				newStatus?: string;
-			};
-			const requestedStatus =
-				body.status ??
-				body.applicationStatus ??
-				body.action ??
-				body.decision ??
-				body.newStatus;
-
-			if (!requestedStatus || typeof requestedStatus !== "string") {
-				return res.status(400).json({
-					message:
-						"status (or applicationStatus/action/decision/newStatus) is required",
-				});
-			}
+			const { status } = req.body as { status: string };
 
 			const result = await this.service.updateApplicationStatusById(
 				applicationId,
-				requestedStatus,
+				status,
 			);
 			return res.status(200).json(result);
 		} catch (error) {
@@ -62,7 +37,7 @@ export class JobApplicationAdminController {
 				error.message === "Unsupported application status"
 			) {
 				return res.status(400).json({
-					message: "Unsupported status. Use HIRED/APPROVED or REJECTED",
+					message: "Unsupported status. Use HIRED or REJECTED",
 				});
 			}
 
@@ -85,6 +60,6 @@ export class JobApplicationAdminController {
 			}
 		}
 
-		return res.status(500).json({ error: "Internal Server Error" });
+		return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
 	}
 }

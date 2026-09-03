@@ -1,4 +1,9 @@
+import { existsSync } from "node:fs";
 import swaggerJsdoc from "swagger-jsdoc";
+
+const apiSources = existsSync("src/routes")
+	? ["src/routes/*.ts", "src/index.ts"]
+	: ["dist/routes/*.js", "dist/index.js"];
 
 const options: swaggerJsdoc.Options = {
 	definition: {
@@ -12,6 +17,7 @@ const options: swaggerJsdoc.Options = {
 		tags: [
 			{ name: "Auth", description: "Authentication endpoints" },
 			{ name: "Job Roles", description: "Job role endpoints" },
+			{ name: "Applications", description: "Job application endpoints" },
 			{ name: "System", description: "Health and metadata" },
 		],
 		components: {
@@ -150,7 +156,7 @@ const options: swaggerJsdoc.Options = {
 						},
 					},
 				},
-				MessageErrorResponse: {
+				MessageResponse: {
 					type: "object",
 					additionalProperties: false,
 					required: ["message"],
@@ -159,12 +165,7 @@ const options: swaggerJsdoc.Options = {
 					},
 				},
 				ErrorResponse: {
-					type: "object",
-					additionalProperties: false,
-					required: ["error"],
-					properties: {
-						error: { type: "string", example: "Internal Server Error" },
-					},
+					$ref: "#/components/schemas/MessageResponse",
 				},
 				HealthResponse: {
 					type: "object",
@@ -202,6 +203,123 @@ const options: swaggerJsdoc.Options = {
 						cvText: {
 							type: "string",
 							example: "I have 5 years of experience...",
+						},
+					},
+				},
+				UserApplicationListItem: {
+					type: "object",
+					additionalProperties: false,
+					required: [
+						"applicationId",
+						"jobRoleId",
+						"roleName",
+						"applicationDate",
+						"cvText",
+						"status",
+					],
+					properties: {
+						applicationId: { type: "integer", minimum: 1, example: 5 },
+						jobRoleId: { type: "integer", minimum: 1, example: 12 },
+						roleName: { type: "string", example: "Software Engineer" },
+						applicationDate: {
+							type: "string",
+							format: "date-time",
+							example: "2026-08-12T10:00:00.000Z",
+						},
+						cvText: { type: "string", example: "My relevant experience..." },
+						status: {
+							type: "string",
+							enum: ["IN_PROGRESS", "HIRED", "REJECTED", "WITHDRAWN"],
+						},
+					},
+				},
+				AdminApplicationListItem: {
+					type: "object",
+					additionalProperties: false,
+					required: [
+						"applicationId",
+						"jobRoleId",
+						"applicantEmail",
+						"roleName",
+						"applicationDate",
+						"cvText",
+						"status",
+					],
+					properties: {
+						applicationId: { type: "integer", minimum: 1, example: 5 },
+						jobRoleId: { type: "integer", minimum: 1, example: 12 },
+						applicantEmail: {
+							type: "string",
+							format: "email",
+							example: "candidate@example.com",
+						},
+						roleName: { type: "string", example: "Software Engineer" },
+						applicationDate: {
+							type: "string",
+							format: "date-time",
+							example: "2026-08-12T10:00:00.000Z",
+						},
+						cvText: { type: "string", example: "My relevant experience..." },
+						status: {
+							type: "string",
+							enum: ["IN_PROGRESS", "HIRED", "REJECTED", "WITHDRAWN"],
+						},
+						actions: {
+							type: "object",
+							required: ["canHire", "canReject"],
+							properties: {
+								canHire: { type: "boolean", example: true },
+								canReject: { type: "boolean", example: true },
+							},
+						},
+					},
+				},
+				UpdateApplicationStatusRequest: {
+					type: "object",
+					additionalProperties: false,
+					required: ["status"],
+					properties: {
+						status: {
+							type: "string",
+							enum: ["HIRED", "REJECTED"],
+							example: "HIRED",
+						},
+					},
+				},
+				AdminApplicationStatusResponse: {
+					type: "object",
+					additionalProperties: false,
+					required: ["message", "application"],
+					properties: {
+						message: { type: "string", example: "Applicant hired" },
+						application: {
+							type: "object",
+							additionalProperties: false,
+							required: ["applicationId", "applicantEmail", "status"],
+							properties: {
+								applicationId: { type: "integer", minimum: 1, example: 5 },
+								applicantEmail: {
+									type: "string",
+									format: "email",
+									example: "candidate@example.com",
+								},
+								status: {
+									type: "string",
+									enum: ["HIRED", "REJECTED"],
+								},
+							},
+						},
+					},
+				},
+				WithdrawApplicationRequest: {
+					type: "object",
+					additionalProperties: false,
+					required: ["status"],
+					properties: {
+						status: {
+							type: "string",
+							enum: ["WITHDRAWN"],
+							example: "WITHDRAWN",
 						},
 					},
 				},
@@ -275,8 +393,9 @@ const options: swaggerJsdoc.Options = {
 				ApplicationRequest: {
 					type: "object",
 					additionalProperties: false,
-					required: ["cvText"],
+					required: ["jobRoleId", "cvText"],
 					properties: {
+						jobRoleId: { type: "integer", minimum: 1, example: 12 },
 						cvText: {
 							type: "string",
 							example: "I have 5 years of software engineering experience...",
@@ -326,12 +445,7 @@ const options: swaggerJsdoc.Options = {
 			},
 		},
 	},
-	apis: [
-		"src/routes/*.ts",
-		"src/index.ts",
-		"dist/routes/*.js",
-		"dist/index.js",
-	],
+	apis: apiSources,
 };
 
 export const swaggerSpec = swaggerJsdoc(options);

@@ -1,9 +1,8 @@
 import { type Request as R, type Response as Res, Router } from "express";
 import { JobRolesController } from "../controllers/jobRolesController";
 import {
-	CreateApplicationSchema,
 	CreateJobRoleSchema,
-	IdParamSchema,
+	JobRoleIdParamSchema,
 	JobRoleFiltersSchema,
 	UpdateJobRoleSchema,
 } from "../dtos/jobRoleDto";
@@ -21,7 +20,7 @@ const controller = new JobRolesController(new JobRolesService());
 
 /**
  * @openapi
- * /job-roles/statuses:
+ * /api/job-roles/statuses:
  *   get:
  *     tags: [Job Roles]
  *     summary: Get available job role statuses
@@ -53,7 +52,7 @@ jobRolesRouter.get("/statuses", (req: R, res: Res) => {
 
 /**
  * @openapi
- * /job-roles/bands:
+ * /api/job-roles/bands:
  *   get:
  *     tags: [Job Roles]
  *     summary: Get available job role bands
@@ -85,7 +84,7 @@ jobRolesRouter.get("/bands", (req: R, res: Res) => {
 
 /**
  * @openapi
- * /job-roles/capabilities:
+ * /api/job-roles/capabilities:
  *   get:
  *     tags: [Job Roles]
  *     summary: Get available job role capabilities
@@ -117,7 +116,7 @@ jobRolesRouter.get("/capabilities", (req: R, res: Res) => {
 
 /**
  * @openapi
- * /job-roles/locations:
+ * /api/job-roles/locations:
  *   get:
  *     tags: [Job Roles]
  *     summary: Get available job role locations
@@ -149,7 +148,7 @@ jobRolesRouter.get("/locations", (req: R, res: Res) => {
 
 /**
  * @openapi
- * /job-roles:
+ * /api/job-roles:
  *   get:
  *     tags: [Job Roles]
  *     summary: Get all job roles
@@ -184,13 +183,13 @@ jobRolesRouter.get("/locations", (req: R, res: Res) => {
  *         style: form
  *         explode: true
  *       - in: query
- *         name: closingFrom
+ *         name: closingDateFrom
  *         schema:
  *           type: string
  *           format: date
  *         description: Include roles closing on or after this date
  *       - in: query
- *         name: closingBy
+ *         name: closingDateTo
  *         schema:
  *           type: string
  *           format: date
@@ -227,13 +226,13 @@ jobRolesRouter.get(
 
 /**
  * @openapi
- * /job-roles/{id}:
+ * /api/job-roles/{jobRoleId}:
  *   get:
  *     tags: [Job Roles]
  *     summary: Get job role details by ID
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: jobRoleId
  *         required: true
  *         schema:
  *           type: integer
@@ -266,16 +265,16 @@ jobRolesRouter.get(
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 jobRolesRouter.get(
-	"/:id",
-	validateParams(IdParamSchema),
-	(req: R<{ id: string }>, res: Res) => {
+	"/:jobRoleId",
+	validateParams(JobRoleIdParamSchema),
+	(req: R<{ jobRoleId: string }>, res: Res) => {
 		controller.getById(req, res);
 	},
 );
 
 /**
  * @openapi
- * /job-roles/create:
+ * /api/job-roles:
  *   post:
  *     tags: [Job Roles]
  *     summary: Create a job role
@@ -306,13 +305,13 @@ jobRolesRouter.get(
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/MessageErrorResponse'
+ *               $ref: '#/components/schemas/MessageResponse'
  *       403:
  *         description: Forbidden for non-admin roles
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/MessageErrorResponse'
+ *               $ref: '#/components/schemas/MessageResponse'
  *       500:
  *         description: Internal server error
  *         content:
@@ -321,7 +320,7 @@ jobRolesRouter.get(
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 jobRolesRouter.post(
-	"/create",
+	"/",
 	requireAuth,
 	allowRoles([USER_ROLES.ADMIN]),
 	validateBody(CreateJobRoleSchema),
@@ -332,7 +331,7 @@ jobRolesRouter.post(
 
 /**
  * @openapi
- * /job-roles/{id}:
+ * /api/job-roles/{jobRoleId}:
  *   patch:
  *     tags: [Job Roles]
  *     summary: Update a job role
@@ -341,7 +340,7 @@ jobRolesRouter.post(
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: jobRoleId
  *         required: true
  *         schema:
  *           type: integer
@@ -365,19 +364,19 @@ jobRolesRouter.post(
  *         description: Job role not found
  */
 jobRolesRouter.patch(
-	"/:id",
+	"/:jobRoleId",
 	requireAuth,
 	allowRoles([USER_ROLES.ADMIN]),
-	validateParams(IdParamSchema),
+	validateParams(JobRoleIdParamSchema),
 	validateBody(UpdateJobRoleSchema),
-	(req: R<{ id: string }>, res: Res) => {
+	(req: R<{ jobRoleId: string }>, res: Res) => {
 		controller.updateJobRole(req, res);
 	},
 );
 
 /**
  * @openapi
- * /job-roles/{id}:
+ * /api/job-roles/{jobRoleId}:
  *   delete:
  *     tags: [Job Roles]
  *     summary: Delete a job role
@@ -386,7 +385,7 @@ jobRolesRouter.patch(
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: jobRoleId
  *         required: true
  *         schema:
  *           type: integer
@@ -402,101 +401,13 @@ jobRolesRouter.patch(
  *         description: Job role not found
  */
 jobRolesRouter.delete(
-	"/:id",
+	"/:jobRoleId",
 	requireAuth,
 	allowRoles([USER_ROLES.ADMIN]),
-	validateParams(IdParamSchema),
-	(req: R, res: Res) => {
+	validateParams(JobRoleIdParamSchema),
+	(req: R<{ jobRoleId: string }>, res: Res) => {
 		controller.deleteJobRole(req, res);
 	},
 );
-
-/**
- * @openapi
- * /job-roles/{id}/apply:
- *   post:
- *     tags: [Job Roles]
- *     summary: Apply for a job role
- *     description: User or admin can apply for a job role. The authenticated user ID is extracted from the JWT token.
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *           minimum: 1
- *         description: Job role ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/ApplicationRequest'
- *     responses:
- *       201:
- *         description: Application created successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/JobRoleApplicationResponse'
- *       400:
- *         description: Request validation failed
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
- *       401:
- *         description: Missing or invalid token
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/MessageErrorResponse'
- *       403:
- *         description: Forbidden for current role
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/MessageErrorResponse'
- *       404:
- *         description: Job role not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       409:
- *         description: Conflict - application may already exist
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/MessageErrorResponse'
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- */
-jobRolesRouter.post(
-	"/:id/apply",
-	requireAuth,
-	allowRoles([USER_ROLES.ADMIN, USER_ROLES.USER]),
-	validateParams(IdParamSchema),
-	validateBody(CreateApplicationSchema),
-	(req: R<{ id: string }>, res: Res) => {
-		controller.createApplication(req, res);
-	},
-);
-
-//future endpoint urls for url reference exclude /job-roles/
-// jobRolesRouter.post('/job-roles/create', (req: R, res: Res) => {
-// });
-
-// jobRolesRouter.put('/job-roles/:id/update', (req: R, res: Res) => {
-// });
-
-// jobRolesRouter.delete('/job-roles/:id/delete', (req: R, res: Res) => {
-// });
 
 export default jobRolesRouter;

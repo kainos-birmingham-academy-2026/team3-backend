@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
 	CreateApplicationSchema,
 	CreateJobRoleSchema,
-	IdParamSchema,
 	JobRoleFiltersSchema,
+	JobRoleIdParamSchema,
 } from "../../src/dtos/jobRoleDto.js";
 
 describe("job role DTO schemas", () => {
@@ -14,7 +14,7 @@ describe("job role DTO schemas", () => {
 				locationId: ["1", "2"],
 				capabilityId: "3",
 				bandId: "4",
-				closingFrom: "2026-09-01",
+				closingDateFrom: "2026-09-01",
 			});
 
 			expect(result.success).toBe(true);
@@ -24,7 +24,7 @@ describe("job role DTO schemas", () => {
 					locationId: [1, 2],
 					capabilityId: [3],
 					bandId: [4],
-					closingFrom: "2026-09-01",
+					closingDateFrom: "2026-09-01",
 				});
 			}
 		});
@@ -32,23 +32,23 @@ describe("job role DTO schemas", () => {
 		it.each([
 			["a non-numeric ID", { locationId: "unknown" }],
 			["a non-positive ID", { bandId: "0" }],
-			["an invalid date", { closingFrom: "2026-02-30" }],
+			["an invalid date", { closingDateFrom: "2026-02-30" }],
 			[
 				"both closing date filters",
-				{ closingFrom: "2026-09-01", closingBy: "2026-12-31" },
+				{ closingDateFrom: "2026-09-01", closingDateTo: "2026-12-31" },
 			],
 		])("should reject %s", (_name, filters) => {
 			expect(JobRoleFiltersSchema.safeParse(filters).success).toBe(false);
 		});
 	});
 
-	describe("IdParamSchema", () => {
+	describe("JobRoleIdParamSchema", () => {
 		it("should coerce a positive integer string to a number", () => {
-			const result = IdParamSchema.safeParse({ id: "42" });
+			const result = JobRoleIdParamSchema.safeParse({ jobRoleId: "42" });
 
 			expect(result.success).toBe(true);
 			if (result.success) {
-				expect(result.data.id).toBe(42);
+				expect(result.data.jobRoleId).toBe(42);
 			}
 		});
 
@@ -57,8 +57,10 @@ describe("job role DTO schemas", () => {
 			["negative", "-1"],
 			["decimal", "1.5"],
 			["non-numeric", "abc"],
-		])("should reject a %s id", (_name, id) => {
-			expect(IdParamSchema.safeParse({ id }).success).toBe(false);
+		])("should reject a %s job role id", (_name, jobRoleId) => {
+			expect(
+				JobRoleIdParamSchema.safeParse({ jobRoleId }).success,
+			).toBe(false);
 		});
 	});
 
@@ -119,21 +121,30 @@ describe("job role DTO schemas", () => {
 	});
 
 	describe("CreateApplicationSchema", () => {
-		it("should trim a valid CV reference", () => {
+		it("should coerce a job role ID and trim a valid CV reference", () => {
 			const result = CreateApplicationSchema.safeParse({
+				jobRoleId: "3",
 				cvText: "  CV-2026-001  ",
 			});
 
 			expect(result.success).toBe(true);
 			if (result.success) {
+				expect(result.data.jobRoleId).toBe(3);
 				expect(result.data.cvText).toBe("CV-2026-001");
 			}
 		});
 
 		it("should reject an empty CV reference", () => {
-			expect(CreateApplicationSchema.safeParse({ cvText: "   " }).success).toBe(
-				false,
-			);
+			expect(
+				CreateApplicationSchema.safeParse({ jobRoleId: 3, cvText: "   " })
+					.success,
+			).toBe(false);
+		});
+
+		it("should reject a missing job role ID", () => {
+			expect(
+				CreateApplicationSchema.safeParse({ cvText: "CV-2026-001" }).success,
+			).toBe(false);
 		});
 	});
 });

@@ -36,13 +36,13 @@ describe("Admin hire API behaviour", () => {
 	});
 
 	it("Given the absence of a token, when the admin applications route is requested, then the status code should be 401", async () => {
-		const response = await request(app).get("/job-applications/admin");
+		const response = await request(app).get("/api/job-applications/admin");
 		expect(response.status).toBe(401);
 	});
 
 	it("Given a non-admin token, when the admin applications route is requested, then the request is forbidden", async () => {
 		const response = await request(app)
-			.get("/job-applications/admin")
+			.get("/api/job-applications/admin")
 			.set("Authorization", `Bearer ${userToken()}`);
 
 		expect(response.status).toBe(403);
@@ -54,14 +54,9 @@ describe("Admin hire API behaviour", () => {
 			{
 				applicationId: 7,
 				jobRoleId: 3,
-				applicant: "candidate@example.com",
-				applicantName: "candidate@example.com",
-				email: "candidate@example.com",
-				appliedRole: "Software Engineer",
+				applicantEmail: "candidate@example.com",
 				roleName: "Software Engineer",
 				applicationDate: "2026-08-12T10:00:00.000Z",
-				createdAt: "2026-08-12T10:00:00.000Z",
-				username: "candidate@example.com",
 				cvText: "cv text",
 				status: "IN_PROGRESS",
 				actions: { canHire: true, canReject: true },
@@ -74,11 +69,51 @@ describe("Admin hire API behaviour", () => {
 		).mockResolvedValueOnce(applications as never);
 
 		const response = await request(app)
-			.get("/job-applications/admin")
+			.get("/api/job-applications/admin")
 			.set("Authorization", `Bearer ${adminToken()}`);
 
 		expect(response.status).toBe(200);
 		expect(response.body).toEqual(applications);
+	});
+
+	it("filters applications by a valid job role query", async () => {
+		const findAllAdmin = vi
+			.spyOn(JobApplicationAdminService.prototype, "findAllAdmin")
+			.mockResolvedValueOnce([]);
+
+		const response = await request(app)
+			.get("/api/job-applications/admin?jobRoleId=3")
+			.set("Authorization", `Bearer ${adminToken()}`);
+
+		expect(response.status).toBe(200);
+		expect(findAllAdmin).toHaveBeenCalledWith(3);
+	});
+
+	it("rejects an invalid job role query", async () => {
+		const findAllAdmin = vi.spyOn(
+			JobApplicationAdminService.prototype,
+			"findAllAdmin",
+		);
+
+		const response = await request(app)
+			.get("/api/job-applications/admin?jobRoleId=invalid")
+			.set("Authorization", `Bearer ${adminToken()}`);
+
+		expect(response.status).toBe(400);
+		expect(response.body.errors).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({ field: "jobRoleId" }),
+			]),
+		);
+		expect(findAllAdmin).not.toHaveBeenCalled();
+	});
+
+	it("does not expose the legacy per-role path", async () => {
+		const response = await request(app)
+			.get("/api/job-applications/admin/3/applications")
+			.set("Authorization", `Bearer ${adminToken()}`);
+
+		expect(response.status).toBe(404);
 	});
 
 	it("Given an admin token, when a valid hire status is sent, then the application is successfully hired", async () => {
@@ -89,13 +124,13 @@ describe("Admin hire API behaviour", () => {
 			message: "Applicant hired",
 			application: {
 				applicationId: 7,
-				username: "candidate@example.com",
+				applicantEmail: "candidate@example.com",
 				status: "HIRED",
 			},
 		} as never);
 
 		const response = await request(app)
-			.patch("/job-applications/admin/7/status")
+			.patch("/api/job-applications/admin/7/status")
 			.set("Authorization", `Bearer ${adminToken()}`)
 			.send({ status: "HIRED" });
 
@@ -104,26 +139,49 @@ describe("Admin hire API behaviour", () => {
 			message: "Applicant hired",
 			application: {
 				applicationId: 7,
-				username: "candidate@example.com",
+				applicantEmail: "candidate@example.com",
 				status: "HIRED",
 			},
 		});
 	});
 
 	it("Given an unsupported status, when the admin attempts to update the application, then a 400 response is returned", async () => {
-		vi.spyOn(
+		const updateStatus = vi.spyOn(
 			JobApplicationAdminService.prototype,
 			"updateApplicationStatusById",
-		).mockRejectedValueOnce(new Error("Unsupported application status"));
+		);
 
 		const response = await request(app)
-			.patch("/job-applications/admin/7/status")
+			.patch("/api/job-applications/admin/7/status")
 			.set("Authorization", `Bearer ${adminToken()}`)
 			.send({ status: "PENDING" });
 
 		expect(response.status).toBe(400);
-		expect(response.body).toEqual({
-			message: "Unsupported status. Use HIRED/APPROVED or REJECTED",
-		});
+		expect(response.body.errors).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({ field: "status" }),
+			]),
+		);
+		expect(updateStatus).not.toHaveBeenCalled();
+	});
+
+	it("Given a status alias, when the admin attempts to update the application, then validation fails", async () => {
+		const updateStatus = vi.spyOn(
+			JobApplicationAdminService.prototype,
+			"updateApplicationStatusById",
+		);
+
+		const response = await request(app)
+			.patch("/api/job-applications/admin/7/status")
+			.set("Authorization", `Bearer ${adminToken()}`)
+			.send({ decision: "HIRED" });
+
+		expect(response.status).toBe(400);
+		expect(response.body.errors).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({ field: "status" }),
+			]),
+		);
+		expect(updateStatus).not.toHaveBeenCalled();
 	});
 });
