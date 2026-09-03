@@ -3,6 +3,7 @@ import express from "express";
 import { registerSwaggerRoutes } from "./config/swaggerRoutes.js";
 import { requestLogger } from "./middleware/requestLogger.js";
 import authRouter from "./routes/authRouter";
+import deploymentCheckRouter from "./routes/deploymentCheckRouter";
 import jobApplicationRouter from "./routes/jobApplicationsAdminRouter";
 import jobRolesRouter from "./routes/jobRolesRouter";
 import teapotRouter from "./routes/teapotRouter";
@@ -22,6 +23,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/job-applications/admin", jobApplicationRouter);
 app.use("/api/job-applications", userApplicationsRouter);
 app.use("/teapot", teapotRouter);
+app.use("/api/deployment-check", deploymentCheckRouter);
 
 // Root endpoint
 
