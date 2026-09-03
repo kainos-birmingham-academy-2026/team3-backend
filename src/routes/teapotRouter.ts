@@ -1,4 +1,5 @@
 import { type Request as R, type Response as Res, Router } from "express";
+import { INTERNAL_SERVER_ERROR } from "../errors/serverError.js";
 import { TeapotError } from "../errors/teapotError.js";
 
 const teapotRouter = Router();
@@ -29,7 +30,7 @@ teapotRouter.get("/", (_req: R, res: Res) => {
 		if (error instanceof TeapotError) {
 			return res.status(error.statusCode).json({ message: error.message });
 		}
-		return res.status(500).json({ message: "Internal server error" });
+		return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
 	}
 });
 

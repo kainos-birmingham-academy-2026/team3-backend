@@ -5,6 +5,7 @@ import type {
 	JobRoleFiltersDto,
 	UpdateJobRoleRequestDto,
 } from "../dtos/jobRoleDto.js";
+import { INTERNAL_SERVER_ERROR } from "../errors/serverError.js";
 import type { JobRolesService } from "../services/jobRolesService";
 
 export class JobRolesController {
@@ -20,7 +21,7 @@ export class JobRolesController {
 			const jobRoles = await this.service.findAll(filters);
 			return res.status(200).send(jobRoles);
 		} catch {
-			return res.status(500).json({ message: "Internal Server Error" });
+			return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
 		}
 	}
 
@@ -39,7 +40,7 @@ export class JobRolesController {
 			if (error instanceof NotFoundError) {
 				return res.status(404).json({ message: error.message });
 			}
-			return res.status(500).json({ message: "Internal Server Error" });
+			return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
 		}
 	}
 
@@ -56,7 +57,7 @@ export class JobRolesController {
 			const jobRole = await this.service.createJobRole(payload);
 			return res.status(201).json(jobRole);
 		} catch (_error) {
-			return res.status(500).json({ message: "Internal Server Error" });
+			return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
 		}
 	}
 
@@ -72,7 +73,7 @@ export class JobRolesController {
 			if (error instanceof NotFoundError) {
 				return res.status(404).json({ message: error.message });
 			}
-			return res.status(500).json({ message: "Internal Server Error" });
+			return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
 		}
 	}
 
@@ -93,7 +94,7 @@ export class JobRolesController {
 			if (error instanceof NotFoundError) {
 				return res.status(404).json({ message: error.message });
 			}
-			return res.status(500).json({ message: "Internal Server Error" });
+			return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
 		}
 	}
 
@@ -106,7 +107,7 @@ export class JobRolesController {
 			if (error instanceof NotFoundError) {
 				return res.status(404).json({ message: error.message });
 			}
-			return res.status(500).json({ message: "Internal Server Error" });
+			return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
 		}
 	}
 
@@ -118,7 +119,7 @@ export class JobRolesController {
 			if (error instanceof NotFoundError) {
 				return res.status(404).json({ message: error.message });
 			}
-			return res.status(500).json({ message: "Internal Server Error" });
+			return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
 		}
 	}
 
@@ -130,7 +131,7 @@ export class JobRolesController {
 			if (error instanceof NotFoundError) {
 				return res.status(404).json({ message: error.message });
 			}
-			return res.status(500).json({ message: "Internal Server Error" });
+			return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
 		}
 	}
 
@@ -142,7 +143,7 @@ export class JobRolesController {
 			if (error instanceof NotFoundError) {
 				return res.status(404).json({ message: error.message });
 			}
-			return res.status(500).json({ message: "Internal Server Error" });
+			return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
 		}
 	}
 }

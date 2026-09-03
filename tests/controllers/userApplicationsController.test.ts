@@ -121,6 +121,6 @@ describe("UserApplicationsController", () => {
 		);
 
 		expect(res.status).toHaveBeenCalledWith(500);
-		expect(res.json).toHaveBeenCalledWith({ message: "Internal Server Error" });
+		expect(res.json).toHaveBeenCalledWith({ message: "Internal server error" });
 	});
 });

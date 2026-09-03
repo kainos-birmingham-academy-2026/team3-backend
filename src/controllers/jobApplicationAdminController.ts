@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { INTERNAL_SERVER_ERROR } from "../errors/serverError.js";
 import type { JobApplicationAdminService } from "../services/jobApplicationAdminService";
 
 export class JobApplicationAdminController {
@@ -59,6 +60,6 @@ export class JobApplicationAdminController {
 			}
 		}
 
-		return res.status(500).json({ message: "Internal Server Error" });
+		return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
 	}
 }

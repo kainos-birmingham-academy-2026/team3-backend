@@ -7,6 +7,7 @@ import type {
 } from "../dtos/authDto.js";
 import { AuthError } from "../errors/authError.js";
 import { ConflictError } from "../errors/conflictError.js";
+import { INTERNAL_SERVER_ERROR } from "../errors/serverError.js";
 import type { AuthService } from "../services/authService.js";
 
 export class AuthController {
@@ -43,6 +44,6 @@ export class AuthController {
 			return res.status(error.statusCode).json({ message: error.message });
 		}
 
-		return res.status(500).json({ message: "Internal server error" });
+		return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
 	}
 }
