@@ -54,7 +54,7 @@ describe("Admin hire API behaviour", () => {
 			{
 				applicationId: 7,
 				jobRoleId: 3,
-				applicantName: "candidate@example.com",
+				applicantEmail: "candidate@example.com",
 				roleName: "Software Engineer",
 				applicationDate: "2026-08-12T10:00:00.000Z",
 				cvText: "cv text",
@@ -84,7 +84,7 @@ describe("Admin hire API behaviour", () => {
 			message: "Applicant hired",
 			application: {
 				applicationId: 7,
-				username: "candidate@example.com",
+				applicantEmail: "candidate@example.com",
 				status: "HIRED",
 			},
 		} as never);
@@ -99,7 +99,7 @@ describe("Admin hire API behaviour", () => {
 			message: "Applicant hired",
 			application: {
 				applicationId: 7,
-				username: "candidate@example.com",
+				applicantEmail: "candidate@example.com",
 				status: "HIRED",
 			},
 		});

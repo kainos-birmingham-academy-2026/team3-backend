@@ -43,7 +43,7 @@ describe("jobApplicationAdminController", () => {
 				{
 					applicationId: 1,
 					jobRoleId: 1,
-					username: "candidate@example.com",
+					applicantEmail: "candidate@example.com",
 					status: "IN_PROGRESS",
 				},
 			]);
@@ -59,7 +59,7 @@ describe("jobApplicationAdminController", () => {
 				{
 					applicationId: 1,
 					jobRoleId: 1,
-					username: "candidate@example.com",
+					applicantEmail: "candidate@example.com",
 					status: "IN_PROGRESS",
 				},
 			]);
@@ -88,7 +88,7 @@ describe("jobApplicationAdminController", () => {
 				{
 					applicationId: 1,
 					jobRoleId: 1,
-					username: "candidate@example.com",
+					applicantEmail: "candidate@example.com",
 					status: "IN_PROGRESS",
 					actions: { canHire: true, canReject: true },
 				},
@@ -105,7 +105,7 @@ describe("jobApplicationAdminController", () => {
 				{
 					applicationId: 1,
 					jobRoleId: 1,
-					username: "candidate@example.com",
+					applicantEmail: "candidate@example.com",
 					status: "IN_PROGRESS",
 					actions: { canHire: true, canReject: true },
 				},
@@ -140,7 +140,7 @@ describe("jobApplicationAdminController", () => {
 				message: "Applicant rejected",
 				application: {
 					applicationId: 2,
-					username: "candidate@example.com",
+					applicantEmail: "candidate@example.com",
 					status: "REJECTED",
 				},
 			});

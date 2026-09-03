@@ -42,7 +42,7 @@ export class JobApplicationAdminService {
 		return applications.map((application) => ({
 			applicationId: application.applicationId,
 			jobRoleId: application.jobRoleId,
-			applicantName: application.user.email,
+			applicantEmail: application.user.email,
 			roleName: application.jobRole.roleName,
 			applicationDate: application.createdAt,
 			cvText: application.cvText,
@@ -135,7 +135,7 @@ export class JobApplicationAdminService {
 				message: "Applicant hired",
 				application: {
 					applicationId: updatedApplication.applicationId,
-					username: updatedApplication.user.email,
+					applicantEmail: updatedApplication.user.email,
 					status: updatedApplication.applicationStatus,
 				},
 			};
@@ -198,7 +198,7 @@ export class JobApplicationAdminService {
 			message: "Applicant rejected",
 			application: {
 				applicationId: updatedApplication.applicationId,
-				username: updatedApplication.user.email,
+				applicantEmail: updatedApplication.user.email,
 				status: updatedApplication.applicationStatus,
 			},
 		};

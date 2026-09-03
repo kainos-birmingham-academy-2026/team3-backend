@@ -55,7 +55,8 @@ describe("registerSwaggerRoutes", () => {
 		const applicationProperties =
 			specificationResponse.body.components.schemas.AdminApplicationListItem
 				.properties;
-		expect(applicationProperties).toHaveProperty("applicantName");
+		expect(applicationProperties).toHaveProperty("applicantEmail");
+		expect(applicationProperties).not.toHaveProperty("applicantName");
 		expect(applicationProperties).toHaveProperty("roleName");
 		expect(applicationProperties).toHaveProperty("applicationDate");
 		expect(applicationProperties).toHaveProperty("status");
@@ -81,6 +82,19 @@ describe("registerSwaggerRoutes", () => {
 				"/api/job-applications/admin/{applicationId}/status"
 			].patch.requestBody.content["application/json"].schema.$ref,
 		).toBe("#/components/schemas/UpdateApplicationStatusRequest");
+		expect(
+			specificationResponse.body.paths[
+				"/api/job-applications/admin/{applicationId}/status"
+			].patch.responses["200"].content["application/json"].schema.$ref,
+		).toBe("#/components/schemas/AdminApplicationStatusResponse");
+		const statusResponseApplicationProperties =
+			specificationResponse.body.components.schemas.AdminApplicationStatusResponse
+				.properties.application.properties;
+		expect(statusResponseApplicationProperties).toHaveProperty("applicantEmail");
+		expect(statusResponseApplicationProperties).not.toHaveProperty(
+			"applicantName",
+		);
+		expect(statusResponseApplicationProperties).not.toHaveProperty("username");
 		const jobRoleDetailOperation =
 			specificationResponse.body.paths["/api/job-roles/{jobRoleId}"].get;
 		expect(jobRoleDetailOperation.parameters).toEqual(

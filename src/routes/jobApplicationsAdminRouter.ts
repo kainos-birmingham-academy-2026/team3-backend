@@ -116,6 +116,10 @@ jobApplicationsAdminRouter.get(
  *     responses:
  *       200:
  *         description: Application status updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AdminApplicationStatusResponse'
  *       400:
  *         description: Invalid request or unsupported status
  *       401:

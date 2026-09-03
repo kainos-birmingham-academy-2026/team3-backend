@@ -239,7 +239,7 @@ const options: swaggerJsdoc.Options = {
 					required: [
 						"applicationId",
 						"jobRoleId",
-						"applicantName",
+						"applicantEmail",
 						"roleName",
 						"applicationDate",
 						"cvText",
@@ -248,7 +248,7 @@ const options: swaggerJsdoc.Options = {
 					properties: {
 						applicationId: { type: "integer", minimum: 1, example: 5 },
 						jobRoleId: { type: "integer", minimum: 1, example: 12 },
-						applicantName: {
+						applicantEmail: {
 							type: "string",
 							format: "email",
 							example: "candidate@example.com",
@@ -283,6 +283,31 @@ const options: swaggerJsdoc.Options = {
 							type: "string",
 							enum: ["HIRED", "APPROVED", "REJECTED", "REJECT"],
 							example: "HIRED",
+						},
+					},
+				},
+				AdminApplicationStatusResponse: {
+					type: "object",
+					additionalProperties: false,
+					required: ["message", "application"],
+					properties: {
+						message: { type: "string", example: "Applicant hired" },
+						application: {
+							type: "object",
+							additionalProperties: false,
+							required: ["applicationId", "applicantEmail", "status"],
+							properties: {
+								applicationId: { type: "integer", minimum: 1, example: 5 },
+								applicantEmail: {
+									type: "string",
+									format: "email",
+									example: "candidate@example.com",
+								},
+								status: {
+									type: "string",
+									enum: ["HIRED", "REJECTED"],
+								},
+							},
 						},
 					},
 				},

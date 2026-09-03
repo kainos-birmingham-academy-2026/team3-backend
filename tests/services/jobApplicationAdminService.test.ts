@@ -98,7 +98,7 @@ describe("jobApplicationAdminService", () => {
 			{
 				applicationId: 1,
 				jobRoleId: 1,
-				applicantName: "candidate@example.com",
+				applicantEmail: "candidate@example.com",
 				roleName: "Software Engineer",
 				applicationDate: new Date("2026-08-12T10:00:00.000Z"),
 				cvText: "cv-1.pdf",
@@ -208,7 +208,7 @@ describe("jobApplicationAdminService", () => {
 			message: "Applicant hired",
 			application: {
 				applicationId: 7,
-				username: "candidate@example.com",
+				applicantEmail: "candidate@example.com",
 				status: "HIRED",
 			},
 		});
@@ -290,7 +290,7 @@ describe("jobApplicationAdminService", () => {
 			message: "Applicant rejected",
 			application: {
 				applicationId: 11,
-				username: "candidate@example.com",
+				applicantEmail: "candidate@example.com",
 				status: "REJECTED",
 			},
 		});
