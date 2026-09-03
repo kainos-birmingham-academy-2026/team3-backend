@@ -30,30 +30,11 @@ export class JobApplicationAdminController {
 	async updateStatus(req: Request, res: Response) {
 		try {
 			const applicationId = Number(req.params.applicationId);
-			const body = req.body as {
-				status?: string;
-				applicationStatus?: string;
-				action?: string;
-				decision?: string;
-				newStatus?: string;
-			};
-			const requestedStatus =
-				body.status ??
-				body.applicationStatus ??
-				body.action ??
-				body.decision ??
-				body.newStatus;
-
-			if (!requestedStatus || typeof requestedStatus !== "string") {
-				return res.status(400).json({
-					message:
-						"status (or applicationStatus/action/decision/newStatus) is required",
-				});
-			}
+			const { status } = req.body as { status: string };
 
 			const result = await this.service.updateApplicationStatusById(
 				applicationId,
-				requestedStatus,
+				status,
 			);
 			return res.status(200).json(result);
 		} catch (error) {

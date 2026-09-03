@@ -121,4 +121,24 @@ describe("Admin hire API behaviour", () => {
 			message: "Unsupported status. Use HIRED/APPROVED or REJECTED",
 		});
 	});
+
+	it("Given a status alias, when the admin attempts to update the application, then validation fails", async () => {
+		const updateStatus = vi.spyOn(
+			JobApplicationAdminService.prototype,
+			"updateApplicationStatusById",
+		);
+
+		const response = await request(app)
+			.patch("/job-applications/admin/7/status")
+			.set("Authorization", `Bearer ${adminToken()}`)
+			.send({ decision: "APPROVED" });
+
+		expect(response.status).toBe(400);
+		expect(response.body.errors).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({ field: "status" }),
+			]),
+		);
+		expect(updateStatus).not.toHaveBeenCalled();
+	});
 });

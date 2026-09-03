@@ -4,7 +4,7 @@ import { z } from "zod";
 import { JobApplicationAdminController } from "../controllers/jobApplicationAdminController";
 import { allowRoles, USER_ROLES } from "../middleware/authorise";
 import { requireAuth } from "../middleware/requireAuth";
-import { validateParams } from "../middleware/validate";
+import { validateBody, validateParams } from "../middleware/validate";
 import { JobApplicationAdminService } from "../services/jobApplicationAdminService";
 
 const jobApplicationsAdminRouter = Router();
@@ -18,6 +18,10 @@ const JobRoleIdParamSchema = z.object({
 
 const ApplicationIdParamSchema = z.object({
 	applicationId: z.coerce.number().int().positive(),
+});
+
+const UpdateApplicationStatusSchema = z.strictObject({
+	status: z.string().trim().min(1),
 });
 
 jobApplicationsAdminRouter.use(requireAuth);
@@ -88,9 +92,47 @@ jobApplicationsAdminRouter.get(
 	controller.getAll.bind(controller),
 );
 
+/**
+ * @openapi
+ * /job-applications/admin/{applicationId}/status:
+ *   patch:
+ *     tags: [Applications]
+ *     summary: Update an application's status
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: applicationId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateApplicationStatusRequest'
+ *     responses:
+ *       200:
+ *         description: Application status updated
+ *       400:
+ *         description: Invalid request or unsupported status
+ *       401:
+ *         description: Missing or invalid token
+ *       403:
+ *         description: Forbidden for non-admin roles
+ *       404:
+ *         description: Application not found
+ *       409:
+ *         description: Application cannot transition from its current status
+ *       500:
+ *         description: Internal server error
+ */
 jobApplicationsAdminRouter.patch(
 	"/:applicationId/status",
 	validateParams(ApplicationIdParamSchema),
+	validateBody(UpdateApplicationStatusSchema),
 	controller.updateStatus.bind(controller),
 );
 

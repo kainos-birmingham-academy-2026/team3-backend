@@ -37,6 +37,16 @@ describe("registerSwaggerRoutes", () => {
 		expect(applicationProperties).not.toHaveProperty("username");
 		expect(applicationProperties).not.toHaveProperty("appliedRole");
 		expect(applicationProperties).not.toHaveProperty("createdAt");
+		const statusUpdateSchema =
+			specificationResponse.body.components.schemas
+				.UpdateApplicationStatusRequest;
+		expect(statusUpdateSchema.required).toEqual(["status"]);
+		expect(Object.keys(statusUpdateSchema.properties)).toEqual(["status"]);
+		expect(
+			specificationResponse.body.paths[
+				"/job-applications/admin/{applicationId}/status"
+			].patch.requestBody.content["application/json"].schema.$ref,
+		).toBe("#/components/schemas/UpdateApplicationStatusRequest");
 		expect(documentationResponse.status).toBe(200);
 	});
 });

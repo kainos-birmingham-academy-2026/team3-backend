@@ -274,6 +274,18 @@ const options: swaggerJsdoc.Options = {
 						},
 					},
 				},
+				UpdateApplicationStatusRequest: {
+					type: "object",
+					additionalProperties: false,
+					required: ["status"],
+					properties: {
+						status: {
+							type: "string",
+							enum: ["HIRED", "APPROVED", "REJECTED", "REJECT"],
+							example: "HIRED",
+						},
+					},
+				},
 				CreateJobRoleRequest: {
 					type: "object",
 					additionalProperties: false,

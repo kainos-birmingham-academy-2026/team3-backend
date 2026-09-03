@@ -157,51 +157,5 @@ describe("jobApplicationAdminController", () => {
 			expect(res.status).toHaveBeenCalledWith(200);
 		});
 
-		it("should return 400 when status field is missing", async () => {
-			const req = {
-				params: { applicationId: "2" },
-				body: {},
-			};
-			const res = createMockResponse();
-
-			await controller.updateStatus(
-				req as unknown as Request,
-				res as unknown as Response,
-			);
-
-			expect(res.status).toHaveBeenCalledWith(400);
-			expect(res.json).toHaveBeenCalledWith({
-				message:
-					"status (or applicationStatus/action/decision/newStatus) is required",
-			});
-		});
-
-		it("should accept decision field for approved action", async () => {
-			const req = {
-				params: { applicationId: "2" },
-				body: { decision: "APPROVED" },
-			};
-			const res = createMockResponse();
-
-			vi.mocked(mockService.updateApplicationStatusById).mockResolvedValue({
-				message: "Applicant hired",
-				application: {
-					applicationId: 2,
-					username: "candidate@example.com",
-					status: "HIRED",
-				},
-			});
-
-			await controller.updateStatus(
-				req as unknown as Request,
-				res as unknown as Response,
-			);
-
-			expect(mockService.updateApplicationStatusById).toHaveBeenCalledWith(
-				2,
-				"APPROVED",
-			);
-			expect(res.status).toHaveBeenCalledWith(200);
-		});
 	});
 });
