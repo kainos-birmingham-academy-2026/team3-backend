@@ -76,6 +76,46 @@ describe("Admin hire API behaviour", () => {
 		expect(response.body).toEqual(applications);
 	});
 
+	it("filters applications by a valid job role query", async () => {
+		const findAllAdmin = vi
+			.spyOn(JobApplicationAdminService.prototype, "findAllAdmin")
+			.mockResolvedValueOnce([]);
+
+		const response = await request(app)
+			.get("/api/job-applications/admin?jobRoleId=3")
+			.set("Authorization", `Bearer ${adminToken()}`);
+
+		expect(response.status).toBe(200);
+		expect(findAllAdmin).toHaveBeenCalledWith(3);
+	});
+
+	it("rejects an invalid job role query", async () => {
+		const findAllAdmin = vi.spyOn(
+			JobApplicationAdminService.prototype,
+			"findAllAdmin",
+		);
+
+		const response = await request(app)
+			.get("/api/job-applications/admin?jobRoleId=invalid")
+			.set("Authorization", `Bearer ${adminToken()}`);
+
+		expect(response.status).toBe(400);
+		expect(response.body.errors).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({ field: "jobRoleId" }),
+			]),
+		);
+		expect(findAllAdmin).not.toHaveBeenCalled();
+	});
+
+	it("does not expose the legacy per-role path", async () => {
+		const response = await request(app)
+			.get("/api/job-applications/admin/3/applications")
+			.set("Authorization", `Bearer ${adminToken()}`);
+
+		expect(response.status).toBe(404);
+	});
+
 	it("Given an admin token, when a valid hire status is sent, then the application is successfully hired", async () => {
 		vi.spyOn(
 			JobApplicationAdminService.prototype,

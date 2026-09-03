@@ -6,6 +6,7 @@ import type { JobApplicationAdminService } from "../../src/services/jobApplicati
 
 const createMockResponse = () => {
 	const res = {
+		locals: { validatedQuery: {} },
 		status: vi.fn(),
 		send: vi.fn(),
 		json: vi.fn(),
@@ -21,7 +22,6 @@ const createMockResponse = () => {
 describe("jobApplicationAdminController", () => {
 	const mockService = {
 		findAllAdmin: vi.fn(),
-		findAll: vi.fn(),
 		updateApplicationStatusById: vi.fn(),
 	};
 
@@ -53,7 +53,7 @@ describe("jobApplicationAdminController", () => {
 				res as unknown as Response,
 			);
 
-			expect(mockService.findAllAdmin).toHaveBeenCalled();
+			expect(mockService.findAllAdmin).toHaveBeenCalledWith(undefined);
 			expect(res.status).toHaveBeenCalledWith(200);
 			expect(res.send).toHaveBeenCalledWith([
 				{
@@ -80,11 +80,12 @@ describe("jobApplicationAdminController", () => {
 			expect(res.json).toHaveBeenCalledWith({ message: "Internal Server Error" });
 		});
 
-		it("should return 200 with applications list", async () => {
-			const req = { params: { jobRoleId: "1" } };
+		it("should return 200 with applications filtered by job role", async () => {
+			const req = {};
 			const res = createMockResponse();
+			res.locals.validatedQuery = { jobRoleId: 1 };
 
-			vi.mocked(mockService.findAll).mockResolvedValue([
+			vi.mocked(mockService.findAllAdmin).mockResolvedValue([
 				{
 					applicationId: 1,
 					jobRoleId: 1,
@@ -94,12 +95,12 @@ describe("jobApplicationAdminController", () => {
 				},
 			]);
 
-			await controller.getAll(
+			await controller.getAllAdmin(
 				req as unknown as Request,
 				res as unknown as Response,
 			);
 
-			expect(mockService.findAll).toHaveBeenCalledWith(1);
+			expect(mockService.findAllAdmin).toHaveBeenCalledWith(1);
 			expect(res.status).toHaveBeenCalledWith(200);
 			expect(res.send).toHaveBeenCalledWith([
 				{
@@ -112,20 +113,6 @@ describe("jobApplicationAdminController", () => {
 			]);
 		});
 
-		it("should return 500 when service throws", async () => {
-			const req = { params: { jobRoleId: "1" } };
-			const res = createMockResponse();
-
-			vi.mocked(mockService.findAll).mockRejectedValue(new Error("boom"));
-
-			await controller.getAll(
-				req as unknown as Request,
-				res as unknown as Response,
-			);
-
-			expect(res.status).toHaveBeenCalledWith(500);
-			expect(res.json).toHaveBeenCalledWith({ message: "Internal Server Error" });
-		});
 	});
 
 	describe("updateStatus", () => {

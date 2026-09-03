@@ -51,18 +51,9 @@ export class JobApplicationAdminService {
 		}));
 	}
 
-	async findAllAdmin() {
+	async findAllAdmin(jobRoleId?: number) {
 		const applications = await prisma.application.findMany({
-			orderBy: { createdAt: "desc" },
-			select: this.applicationListSelect,
-		});
-
-		return this.mapApplications(applications);
-	}
-
-	async findAll(jobRoleId: number) {
-		const applications = await prisma.application.findMany({
-			where: { jobRoleId },
+			...(jobRoleId === undefined ? {} : { where: { jobRoleId } }),
 			orderBy: { createdAt: "desc" },
 			select: this.applicationListSelect,
 		});

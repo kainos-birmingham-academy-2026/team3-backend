@@ -611,12 +611,17 @@ Only `WITHDRAWN` is accepted for user-owned application status updates.
 
 #### `GET /api/job-applications/admin`
 
-Retrieves all job applications across all job roles (admin only).
+Retrieves job applications for administrators. Use the optional `jobRoleId`
+query parameter to filter the collection to a specific job role.
 
 Authentication:
 
 - Requires `Authorization: Bearer <jwt>`
 - Admin role required
+
+Query parameters:
+
+- `jobRoleId` - Optional positive integer job role ID
 
 Success response (`200`):
 
@@ -625,43 +630,8 @@ Success response (`200`):
   {
     "applicationId": 1,
     "jobRoleId": 1,
-    "applicant": "test@example.com",
-    "email": "test@example.com",
-    "appliedRole": "Software Engineer",
-    "applicationDate": "2026-08-15T10:30:00.000Z",
-    "status": "IN_PROGRESS",
-    "cvText": "Lorem ipsum dolor sit amet...",
-    "actions": {
-      "canHire": true,
-      "canReject": true
-    }
-  }
-]
-```
-
-#### `GET /api/job-applications/admin/:jobRoleId/applications`
-
-Retrieves all applications for a specific job role (admin only).
-
-Authentication:
-
-- Requires `Authorization: Bearer <jwt>`
-- Admin role required
-
-Path parameters:
-
-- `jobRoleId` - The job role ID (positive integer)
-
-Success response (`200`):
-
-```json
-[
-  {
-    "applicationId": 1,
-    "jobRoleId": 1,
-    "applicant": "test@example.com",
-    "email": "test@example.com",
-    "appliedRole": "Software Engineer",
+    "applicantEmail": "test@example.com",
+    "roleName": "Software Engineer",
     "applicationDate": "2026-08-15T10:30:00.000Z",
     "status": "IN_PROGRESS",
     "cvText": "Lorem ipsum dolor sit amet...",

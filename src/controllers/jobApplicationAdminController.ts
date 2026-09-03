@@ -10,17 +10,10 @@ export class JobApplicationAdminController {
 
 	async getAllAdmin(_req: Request, res: Response) {
 		try {
-			const jobApplications = await this.service.findAllAdmin();
-			return res.status(200).send(jobApplications);
-		} catch (error) {
-			return this.handleStatusErrors(error, res);
-		}
-	}
-
-	async getAll(req: Request, res: Response) {
-		try {
-			const jobRoleId = Number(req.params.jobRoleId);
-			const jobApplications = await this.service.findAll(jobRoleId);
+			const { jobRoleId } = res.locals.validatedQuery as {
+				jobRoleId?: number;
+			};
+			const jobApplications = await this.service.findAllAdmin(jobRoleId);
 			return res.status(200).send(jobApplications);
 		} catch (error) {
 			return this.handleStatusErrors(error, res);

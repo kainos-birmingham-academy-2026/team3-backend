@@ -25,6 +25,21 @@ describe("registerSwaggerRoutes", () => {
 		expect(specificationResponse.body.paths).toHaveProperty(
 			"/api/job-applications/admin",
 		);
+		const adminApplicationParameters =
+			specificationResponse.body.paths["/api/job-applications/admin"].get
+				.parameters;
+		expect(adminApplicationParameters).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({
+					in: "query",
+					name: "jobRoleId",
+					required: false,
+				}),
+			]),
+		);
+		expect(specificationResponse.body.paths).not.toHaveProperty(
+			"/api/job-applications/admin/{jobRoleId}/applications",
+		);
 		expect(
 			specificationResponse.body.paths["/api/job-applications"],
 		).toHaveProperty("post");

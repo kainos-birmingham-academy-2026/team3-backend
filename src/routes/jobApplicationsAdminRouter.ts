@@ -4,7 +4,7 @@ import { z } from "zod";
 import { JobApplicationAdminController } from "../controllers/jobApplicationAdminController";
 import { allowRoles, USER_ROLES } from "../middleware/authorise";
 import { requireAuth } from "../middleware/requireAuth";
-import { validateBody, validateParams } from "../middleware/validate";
+import { validateBody, validateParams, validateQuery } from "../middleware/validate";
 import { JobApplicationAdminService } from "../services/jobApplicationAdminService";
 
 const jobApplicationsAdminRouter = Router();
@@ -12,8 +12,8 @@ const controller = new JobApplicationAdminController(
 	new JobApplicationAdminService(),
 );
 
-const JobRoleIdParamSchema = z.object({
-	jobRoleId: z.coerce.number().int().positive(),
+const AdminApplicationsQuerySchema = z.strictObject({
+	jobRoleId: z.coerce.number().int().positive().optional(),
 });
 
 const ApplicationIdParamSchema = z.object({
@@ -35,6 +35,14 @@ jobApplicationsAdminRouter.use(allowRoles([USER_ROLES.ADMIN]));
  *     summary: Get all job applications
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: jobRoleId
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: Filter applications by job role ID
  *     responses:
  *       200:
  *         description: List of applications for administrators
@@ -51,45 +59,10 @@ jobApplicationsAdminRouter.use(allowRoles([USER_ROLES.ADMIN]));
  *       500:
  *         description: Internal server error
  */
-jobApplicationsAdminRouter.get("/", controller.getAllAdmin.bind(controller));
-
-/**
- * @openapi
- * /api/job-applications/admin/{jobRoleId}/applications:
- *   get:
- *     tags: [Applications]
- *     summary: Get applications for a job role
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: jobRoleId
- *         required: true
- *         schema:
- *           type: integer
- *           minimum: 1
- *     responses:
- *       200:
- *         description: List of applications for the job role
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/AdminApplicationListItem'
- *       400:
- *         description: Invalid job role ID
- *       401:
- *         description: Missing or invalid token
- *       403:
- *         description: Forbidden for non-admin roles
- *       500:
- *         description: Internal server error
- */
 jobApplicationsAdminRouter.get(
-	"/:jobRoleId/applications",
-	validateParams(JobRoleIdParamSchema),
-	controller.getAll.bind(controller),
+	"/",
+	validateQuery(AdminApplicationsQuerySchema),
+	controller.getAllAdmin.bind(controller),
 );
 
 /**

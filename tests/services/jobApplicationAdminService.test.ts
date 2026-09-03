@@ -91,7 +91,7 @@ describe("jobApplicationAdminService", () => {
 			},
 		]);
 
-		const result = await service.findAll(1);
+		const result = await service.findAllAdmin(1);
 
 		expect(Array.isArray(result)).toBe(true);
 		expect(result).toEqual([
@@ -151,9 +151,18 @@ describe("jobApplicationAdminService", () => {
 			},
 		]);
 
-		const result = await service.findAll(1);
+		const result = await service.findAllAdmin(1);
 
 		expect(result[0]?.actions).toBeUndefined();
+	});
+
+	it("should omit the job role filter when none is supplied", async () => {
+		mockFindMany.mockResolvedValueOnce([]);
+
+		await service.findAllAdmin();
+
+		const [query] = mockFindMany.mock.calls[0] ?? [];
+		expect(query).not.toHaveProperty("where");
 	});
 
 	it("should map HIRED status to hire flow", async () => {
