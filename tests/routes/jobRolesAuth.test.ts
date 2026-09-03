@@ -39,7 +39,7 @@ describe("Job role route auth protection", () => {
 			.mockResolvedValueOnce([]);
 
 		const response = await request(app).get(
-			"/job-roles?roleName=engineer&locationId=1&locationId=2&capabilityId=3&bandId=4&closingFrom=2026-09-01&closingBy=2026-12-31",
+			"/job-roles?roleName=engineer&locationId=1&locationId=2&capabilityId=3&bandId=4&closingFrom=2026-09-01",
 		);
 
 		expect(response.status).toBe(200);
@@ -49,8 +49,21 @@ describe("Job role route auth protection", () => {
 			capabilityId: [3],
 			bandId: [4],
 			closingFrom: "2026-09-01",
-			closingBy: "2026-12-31",
 		});
+	});
+
+	it("should return 400 when both closing date filters are supplied", async () => {
+		const response = await request(app).get(
+			"/job-roles?closingFrom=2026-09-01&closingBy=2026-12-31",
+		);
+
+		expect(response.status).toBe(400);
+		expect(response.body.errors[0]).toEqual(
+			expect.objectContaining({
+				field: "closingBy",
+				message: "Choose either closing on or after or closing on or before",
+			}),
+		);
 	});
 
 	it("should return 400 for invalid list filters", async () => {

@@ -15,7 +15,6 @@ describe("job role DTO schemas", () => {
 				capabilityId: "3",
 				bandId: "4",
 				closingFrom: "2026-09-01",
-				closingBy: "2026-12-31",
 			});
 
 			expect(result.success).toBe(true);
@@ -26,7 +25,6 @@ describe("job role DTO schemas", () => {
 					capabilityId: [3],
 					bandId: [4],
 					closingFrom: "2026-09-01",
-					closingBy: "2026-12-31",
 				});
 			}
 		});
@@ -36,8 +34,8 @@ describe("job role DTO schemas", () => {
 			["a non-positive ID", { bandId: "0" }],
 			["an invalid date", { closingFrom: "2026-02-30" }],
 			[
-				"a reversed date range",
-				{ closingFrom: "2026-12-31", closingBy: "2026-09-01" },
+				"both closing date filters",
+				{ closingFrom: "2026-09-01", closingBy: "2026-12-31" },
 			],
 		])("should reject %s", (_name, filters) => {
 			expect(JobRoleFiltersSchema.safeParse(filters).success).toBe(false);
