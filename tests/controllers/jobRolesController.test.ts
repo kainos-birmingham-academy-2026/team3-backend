@@ -89,7 +89,7 @@ describe("JobRolesController", () => {
 
 	describe("deleteJobRole", () => {
 		it("should return 204 when the job role is deleted", async () => {
-			const req = { params: { id: "1" } };
+			const req = { params: { jobRoleId: "1" } };
 			const res = createMockResponse();
 			vi.mocked(mockService.deleteJobRole).mockResolvedValue();
 
@@ -101,7 +101,7 @@ describe("JobRolesController", () => {
 		});
 
 		it("should return 404 when the job role does not exist", async () => {
-			const req = { params: { id: "999" } };
+			const req = { params: { jobRoleId: "999" } };
 			const res = createMockResponse();
 			vi.mocked(mockService.deleteJobRole).mockRejectedValue(
 				new NotFoundError("JobRole with id 999 not found"),
@@ -118,7 +118,7 @@ describe("JobRolesController", () => {
 
 	describe("getById", () => {
 		it("should return 200 when the job role is found", async () => {
-			const req = { params: { id: "1" } };
+			const req = { params: { jobRoleId: "1" } };
 			const res = createMockResponse();
 
 			vi.mocked(mockService.findById).mockResolvedValue({
@@ -151,7 +151,7 @@ describe("JobRolesController", () => {
 		});
 
 		it("should return 404 when the job role is not found", async () => {
-			const req = { params: { id: "999" } };
+			const req = { params: { jobRoleId: "999" } };
 			const res = createMockResponse();
 
 			vi.mocked(mockService.findById).mockRejectedValue(
@@ -167,7 +167,7 @@ describe("JobRolesController", () => {
 		});
 
 		it("should return 400 when the id is invalid", async () => {
-			const req = { params: { id: "abc" } };
+			const req = { params: { jobRoleId: "abc" } };
 			const res = createMockResponse();
 
 			await controller.getById(req as never, res as never);
@@ -177,7 +177,7 @@ describe("JobRolesController", () => {
 		});
 
 		it("should return 500 when the service throws", async () => {
-			const req = { params: { id: "1" } };
+			const req = { params: { jobRoleId: "1" } };
 			const res = createMockResponse();
 
 			vi.mocked(mockService.findById).mockRejectedValue(new Error("boom"));
@@ -276,7 +276,10 @@ describe("JobRolesController", () => {
 
 	describe("updateJobRole", () => {
 		it("should return 200 with the updated job role", async () => {
-			const req = { params: { id: "1" }, body: { roleName: "Lead Engineer" } };
+			const req = {
+				params: { jobRoleId: "1" },
+				body: { roleName: "Lead Engineer" },
+			};
 			const res = createMockResponse();
 			const updatedJobRole = { jobRoleId: 1, roleName: "Lead Engineer" };
 			vi.mocked(mockService.updateJobRole).mockResolvedValue(
@@ -292,7 +295,7 @@ describe("JobRolesController", () => {
 
 		it("should return 404 when the job role does not exist", async () => {
 			const req = {
-				params: { id: "999" },
+				params: { jobRoleId: "999" },
 				body: { roleName: "Lead Engineer" },
 			};
 			const res = createMockResponse();
@@ -312,7 +315,7 @@ describe("JobRolesController", () => {
 	describe("createApplication", () => {
 		it("should return 201 with application data when application is created successfully", async () => {
 			const req = {
-				params: { id: "1" },
+				params: { jobRoleId: "1" },
 				body: { cvText: "CV-2026-001" },
 			};
 			const res = createMockResponse();
@@ -340,7 +343,7 @@ describe("JobRolesController", () => {
 
 		it("should return 404 when job role does not exist", async () => {
 			const req = {
-				params: { id: "999" },
+				params: { jobRoleId: "999" },
 				body: { cvText: "CV-2026-001" },
 			};
 			const res = createMockResponse();
@@ -360,7 +363,7 @@ describe("JobRolesController", () => {
 
 		it("should return 409 when user has already applied for the job role", async () => {
 			const req = {
-				params: { id: "1" },
+				params: { jobRoleId: "1" },
 				body: { cvText: "CV-2026-001" },
 			};
 			const res = createMockResponse();
@@ -383,7 +386,7 @@ describe("JobRolesController", () => {
 
 		it("should return 401 when user is not authenticated", async () => {
 			const req = {
-				params: { id: "1" },
+				params: { jobRoleId: "1" },
 				body: { cvText: "CV-2026-001" },
 			};
 			const res = createMockResponse();
@@ -397,7 +400,7 @@ describe("JobRolesController", () => {
 
 		it("should return 500 when an unexpected error occurs", async () => {
 			const req = {
-				params: { id: "1" },
+				params: { jobRoleId: "1" },
 				body: { cvText: "CV-2026-001" },
 			};
 			const res = createMockResponse();

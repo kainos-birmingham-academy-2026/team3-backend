@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
 	CreateApplicationSchema,
 	CreateJobRoleSchema,
-	IdParamSchema,
 	JobRoleFiltersSchema,
+	JobRoleIdParamSchema,
 } from "../../src/dtos/jobRoleDto.js";
 
 describe("job role DTO schemas", () => {
@@ -42,13 +42,13 @@ describe("job role DTO schemas", () => {
 		});
 	});
 
-	describe("IdParamSchema", () => {
+	describe("JobRoleIdParamSchema", () => {
 		it("should coerce a positive integer string to a number", () => {
-			const result = IdParamSchema.safeParse({ id: "42" });
+			const result = JobRoleIdParamSchema.safeParse({ jobRoleId: "42" });
 
 			expect(result.success).toBe(true);
 			if (result.success) {
-				expect(result.data.id).toBe(42);
+				expect(result.data.jobRoleId).toBe(42);
 			}
 		});
 
@@ -57,8 +57,10 @@ describe("job role DTO schemas", () => {
 			["negative", "-1"],
 			["decimal", "1.5"],
 			["non-numeric", "abc"],
-		])("should reject a %s id", (_name, id) => {
-			expect(IdParamSchema.safeParse({ id }).success).toBe(false);
+		])("should reject a %s job role id", (_name, jobRoleId) => {
+			expect(
+				JobRoleIdParamSchema.safeParse({ jobRoleId }).success,
+			).toBe(false);
 		});
 	});
 

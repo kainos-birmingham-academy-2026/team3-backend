@@ -26,8 +26,8 @@ export class JobRolesController {
 		}
 	}
 
-	async getById(req: Request<{ id: string }>, res: Response) {
-		const idParam = req.params.id;
+	async getById(req: Request<{ jobRoleId: string }>, res: Response) {
+		const idParam = req.params.jobRoleId;
 		const jobRoleId = parseInt(idParam, 10);
 		// This is redundant with validation middleware but kept as a defensive guard.
 		if (Number.isNaN(jobRoleId)) {
@@ -45,8 +45,8 @@ export class JobRolesController {
 		}
 	}
 
-	async createApplication(req: Request<{ id: string }>, res: Response) {
-		const idParam = req.params.id;
+	async createApplication(req: Request<{ jobRoleId: string }>, res: Response) {
+		const idParam = req.params.jobRoleId;
 		const jobRoleId = parseInt(idParam, 10);
 		//this is unnecessary due to validation middleware, but required for error handling
 		const userId = res.locals.authUser?.userId;
@@ -89,8 +89,8 @@ export class JobRolesController {
 		}
 	}
 
-	async updateJobRole(req: Request<{ id: string }>, res: Response) {
-		const idParam = req.params.id;
+	async updateJobRole(req: Request<{ jobRoleId: string }>, res: Response) {
+		const idParam = req.params.jobRoleId;
 		const jobRoleId = parseInt(idParam, 10);
 		const payload = req.body as UpdateJobRoleRequestDto;
 
@@ -105,8 +105,11 @@ export class JobRolesController {
 		}
 	}
 
-	async deleteJobRole(req: Request, res: Response) {
-		const idParam = req.params.id;
+	async deleteJobRole(
+		req: Request<{ jobRoleId: string }>,
+		res: Response,
+	) {
+		const idParam = req.params.jobRoleId;
 		const jobRoleId = parseInt(
 			Array.isArray(idParam) ? idParam[0] : idParam,
 			10,

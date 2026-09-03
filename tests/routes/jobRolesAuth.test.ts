@@ -381,7 +381,7 @@ describe("Job role route auth protection", () => {
 	});
 });
 
-describe("POST /api/job-roles/:id/apply", () => {
+describe("POST /api/job-roles/:jobRoleId/apply", () => {
 	let originalJwtSecret: string | undefined;
 
 	beforeEach(() => {
@@ -422,7 +422,10 @@ describe("POST /api/job-roles/:id/apply", () => {
 		expect(response.status).toBe(400);
 		expect(response.body).toEqual({
 			errors: expect.arrayContaining([
-				expect.objectContaining({ field: "id", message: expect.any(String) }),
+				expect.objectContaining({
+					field: "jobRoleId",
+					message: expect.any(String),
+				}),
 			]),
 		});
 	});

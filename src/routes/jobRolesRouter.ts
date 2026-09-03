@@ -3,7 +3,7 @@ import { JobRolesController } from "../controllers/jobRolesController";
 import {
 	CreateApplicationSchema,
 	CreateJobRoleSchema,
-	IdParamSchema,
+	JobRoleIdParamSchema,
 	JobRoleFiltersSchema,
 	UpdateJobRoleSchema,
 } from "../dtos/jobRoleDto";
@@ -227,13 +227,13 @@ jobRolesRouter.get(
 
 /**
  * @openapi
- * /api/job-roles/{id}:
+ * /api/job-roles/{jobRoleId}:
  *   get:
  *     tags: [Job Roles]
  *     summary: Get job role details by ID
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: jobRoleId
  *         required: true
  *         schema:
  *           type: integer
@@ -266,9 +266,9 @@ jobRolesRouter.get(
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 jobRolesRouter.get(
-	"/:id",
-	validateParams(IdParamSchema),
-	(req: R<{ id: string }>, res: Res) => {
+	"/:jobRoleId",
+	validateParams(JobRoleIdParamSchema),
+	(req: R<{ jobRoleId: string }>, res: Res) => {
 		controller.getById(req, res);
 	},
 );
@@ -332,7 +332,7 @@ jobRolesRouter.post(
 
 /**
  * @openapi
- * /api/job-roles/{id}:
+ * /api/job-roles/{jobRoleId}:
  *   patch:
  *     tags: [Job Roles]
  *     summary: Update a job role
@@ -341,7 +341,7 @@ jobRolesRouter.post(
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: jobRoleId
  *         required: true
  *         schema:
  *           type: integer
@@ -365,19 +365,19 @@ jobRolesRouter.post(
  *         description: Job role not found
  */
 jobRolesRouter.patch(
-	"/:id",
+	"/:jobRoleId",
 	requireAuth,
 	allowRoles([USER_ROLES.ADMIN]),
-	validateParams(IdParamSchema),
+	validateParams(JobRoleIdParamSchema),
 	validateBody(UpdateJobRoleSchema),
-	(req: R<{ id: string }>, res: Res) => {
+	(req: R<{ jobRoleId: string }>, res: Res) => {
 		controller.updateJobRole(req, res);
 	},
 );
 
 /**
  * @openapi
- * /api/job-roles/{id}:
+ * /api/job-roles/{jobRoleId}:
  *   delete:
  *     tags: [Job Roles]
  *     summary: Delete a job role
@@ -386,7 +386,7 @@ jobRolesRouter.patch(
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: jobRoleId
  *         required: true
  *         schema:
  *           type: integer
@@ -402,18 +402,18 @@ jobRolesRouter.patch(
  *         description: Job role not found
  */
 jobRolesRouter.delete(
-	"/:id",
+	"/:jobRoleId",
 	requireAuth,
 	allowRoles([USER_ROLES.ADMIN]),
-	validateParams(IdParamSchema),
-	(req: R, res: Res) => {
+	validateParams(JobRoleIdParamSchema),
+	(req: R<{ jobRoleId: string }>, res: Res) => {
 		controller.deleteJobRole(req, res);
 	},
 );
 
 /**
  * @openapi
- * /api/job-roles/{id}/apply:
+ * /api/job-roles/{jobRoleId}/apply:
  *   post:
  *     tags: [Job Roles]
  *     summary: Apply for a job role
@@ -422,7 +422,7 @@ jobRolesRouter.delete(
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: jobRoleId
  *         required: true
  *         schema:
  *           type: integer
@@ -479,12 +479,12 @@ jobRolesRouter.delete(
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 jobRolesRouter.post(
-	"/:id/apply",
+	"/:jobRoleId/apply",
 	requireAuth,
 	allowRoles([USER_ROLES.ADMIN, USER_ROLES.USER]),
-	validateParams(IdParamSchema),
+	validateParams(JobRoleIdParamSchema),
 	validateBody(CreateApplicationSchema),
-	(req: R<{ id: string }>, res: Res) => {
+	(req: R<{ jobRoleId: string }>, res: Res) => {
 		controller.createApplication(req, res);
 	},
 );

@@ -38,8 +38,8 @@ export const JobRoleFiltersSchema = z
 		path: ["closingBy"],
 	});
 
-export const IdParamSchema = z.object({
-	id: z.coerce
+export const JobRoleIdParamSchema = z.object({
+	jobRoleId: z.coerce
 		.number("ID must be a number")
 		.int("ID must be an integer")
 		.positive("ID must be a positive number"),
@@ -104,7 +104,7 @@ export const CreateJobRoleSchema = z.object({
 
 export const UpdateJobRoleSchema = CreateJobRoleSchema;
 
-export type IdParamDto = z.infer<typeof IdParamSchema>;
+export type JobRoleIdParamDto = z.infer<typeof JobRoleIdParamSchema>;
 export type JobRoleFiltersDto = z.infer<typeof JobRoleFiltersSchema>;
 
 export const CreateApplicationSchema = z.object({

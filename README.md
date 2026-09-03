@@ -330,7 +330,7 @@ Validation error (`400`) example:
 }
 ```
 
-### `GET /api/job-roles/{id}`
+### `GET /api/job-roles/{jobRoleId}`
 
 Returns the full details for a job role. This endpoint is public and does not require authentication.
 
@@ -370,7 +370,7 @@ These public endpoints provide the lookup data used when creating a job role. Th
 
 Each endpoint returns an array with status `200`. If no lookup records exist, it returns `404` with an error object; unexpected database or service failures return `500`.
 
-### `DELETE /api/job-roles/{id}`
+### `DELETE /api/job-roles/{jobRoleId}`
 
 Deletes a job role and its associated applications.
 
@@ -527,7 +527,7 @@ Authorisation error (403):
 
 
 
-### `POST /api/job-roles/:id/apply`
+### `POST /api/job-roles/:jobRoleId/apply`
 
 Allows an authenticated user to apply for a specific job role with their CV.
 

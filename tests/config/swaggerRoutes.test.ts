@@ -47,6 +47,13 @@ describe("registerSwaggerRoutes", () => {
 				"/api/job-applications/admin/{applicationId}/status"
 			].patch.requestBody.content["application/json"].schema.$ref,
 		).toBe("#/components/schemas/UpdateApplicationStatusRequest");
+		const jobRoleDetailOperation =
+			specificationResponse.body.paths["/api/job-roles/{jobRoleId}"].get;
+		expect(jobRoleDetailOperation.parameters).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({ in: "path", name: "jobRoleId" }),
+			]),
+		);
 		expect(documentationResponse.status).toBe(200);
 	});
 });
