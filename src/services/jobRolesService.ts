@@ -9,7 +9,7 @@ import { ConflictError } from "../errors/conflictError.js";
 import { JobRoleMapper } from "../mappers/jobRoleMapper.js";
 import type { BandResponse } from "../models/bandResponse.js";
 import type { CapabilityResponse } from "../models/capabilityResponse.js";
-import type { JobRoleDetailedResponse } from "../models/JobRoleDetailedResponse.js";
+import type { JobRoleDetailedResponse } from "../models/jobRoleDetailedResponse.js";
 import type { JobRoleApplication } from "../models/jobRoleApplication.js";
 import { JobRoleDao } from "../models/jobRoleDao.js";
 import type { JobRoleResponse } from "../models/jobRoleResponse.ts";
