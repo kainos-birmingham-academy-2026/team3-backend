@@ -218,7 +218,7 @@ docker run -d \
 
 ```bash
 curl http://localhost:4000/health
-curl http://localhost:4000/job-roles
+curl http://localhost:4000/api/job-roles
 docker logs team3-backend
 ```
 
@@ -248,7 +248,7 @@ Example response:
 }
 ```
 
-### `GET /job-roles`
+### `GET /api/job-roles`
 
 Returns all job roles in the database (currently seeded with test data).
 
@@ -295,7 +295,7 @@ Example response (`418`):
 }
 ```
 
-### `POST /api/login`
+### `POST /api/auth/login`
 
 Authenticates a user with email and password and returns a JWT token.
 
@@ -330,7 +330,7 @@ Validation error (`400`) example:
 }
 ```
 
-### `GET /job-roles/{id}`
+### `GET /api/job-roles/{id}`
 
 Returns the full details for a job role. This endpoint is public and does not require authentication.
 
@@ -363,14 +363,14 @@ Example response (`200`):
 
 These public endpoints provide the lookup data used when creating a job role. They do not require authentication and do not accept a request body or query parameters.
 
-- `GET /job-roles/statuses` returns `{ "statusId": 1, "statusName": "OPEN" }` objects.
-- `GET /job-roles/bands` returns `{ "bandId": 3, "bandName": "Engineer" }` objects.
-- `GET /job-roles/capabilities` returns `{ "capabilityId": 1, "capabilityName": "Software Engineering" }` objects.
-- `GET /job-roles/locations` returns `{ "locationId": 1, "locationName": "Belfast" }` objects.
+- `GET /api/job-roles/statuses` returns `{ "statusId": 1, "statusName": "OPEN" }` objects.
+- `GET /api/job-roles/bands` returns `{ "bandId": 3, "bandName": "Engineer" }` objects.
+- `GET /api/job-roles/capabilities` returns `{ "capabilityId": 1, "capabilityName": "Software Engineering" }` objects.
+- `GET /api/job-roles/locations` returns `{ "locationId": 1, "locationName": "Belfast" }` objects.
 
 Each endpoint returns an array with status `200`. If no lookup records exist, it returns `404` with an error object; unexpected database or service failures return `500`.
 
-### `DELETE /job-roles/{id}`
+### `DELETE /api/job-roles/{id}`
 
 Deletes a job role and its associated applications.
 
@@ -406,7 +406,7 @@ Seeded login users for local and E2E testing all use the password `password`:
 
 Each applicant has at least one application. The seed includes applications across multiple job roles with `IN_PROGRESS`, `HIRED`, and `REJECTED` statuses. Running `npm run seed` again restores these records to their original states.
 
-### `POST /api/register`
+### `POST /api/auth/register`
 
 Registers a new user account.
 
@@ -447,7 +447,7 @@ Role behaviour:
 - Passwords are salted and hashed with Argon2id before storage
 
 
-### `POST /job-roles/create`
+### `POST /api/job-roles/create`
 
 Creates a new job role.
 
@@ -527,7 +527,7 @@ Authorisation error (403):
 
 
 
-### `POST /job-roles/:id/apply`
+### `POST /api/job-roles/:id/apply`
 
 Allows an authenticated user to apply for a specific job role with their CV.
 
@@ -597,7 +597,7 @@ Authentication error (`401`) example:
 
 ### Admin Job Applications Endpoints
 
-#### `GET /job-applications/admin`
+#### `GET /api/job-applications/admin`
 
 Retrieves all job applications across all job roles (admin only).
 
@@ -627,7 +627,7 @@ Success response (`200`):
 ]
 ```
 
-#### `GET /job-applications/admin/:jobRoleId/applications`
+#### `GET /api/job-applications/admin/:jobRoleId/applications`
 
 Retrieves all applications for a specific job role (admin only).
 
@@ -669,7 +669,7 @@ Not found error (`404`) example:
 }
 ```
 
-#### `PATCH /job-applications/admin/:applicationId/status`
+#### `PATCH /api/job-applications/admin/:applicationId/status`
 
 Updates the status of a job application (admin only).
 
@@ -741,17 +741,17 @@ After starting the app, you can verify endpoints with:
 ```bash
 curl http://localhost:4000/
 curl http://localhost:4000/health
-curl -X POST http://localhost:4000/api/login \
+curl -X POST http://localhost:4000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"password"}'
-curl -X POST http://localhost:4000/api/register \
+curl -X POST http://localhost:4000/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"new.user@example.com","password":"Password123!"}'
-curl -X POST http://localhost:4000/job-roles/1/apply \
+curl -X POST http://localhost:4000/api/job-roles/1/apply \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <jwt-token>" \
   -d '{"cvText":"Lorem ipsum dolor sit amet. Qui repellendus exercitationem sed reiciendis..."}'
-curl -X POST http://localhost:4000/job-roles/create \
+curl -X POST http://localhost:4000/api/job-roles/create \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <admin-jwt-token>" \
   -d '{

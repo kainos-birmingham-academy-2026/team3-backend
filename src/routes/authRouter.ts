@@ -9,7 +9,7 @@ const controller = new AuthController(new AuthService());
 
 /**
  * @openapi
- * /api/login:
+ * /api/auth/login:
  *   post:
  *     tags: [Auth]
  *     summary: Login and receive JWT
@@ -56,7 +56,7 @@ router.post(
 
 /**
  * @openapi
- * /api/register:
+ * /api/auth/register:
  *   post:
  *     tags: [Auth]
  *     summary: Register a new user account

@@ -29,7 +29,7 @@ jobApplicationsAdminRouter.use(allowRoles([USER_ROLES.ADMIN]));
 
 /**
  * @openapi
- * /job-applications/admin:
+ * /api/job-applications/admin:
  *   get:
  *     tags: [Applications]
  *     summary: Get all job applications
@@ -55,7 +55,7 @@ jobApplicationsAdminRouter.get("/", controller.getAllAdmin.bind(controller));
 
 /**
  * @openapi
- * /job-applications/admin/{jobRoleId}/applications:
+ * /api/job-applications/admin/{jobRoleId}/applications:
  *   get:
  *     tags: [Applications]
  *     summary: Get applications for a job role
@@ -94,7 +94,7 @@ jobApplicationsAdminRouter.get(
 
 /**
  * @openapi
- * /job-applications/admin/{applicationId}/status:
+ * /api/job-applications/admin/{applicationId}/status:
  *   patch:
  *     tags: [Applications]
  *     summary: Update an application's status

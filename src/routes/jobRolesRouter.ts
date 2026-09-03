@@ -21,7 +21,7 @@ const controller = new JobRolesController(new JobRolesService());
 
 /**
  * @openapi
- * /job-roles/statuses:
+ * /api/job-roles/statuses:
  *   get:
  *     tags: [Job Roles]
  *     summary: Get available job role statuses
@@ -53,7 +53,7 @@ jobRolesRouter.get("/statuses", (req: R, res: Res) => {
 
 /**
  * @openapi
- * /job-roles/bands:
+ * /api/job-roles/bands:
  *   get:
  *     tags: [Job Roles]
  *     summary: Get available job role bands
@@ -85,7 +85,7 @@ jobRolesRouter.get("/bands", (req: R, res: Res) => {
 
 /**
  * @openapi
- * /job-roles/capabilities:
+ * /api/job-roles/capabilities:
  *   get:
  *     tags: [Job Roles]
  *     summary: Get available job role capabilities
@@ -117,7 +117,7 @@ jobRolesRouter.get("/capabilities", (req: R, res: Res) => {
 
 /**
  * @openapi
- * /job-roles/locations:
+ * /api/job-roles/locations:
  *   get:
  *     tags: [Job Roles]
  *     summary: Get available job role locations
@@ -149,7 +149,7 @@ jobRolesRouter.get("/locations", (req: R, res: Res) => {
 
 /**
  * @openapi
- * /job-roles:
+ * /api/job-roles:
  *   get:
  *     tags: [Job Roles]
  *     summary: Get all job roles
@@ -227,7 +227,7 @@ jobRolesRouter.get(
 
 /**
  * @openapi
- * /job-roles/{id}:
+ * /api/job-roles/{id}:
  *   get:
  *     tags: [Job Roles]
  *     summary: Get job role details by ID
@@ -275,7 +275,7 @@ jobRolesRouter.get(
 
 /**
  * @openapi
- * /job-roles/create:
+ * /api/job-roles/create:
  *   post:
  *     tags: [Job Roles]
  *     summary: Create a job role
@@ -332,7 +332,7 @@ jobRolesRouter.post(
 
 /**
  * @openapi
- * /job-roles/{id}:
+ * /api/job-roles/{id}:
  *   patch:
  *     tags: [Job Roles]
  *     summary: Update a job role
@@ -377,7 +377,7 @@ jobRolesRouter.patch(
 
 /**
  * @openapi
- * /job-roles/{id}:
+ * /api/job-roles/{id}:
  *   delete:
  *     tags: [Job Roles]
  *     summary: Delete a job role
@@ -413,7 +413,7 @@ jobRolesRouter.delete(
 
 /**
  * @openapi
- * /job-roles/{id}/apply:
+ * /api/job-roles/{id}/apply:
  *   post:
  *     tags: [Job Roles]
  *     summary: Apply for a job role
@@ -488,15 +488,5 @@ jobRolesRouter.post(
 		controller.createApplication(req, res);
 	},
 );
-
-//future endpoint urls for url reference exclude /job-roles/
-// jobRolesRouter.post('/job-roles/create', (req: R, res: Res) => {
-// });
-
-// jobRolesRouter.put('/job-roles/:id/update', (req: R, res: Res) => {
-// });
-
-// jobRolesRouter.delete('/job-roles/:id/delete', (req: R, res: Res) => {
-// });
 
 export default jobRolesRouter;

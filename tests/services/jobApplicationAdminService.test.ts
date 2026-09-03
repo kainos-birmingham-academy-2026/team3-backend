@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Prisma } from "../../src/generated/prisma/client.js";
 import { JobApplicationAdminService } from "../../src/services/jobApplicationAdminService";
 
 const {
@@ -19,6 +18,17 @@ const {
 		mockTransaction: vi.fn(),
 	};
 });
+
+type TransactionTestClient = {
+	application: {
+		findFirst: typeof mockFindFirst;
+		update: typeof mockUpdate;
+		findUnique: typeof mockFindUnique;
+	};
+	jobRole: {
+		updateMany: typeof mockUpdateMany;
+	};
+};
 
 vi.mock("../../src/prismaClient.ts", () => {
 	return {
@@ -44,8 +54,8 @@ describe("jobApplicationAdminService", () => {
 		vi.clearAllMocks();
 
 		mockTransaction.mockImplementation(
-			async (callback: (tx: Prisma.TransactionClient) => Promise<unknown>) =>
-				callback({
+			async (callback: (tx: TransactionTestClient) => Promise<unknown>) => {
+				const transactionClient: TransactionTestClient = {
 					application: {
 						findFirst: mockFindFirst,
 						update: mockUpdate,
@@ -54,7 +64,10 @@ describe("jobApplicationAdminService", () => {
 					jobRole: {
 						updateMany: mockUpdateMany,
 					},
-				}),
+				};
+
+				return callback(transactionClient);
+			},
 		);
 
 		service = new JobApplicationAdminService();

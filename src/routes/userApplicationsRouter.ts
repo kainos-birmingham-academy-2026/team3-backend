@@ -18,7 +18,7 @@ userApplicationsRouter.use(requireAuth);
 
 /**
  * @openapi
- * /job-applications:
+ * /api/job-applications:
  *   get:
  *     tags: [Applications]
  *     summary: Get the authenticated user's applications

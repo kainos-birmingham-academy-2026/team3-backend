@@ -36,13 +36,13 @@ describe("Admin hire API behaviour", () => {
 	});
 
 	it("Given the absence of a token, when the admin applications route is requested, then the status code should be 401", async () => {
-		const response = await request(app).get("/job-applications/admin");
+		const response = await request(app).get("/api/job-applications/admin");
 		expect(response.status).toBe(401);
 	});
 
 	it("Given a non-admin token, when the admin applications route is requested, then the request is forbidden", async () => {
 		const response = await request(app)
-			.get("/job-applications/admin")
+			.get("/api/job-applications/admin")
 			.set("Authorization", `Bearer ${userToken()}`);
 
 		expect(response.status).toBe(403);
@@ -69,7 +69,7 @@ describe("Admin hire API behaviour", () => {
 		).mockResolvedValueOnce(applications as never);
 
 		const response = await request(app)
-			.get("/job-applications/admin")
+			.get("/api/job-applications/admin")
 			.set("Authorization", `Bearer ${adminToken()}`);
 
 		expect(response.status).toBe(200);
@@ -90,7 +90,7 @@ describe("Admin hire API behaviour", () => {
 		} as never);
 
 		const response = await request(app)
-			.patch("/job-applications/admin/7/status")
+			.patch("/api/job-applications/admin/7/status")
 			.set("Authorization", `Bearer ${adminToken()}`)
 			.send({ status: "HIRED" });
 
@@ -112,7 +112,7 @@ describe("Admin hire API behaviour", () => {
 		).mockRejectedValueOnce(new Error("Unsupported application status"));
 
 		const response = await request(app)
-			.patch("/job-applications/admin/7/status")
+			.patch("/api/job-applications/admin/7/status")
 			.set("Authorization", `Bearer ${adminToken()}`)
 			.send({ status: "PENDING" });
 
@@ -129,7 +129,7 @@ describe("Admin hire API behaviour", () => {
 		);
 
 		const response = await request(app)
-			.patch("/job-applications/admin/7/status")
+			.patch("/api/job-applications/admin/7/status")
 			.set("Authorization", `Bearer ${adminToken()}`)
 			.send({ decision: "APPROVED" });
 

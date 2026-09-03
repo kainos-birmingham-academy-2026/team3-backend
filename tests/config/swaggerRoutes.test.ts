@@ -23,7 +23,7 @@ describe("registerSwaggerRoutes", () => {
 		expect(specificationResponse.status).toBe(200);
 		expect(specificationResponse.body).toHaveProperty("openapi");
 		expect(specificationResponse.body.paths).toHaveProperty(
-			"/job-applications/admin",
+			"/api/job-applications/admin",
 		);
 		const applicationProperties =
 			specificationResponse.body.components.schemas.AdminApplicationListItem
@@ -44,7 +44,7 @@ describe("registerSwaggerRoutes", () => {
 		expect(Object.keys(statusUpdateSchema.properties)).toEqual(["status"]);
 		expect(
 			specificationResponse.body.paths[
-				"/job-applications/admin/{applicationId}/status"
+				"/api/job-applications/admin/{applicationId}/status"
 			].patch.requestBody.content["application/json"].schema.$ref,
 		).toBe("#/components/schemas/UpdateApplicationStatusRequest");
 		expect(documentationResponse.status).toBe(200);
