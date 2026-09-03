@@ -188,7 +188,23 @@ to `main` additionally:
 	commit SHA image.
 4. Dispatches the frontend workflow only after the backend apply succeeds.
 
-Feature branches do not push images or deploy infrastructure.
+Feature branches do not push images or deploy infrastructure automatically.
+To create or update the isolated test environment, run the backend CI workflow
+manually from `main` with `deploy_test` enabled:
+
+- **backend_ref** selects the backend branch, tag, or commit built and deployed
+	as `test-<commit-sha>`.
+- **frontend_ref** selects the frontend branch, tag, or commit passed to the
+	frontend deployment.
+
+Both references are resolved to exact commit SHAs in the first workflow job. An
+unknown branch, tag, or SHA fails the run before tests, image pushes, or
+Terraform changes begin.
+
+The test deployment uses `team3-backend-test.tfstate` and creates resources in
+`rg-team3-test`. The workflow and Terraform configuration always come from
+`main`; only the application images come from the selected refs. The deployment
+does not read or update the dev Terraform state.
 
 ## Local Terraform checks
 
