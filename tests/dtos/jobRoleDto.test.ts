@@ -121,21 +121,30 @@ describe("job role DTO schemas", () => {
 	});
 
 	describe("CreateApplicationSchema", () => {
-		it("should trim a valid CV reference", () => {
+		it("should coerce a job role ID and trim a valid CV reference", () => {
 			const result = CreateApplicationSchema.safeParse({
+				jobRoleId: "3",
 				cvText: "  CV-2026-001  ",
 			});
 
 			expect(result.success).toBe(true);
 			if (result.success) {
+				expect(result.data.jobRoleId).toBe(3);
 				expect(result.data.cvText).toBe("CV-2026-001");
 			}
 		});
 
 		it("should reject an empty CV reference", () => {
-			expect(CreateApplicationSchema.safeParse({ cvText: "   " }).success).toBe(
-				false,
-			);
+			expect(
+				CreateApplicationSchema.safeParse({ jobRoleId: 3, cvText: "   " })
+					.success,
+			).toBe(false);
+		});
+
+		it("should reject a missing job role ID", () => {
+			expect(
+				CreateApplicationSchema.safeParse({ cvText: "CV-2026-001" }).success,
+			).toBe(false);
 		});
 	});
 });

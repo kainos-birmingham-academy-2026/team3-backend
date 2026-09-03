@@ -107,9 +107,8 @@ export const UpdateJobRoleSchema = CreateJobRoleSchema;
 export type JobRoleIdParamDto = z.infer<typeof JobRoleIdParamSchema>;
 export type JobRoleFiltersDto = z.infer<typeof JobRoleFiltersSchema>;
 
-export const CreateApplicationSchema = z.object({
-	//user id validation is handled by the auth middleware, validation not required here
-	//job role id validation is handled by the route param validation, validation not required here
+export const CreateApplicationSchema = z.strictObject({
+	jobRoleId: z.coerce.number().int().positive(),
 	cvText: z.string().trim().min(1, "CV reference cannot be empty"),
 });
 

@@ -25,6 +25,33 @@ describe("registerSwaggerRoutes", () => {
 		expect(specificationResponse.body.paths).toHaveProperty(
 			"/api/job-applications/admin",
 		);
+		expect(
+			specificationResponse.body.paths["/api/job-applications"],
+		).toHaveProperty("post");
+		expect(
+			specificationResponse.body.paths[
+				"/api/job-applications/{applicationId}/status"
+			],
+		).toHaveProperty("patch");
+		expect(specificationResponse.body.paths).not.toHaveProperty(
+			"/api/job-roles/{jobRoleId}/apply",
+		);
+		expect(specificationResponse.body.paths).not.toHaveProperty(
+			"/api/job-applications/{applicationId}/withdraw",
+		);
+		const applicationRequestSchema =
+			specificationResponse.body.components.schemas.ApplicationRequest;
+		expect(applicationRequestSchema.required).toEqual(["jobRoleId", "cvText"]);
+		expect(Object.keys(applicationRequestSchema.properties)).toEqual([
+			"jobRoleId",
+			"cvText",
+		]);
+		const withdrawalRequestSchema =
+			specificationResponse.body.components.schemas.WithdrawApplicationRequest;
+		expect(withdrawalRequestSchema.required).toEqual(["status"]);
+		expect(withdrawalRequestSchema.properties.status.enum).toEqual([
+			"WITHDRAWN",
+		]);
 		const applicationProperties =
 			specificationResponse.body.components.schemas.AdminApplicationListItem
 				.properties;

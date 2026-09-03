@@ -70,7 +70,7 @@ export class JobRolesService {
 	async createApplication(
 		jobRoleId: number,
 		userId: number,
-		data: CreateApplicationRequestDto,
+		data: Pick<CreateApplicationRequestDto, "cvText">,
 	): Promise<JobRoleApplication> {
 		const jobRole = await this.jobRoleDao.findById(jobRoleId);
 		if (!jobRole) {

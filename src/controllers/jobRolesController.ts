@@ -5,8 +5,6 @@ import type {
 	JobRoleFiltersDto,
 	UpdateJobRoleRequestDto,
 } from "../dtos/jobRoleDto.js";
-import { TOKEN_ERROR } from "../errors/authError.js";
-import { ConflictError } from "../errors/conflictError.js";
 import type { JobRolesService } from "../services/jobRolesService";
 
 export class JobRolesController {
@@ -42,33 +40,6 @@ export class JobRolesController {
 				return res.status(404).json({ message: error.message });
 			}
 			return res.status(500).json({ message: "Internal Server Error" });
-		}
-	}
-
-	async createApplication(req: Request<{ jobRoleId: string }>, res: Response) {
-		const idParam = req.params.jobRoleId;
-		const jobRoleId = parseInt(idParam, 10);
-		//this is unnecessary due to validation middleware, but required for error handling
-		const userId = res.locals.authUser?.userId;
-		if (!userId) {
-			return res.status(401).json({ message: TOKEN_ERROR });
-		}
-
-		try {
-			const application = await this.service.createApplication(
-				jobRoleId,
-				userId,
-				req.body,
-			);
-			res.status(201).json(application);
-		} catch (error) {
-			if (error instanceof NotFoundError) {
-				return res.status(404).json({ message: error.message });
-			}
-			if (error instanceof ConflictError) {
-				return res.status(error.statusCode).json({ message: error.message });
-			}
-			res.status(500).json({ message: "Internal Server Error" });
 		}
 	}
 

@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { UserApplicationsController } from "../../src/controllers/userApplicationsController";
+import type { JobRolesService } from "../../src/services/jobRolesService";
 import type { UserApplicationsService } from "../../src/services/userApplicationsService";
 
 const createMockResponse = () => {
@@ -24,13 +25,38 @@ describe("UserApplicationsController", () => {
 		findAllForUser: vi.fn(),
 		withdrawApplication: vi.fn(),
 	};
+	const mockJobRolesService = {
+		createApplication: vi.fn(),
+	};
 	let controller: UserApplicationsController;
 
 	beforeEach(() => {
 		vi.resetAllMocks();
 		controller = new UserApplicationsController(
 			mockService as unknown as UserApplicationsService,
+			mockJobRolesService as unknown as JobRolesService,
 		);
+	});
+
+	it("creates an application for the authenticated user", async () => {
+		const req = { body: { jobRoleId: 3, cvText: "CV-2026-001" } };
+		const res = createMockResponse();
+		vi.mocked(mockJobRolesService.createApplication).mockResolvedValue({
+			applicationId: 7,
+			jobRoleId: 3,
+			userId: 42,
+			cvText: "CV-2026-001",
+		});
+
+		await controller.create(
+			req as unknown as Request,
+			res as unknown as Response,
+		);
+
+		expect(mockJobRolesService.createApplication).toHaveBeenCalledWith(3, 42, {
+			cvText: "CV-2026-001",
+		});
+		expect(res.status).toHaveBeenCalledWith(201);
 	});
 
 	it("withdraws an application owned by the authenticated user", async () => {
@@ -40,7 +66,7 @@ describe("UserApplicationsController", () => {
 			message: "Application withdrawn",
 		});
 
-		await controller.withdraw(
+		await controller.updateStatus(
 			req as unknown as Request,
 			res as unknown as Response,
 		);
@@ -57,7 +83,7 @@ describe("UserApplicationsController", () => {
 			new Error("Only IN_PROGRESS applications can be withdrawn"),
 		);
 
-		await controller.withdraw(
+		await controller.updateStatus(
 			req as unknown as Request,
 			res as unknown as Response,
 		);

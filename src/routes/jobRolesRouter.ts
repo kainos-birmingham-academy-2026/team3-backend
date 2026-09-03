@@ -1,7 +1,6 @@
 import { type Request as R, type Response as Res, Router } from "express";
 import { JobRolesController } from "../controllers/jobRolesController";
 import {
-	CreateApplicationSchema,
 	CreateJobRoleSchema,
 	JobRoleIdParamSchema,
 	JobRoleFiltersSchema,
@@ -408,84 +407,6 @@ jobRolesRouter.delete(
 	validateParams(JobRoleIdParamSchema),
 	(req: R<{ jobRoleId: string }>, res: Res) => {
 		controller.deleteJobRole(req, res);
-	},
-);
-
-/**
- * @openapi
- * /api/job-roles/{jobRoleId}/apply:
- *   post:
- *     tags: [Job Roles]
- *     summary: Apply for a job role
- *     description: User or admin can apply for a job role. The authenticated user ID is extracted from the JWT token.
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: jobRoleId
- *         required: true
- *         schema:
- *           type: integer
- *           minimum: 1
- *         description: Job role ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/ApplicationRequest'
- *     responses:
- *       201:
- *         description: Application created successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/JobRoleApplicationResponse'
- *       400:
- *         description: Request validation failed
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ValidationErrorResponse'
- *       401:
- *         description: Missing or invalid token
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/MessageErrorResponse'
- *       403:
- *         description: Forbidden for current role
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/MessageErrorResponse'
- *       404:
- *         description: Job role not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       409:
- *         description: Conflict - application may already exist
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/MessageErrorResponse'
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- */
-jobRolesRouter.post(
-	"/:jobRoleId/apply",
-	requireAuth,
-	allowRoles([USER_ROLES.ADMIN, USER_ROLES.USER]),
-	validateParams(JobRoleIdParamSchema),
-	validateBody(CreateApplicationSchema),
-	(req: R<{ jobRoleId: string }>, res: Res) => {
-		controller.createApplication(req, res);
 	},
 );
 

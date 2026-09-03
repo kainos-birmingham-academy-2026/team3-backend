@@ -176,7 +176,7 @@ export class JobRoleDao {
 	async createApplication(
 		jobRoleId: number,
 		userId: number,
-		data: CreateApplicationRequestDto,
+		data: Pick<CreateApplicationRequestDto, "cvText">,
 	): Promise<JobRoleApplication> {
 		const application = await prisma.application.create({
 			data: {

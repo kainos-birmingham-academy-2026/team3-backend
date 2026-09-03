@@ -527,7 +527,7 @@ Authorisation error (403):
 
 
 
-### `POST /api/job-roles/:jobRoleId/apply`
+### `POST /api/job-applications`
 
 Allows an authenticated user to apply for a specific job role with their CV.
 
@@ -540,6 +540,7 @@ Request body:
 
 ```json
 {
+  "jobRoleId": 1,
   "cvText": "Lagosuchus. Amtosaurus. Ischyrosaurus. Xixiasaurus. Sinoceratops. Changchunsaurus. Kundurosaurus. Cryptovolans. Sinovenator. Heterosaurus. Lisboasaurus. Borogovia. Gideonmantellia. Apatodon. Aviatyrannis. Saurophaganax. Baotianmansaurus. Teyuwasu. Pachycephalosaurus. Galtonia. Sinornithomimus.
 
  Geminiraptor. Vulcanodon. Banji. Sinucerasaurus. Maiasaura. Osmakasaurus. Inosaurus. Eucercosaurus. Petrobrasaurus. Indosuchus. Anserimimus. Yuanmousaurus. Adeopapposaurus. Abydosaurus. Crichtonsaurus. Prenoceratops. Coronosaurus. Xenoceratops. Shuvuuia. Mirischia. Ojoraptorsaurus. Eotyrannus. Tsaagan. Qinlingosaurus. Epidexipteryx. Gresslyosaurus. Platyceratops. Sinornithoides. Halticosaurus. Siluosaurus. Campylodoniscus. Eocarcharia.
@@ -551,12 +552,9 @@ Request body:
 }
 ```
 
-URL parameters:
-
-- `id` - The job role ID (integer)
-
 Validation rules:
 
+- `jobRoleId` must be a positive integer
 - `cvText` must be a non-empty string
 
 Success response (`201`):
@@ -594,6 +592,20 @@ Authentication error (`401`) example:
   "message": "Token error"
 }
 ```
+
+### `PATCH /api/job-applications/:applicationId/status`
+
+Withdraws an authenticated user's in-progress application.
+
+Request body:
+
+```json
+{
+  "status": "WITHDRAWN"
+}
+```
+
+Only `WITHDRAWN` is accepted for user-owned application status updates.
 
 ### Admin Job Applications Endpoints
 
@@ -747,10 +759,10 @@ curl -X POST http://localhost:4000/api/auth/login \
 curl -X POST http://localhost:4000/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"new.user@example.com","password":"Password123!"}'
-curl -X POST http://localhost:4000/api/job-roles/1/apply \
+curl -X POST http://localhost:4000/api/job-applications \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <jwt-token>" \
-  -d '{"cvText":"Lorem ipsum dolor sit amet. Qui repellendus exercitationem sed reiciendis..."}'
+  -d '{"jobRoleId":1,"cvText":"Lorem ipsum dolor sit amet. Qui repellendus exercitationem sed reiciendis..."}'
 curl -X POST http://localhost:4000/api/job-roles \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <admin-jwt-token>" \

@@ -286,6 +286,18 @@ const options: swaggerJsdoc.Options = {
 						},
 					},
 				},
+				WithdrawApplicationRequest: {
+					type: "object",
+					additionalProperties: false,
+					required: ["status"],
+					properties: {
+						status: {
+							type: "string",
+							enum: ["WITHDRAWN"],
+							example: "WITHDRAWN",
+						},
+					},
+				},
 				CreateJobRoleRequest: {
 					type: "object",
 					additionalProperties: false,
@@ -356,8 +368,9 @@ const options: swaggerJsdoc.Options = {
 				ApplicationRequest: {
 					type: "object",
 					additionalProperties: false,
-					required: ["cvText"],
+					required: ["jobRoleId", "cvText"],
 					properties: {
+						jobRoleId: { type: "integer", minimum: 1, example: 12 },
 						cvText: {
 							type: "string",
 							example: "I have 5 years of software engineering experience...",
