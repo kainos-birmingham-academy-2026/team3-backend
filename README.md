@@ -336,7 +336,7 @@ Returns the full details for a job role. This endpoint is public and does not re
 
 Path parameters:
 
-- `id` - A positive integer job role ID
+- `jobRoleId` - A positive integer job role ID
 
 Example response (`200`):
 
