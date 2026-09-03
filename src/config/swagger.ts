@@ -12,6 +12,7 @@ const options: swaggerJsdoc.Options = {
 		tags: [
 			{ name: "Auth", description: "Authentication endpoints" },
 			{ name: "Job Roles", description: "Job role endpoints" },
+			{ name: "Applications", description: "Job application endpoints" },
 			{ name: "System", description: "Health and metadata" },
 		],
 		components: {
@@ -202,6 +203,74 @@ const options: swaggerJsdoc.Options = {
 						cvText: {
 							type: "string",
 							example: "I have 5 years of experience...",
+						},
+					},
+				},
+				UserApplicationListItem: {
+					type: "object",
+					additionalProperties: false,
+					required: [
+						"applicationId",
+						"jobRoleId",
+						"roleName",
+						"applicationDate",
+						"cvText",
+						"status",
+					],
+					properties: {
+						applicationId: { type: "integer", minimum: 1, example: 5 },
+						jobRoleId: { type: "integer", minimum: 1, example: 12 },
+						roleName: { type: "string", example: "Software Engineer" },
+						applicationDate: {
+							type: "string",
+							format: "date-time",
+							example: "2026-08-12T10:00:00.000Z",
+						},
+						cvText: { type: "string", example: "My relevant experience..." },
+						status: {
+							type: "string",
+							enum: ["IN_PROGRESS", "HIRED", "REJECTED", "WITHDRAWN"],
+						},
+					},
+				},
+				AdminApplicationListItem: {
+					type: "object",
+					additionalProperties: false,
+					required: [
+						"applicationId",
+						"jobRoleId",
+						"applicantName",
+						"roleName",
+						"applicationDate",
+						"cvText",
+						"status",
+					],
+					properties: {
+						applicationId: { type: "integer", minimum: 1, example: 5 },
+						jobRoleId: { type: "integer", minimum: 1, example: 12 },
+						applicantName: {
+							type: "string",
+							format: "email",
+							example: "candidate@example.com",
+						},
+						roleName: { type: "string", example: "Software Engineer" },
+						applicationDate: {
+							type: "string",
+							format: "date-time",
+							example: "2026-08-12T10:00:00.000Z",
+						},
+						cvText: { type: "string", example: "My relevant experience..." },
+						status: {
+							type: "string",
+							enum: ["IN_PROGRESS", "HIRED", "REJECTED", "WITHDRAWN"],
+						},
+						actions: {
+							type: "object",
+							required: ["canHire", "canReject"],
+							properties: {
+								canHire: { type: "boolean", example: true },
+								canReject: { type: "boolean", example: true },
+							},
 						},
 					},
 				},

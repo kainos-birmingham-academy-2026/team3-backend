@@ -15,6 +15,29 @@ const ApplicationIdParamSchema = z.object({
 });
 
 userApplicationsRouter.use(requireAuth);
+
+/**
+ * @openapi
+ * /job-applications:
+ *   get:
+ *     tags: [Applications]
+ *     summary: Get the authenticated user's applications
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of the user's applications
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/UserApplicationListItem'
+ *       401:
+ *         description: Missing or invalid token
+ *       500:
+ *         description: Internal server error
+ */
 userApplicationsRouter.get("/", controller.getAll.bind(controller));
 userApplicationsRouter.patch(
     "/:applicationId/withdraw",

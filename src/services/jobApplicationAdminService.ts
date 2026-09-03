@@ -42,14 +42,9 @@ export class JobApplicationAdminService {
 		return applications.map((application) => ({
 			applicationId: application.applicationId,
 			jobRoleId: application.jobRoleId,
-			applicant: application.user.email,
 			applicantName: application.user.email,
-			email: application.user.email,
-			appliedRole: application.jobRole.roleName,
 			roleName: application.jobRole.roleName,
 			applicationDate: application.createdAt,
-			createdAt: application.createdAt,
-			username: application.user.email,
 			cvText: application.cvText,
 			status: application.applicationStatus,
 			actions:

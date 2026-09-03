@@ -22,6 +22,21 @@ describe("registerSwaggerRoutes", () => {
 
 		expect(specificationResponse.status).toBe(200);
 		expect(specificationResponse.body).toHaveProperty("openapi");
+		expect(specificationResponse.body.paths).toHaveProperty(
+			"/job-applications/admin",
+		);
+		const applicationProperties =
+			specificationResponse.body.components.schemas.AdminApplicationListItem
+				.properties;
+		expect(applicationProperties).toHaveProperty("applicantName");
+		expect(applicationProperties).toHaveProperty("roleName");
+		expect(applicationProperties).toHaveProperty("applicationDate");
+		expect(applicationProperties).toHaveProperty("status");
+		expect(applicationProperties).not.toHaveProperty("applicant");
+		expect(applicationProperties).not.toHaveProperty("email");
+		expect(applicationProperties).not.toHaveProperty("username");
+		expect(applicationProperties).not.toHaveProperty("appliedRole");
+		expect(applicationProperties).not.toHaveProperty("createdAt");
 		expect(documentationResponse.status).toBe(200);
 	});
 });

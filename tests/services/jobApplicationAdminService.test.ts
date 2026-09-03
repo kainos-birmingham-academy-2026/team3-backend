@@ -85,14 +85,9 @@ describe("jobApplicationAdminService", () => {
 			{
 				applicationId: 1,
 				jobRoleId: 1,
-				applicant: "candidate@example.com",
 				applicantName: "candidate@example.com",
-				email: "candidate@example.com",
-				appliedRole: "Software Engineer",
 				roleName: "Software Engineer",
 				applicationDate: new Date("2026-08-12T10:00:00.000Z"),
-				createdAt: new Date("2026-08-12T10:00:00.000Z"),
-				username: "candidate@example.com",
 				cvText: "cv-1.pdf",
 				status: "IN_PROGRESS",
 				actions: {

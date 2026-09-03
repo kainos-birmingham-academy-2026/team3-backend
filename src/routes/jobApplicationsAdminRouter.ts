@@ -23,8 +23,65 @@ const ApplicationIdParamSchema = z.object({
 jobApplicationsAdminRouter.use(requireAuth);
 jobApplicationsAdminRouter.use(allowRoles([USER_ROLES.ADMIN]));
 
+/**
+ * @openapi
+ * /job-applications/admin:
+ *   get:
+ *     tags: [Applications]
+ *     summary: Get all job applications
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of applications for administrators
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/AdminApplicationListItem'
+ *       401:
+ *         description: Missing or invalid token
+ *       403:
+ *         description: Forbidden for non-admin roles
+ *       500:
+ *         description: Internal server error
+ */
 jobApplicationsAdminRouter.get("/", controller.getAllAdmin.bind(controller));
 
+/**
+ * @openapi
+ * /job-applications/admin/{jobRoleId}/applications:
+ *   get:
+ *     tags: [Applications]
+ *     summary: Get applications for a job role
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: jobRoleId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *     responses:
+ *       200:
+ *         description: List of applications for the job role
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/AdminApplicationListItem'
+ *       400:
+ *         description: Invalid job role ID
+ *       401:
+ *         description: Missing or invalid token
+ *       403:
+ *         description: Forbidden for non-admin roles
+ *       500:
+ *         description: Internal server error
+ */
 jobApplicationsAdminRouter.get(
 	"/:jobRoleId/applications",
 	validateParams(JobRoleIdParamSchema),
