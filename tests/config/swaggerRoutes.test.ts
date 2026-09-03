@@ -61,6 +61,14 @@ describe("registerSwaggerRoutes", () => {
 				expect.objectContaining({ in: "path", name: "jobRoleId" }),
 			]),
 		);
+		const jobRoleListParameterNames = specificationResponse.body.paths[
+			"/api/job-roles"
+		].get.parameters.map((parameter: { name: string }) => parameter.name);
+		expect(jobRoleListParameterNames).toEqual(
+			expect.arrayContaining(["closingDateFrom", "closingDateTo"]),
+		);
+		expect(jobRoleListParameterNames).not.toContain("closingFrom");
+		expect(jobRoleListParameterNames).not.toContain("closingBy");
 		expect(documentationResponse.status).toBe(200);
 	});
 });

@@ -184,13 +184,13 @@ jobRolesRouter.get("/locations", (req: R, res: Res) => {
  *         style: form
  *         explode: true
  *       - in: query
- *         name: closingFrom
+ *         name: closingDateFrom
  *         schema:
  *           type: string
  *           format: date
  *         description: Include roles closing on or after this date
  *       - in: query
- *         name: closingBy
+ *         name: closingDateTo
  *         schema:
  *           type: string
  *           format: date

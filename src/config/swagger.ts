@@ -1,4 +1,9 @@
+import { existsSync } from "node:fs";
 import swaggerJsdoc from "swagger-jsdoc";
+
+const apiSources = existsSync("src/routes")
+	? ["src/routes/*.ts", "src/index.ts"]
+	: ["dist/routes/*.js", "dist/index.js"];
 
 const options: swaggerJsdoc.Options = {
 	definition: {
@@ -402,12 +407,7 @@ const options: swaggerJsdoc.Options = {
 			},
 		},
 	},
-	apis: [
-		"src/routes/*.ts",
-		"src/index.ts",
-		"dist/routes/*.js",
-		"dist/index.js",
-	],
+	apis: apiSources,
 };
 
 export const swaggerSpec = swaggerJsdoc(options);

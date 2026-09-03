@@ -30,12 +30,12 @@ export const JobRoleFiltersSchema = z
 		locationId: optionalIdList,
 		capabilityId: optionalIdList,
 		bandId: optionalIdList,
-		closingFrom: optionalFilterDate,
-		closingBy: optionalFilterDate,
+		closingDateFrom: optionalFilterDate,
+		closingDateTo: optionalFilterDate,
 	})
-	.refine((filters) => !filters.closingFrom || !filters.closingBy, {
+	.refine((filters) => !filters.closingDateFrom || !filters.closingDateTo, {
 		message: "Choose either closing on or after or closing on or before",
-		path: ["closingBy"],
+		path: ["closingDateTo"],
 	});
 
 export const JobRoleIdParamSchema = z.object({
