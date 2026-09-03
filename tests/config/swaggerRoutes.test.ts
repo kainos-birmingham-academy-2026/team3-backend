@@ -42,6 +42,13 @@ describe("registerSwaggerRoutes", () => {
 				.UpdateApplicationStatusRequest;
 		expect(statusUpdateSchema.required).toEqual(["status"]);
 		expect(Object.keys(statusUpdateSchema.properties)).toEqual(["status"]);
+		const messageErrorSchema =
+			specificationResponse.body.components.schemas.MessageErrorResponse;
+		expect(messageErrorSchema.required).toEqual(["message"]);
+		expect(Object.keys(messageErrorSchema.properties)).toEqual(["message"]);
+		expect(
+			specificationResponse.body.components.schemas.ErrorResponse.$ref,
+		).toBe("#/components/schemas/MessageErrorResponse");
 		expect(
 			specificationResponse.body.paths[
 				"/api/job-applications/admin/{applicationId}/status"

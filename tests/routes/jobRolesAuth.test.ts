@@ -503,7 +503,7 @@ describe("POST /api/job-roles/:jobRoleId/apply", () => {
 			.send({ cvText: "CV-2026-001" });
 
 		expect(response.status).toBe(404);
-		expect(response.body).toEqual({ error: "JobRole with id 999 not found" });
+		expect(response.body).toEqual({ message: "JobRole with id 999 not found" });
 	});
 
 	it("should return 409 when user has already applied for the job role", async () => {
@@ -530,7 +530,7 @@ describe("POST /api/job-roles/:jobRoleId/apply", () => {
 
 		expect(response.status).toBe(409);
 		expect(response.body).toEqual({
-			error: "User with id 1 has already applied for JobRole with id 1",
+			message: "User with id 1 has already applied for JobRole with id 1",
 		});
 	});
 

@@ -22,7 +22,7 @@ export class JobRolesController {
 			const jobRoles = await this.service.findAll(filters);
 			return res.status(200).send(jobRoles);
 		} catch {
-			return res.status(500).json({ error: "Internal Server Error" });
+			return res.status(500).json({ message: "Internal Server Error" });
 		}
 	}
 
@@ -31,7 +31,7 @@ export class JobRolesController {
 		const jobRoleId = parseInt(idParam, 10);
 		// This is redundant with validation middleware but kept as a defensive guard.
 		if (Number.isNaN(jobRoleId)) {
-			return res.status(400).json({ error: "Invalid job role ID" });
+			return res.status(400).json({ message: "Invalid job role ID" });
 		}
 
 		try {
@@ -39,9 +39,9 @@ export class JobRolesController {
 			return res.status(200).send(jobRole);
 		} catch (error) {
 			if (error instanceof NotFoundError) {
-				return res.status(404).json({ error: error.message });
+				return res.status(404).json({ message: error.message });
 			}
-			return res.status(500).json({ error: "Internal Server Error" });
+			return res.status(500).json({ message: "Internal Server Error" });
 		}
 	}
 
@@ -51,7 +51,7 @@ export class JobRolesController {
 		//this is unnecessary due to validation middleware, but required for error handling
 		const userId = res.locals.authUser?.userId;
 		if (!userId) {
-			return res.status(401).json({ error: TOKEN_ERROR });
+			return res.status(401).json({ message: TOKEN_ERROR });
 		}
 
 		try {
@@ -63,12 +63,12 @@ export class JobRolesController {
 			res.status(201).json(application);
 		} catch (error) {
 			if (error instanceof NotFoundError) {
-				return res.status(404).json({ error: error.message });
+				return res.status(404).json({ message: error.message });
 			}
 			if (error instanceof ConflictError) {
-				return res.status(error.statusCode).json({ error: error.message });
+				return res.status(error.statusCode).json({ message: error.message });
 			}
-			res.status(500).json({ error: "Internal Server Error" });
+			res.status(500).json({ message: "Internal Server Error" });
 		}
 	}
 
@@ -78,14 +78,14 @@ export class JobRolesController {
 		if (payload.closingDate && payload.closingDate < new Date()) {
 			return res
 				.status(400)
-				.json({ error: "Closing date cannot be in the past" });
+				.json({ message: "Closing date cannot be in the past" });
 		}
 
 		try {
 			const jobRole = await this.service.createJobRole(payload);
 			return res.status(201).json(jobRole);
 		} catch (_error) {
-			return res.status(500).json({ error: "Internal Server Error" });
+			return res.status(500).json({ message: "Internal Server Error" });
 		}
 	}
 
@@ -99,9 +99,9 @@ export class JobRolesController {
 			return res.status(200).json(jobRole);
 		} catch (error) {
 			if (error instanceof NotFoundError) {
-				return res.status(404).json({ error: error.message });
+				return res.status(404).json({ message: error.message });
 			}
-			return res.status(500).json({ error: "Internal Server Error" });
+			return res.status(500).json({ message: "Internal Server Error" });
 		}
 	}
 
@@ -120,9 +120,9 @@ export class JobRolesController {
 			return res.status(204).send();
 		} catch (error) {
 			if (error instanceof NotFoundError) {
-				return res.status(404).json({ error: error.message });
+				return res.status(404).json({ message: error.message });
 			}
-			return res.status(500).json({ error: "Internal Server Error" });
+			return res.status(500).json({ message: "Internal Server Error" });
 		}
 	}
 
@@ -133,9 +133,9 @@ export class JobRolesController {
 			return res.status(200).json(status);
 		} catch (error) {
 			if (error instanceof NotFoundError) {
-				return res.status(404).json({ error: error.message });
+				return res.status(404).json({ message: error.message });
 			}
-			return res.status(500).json({ error: "Internal Server Error" });
+			return res.status(500).json({ message: "Internal Server Error" });
 		}
 	}
 
@@ -145,9 +145,9 @@ export class JobRolesController {
 			return res.status(200).json(bands);
 		} catch (error) {
 			if (error instanceof NotFoundError) {
-				return res.status(404).json({ error: error.message });
+				return res.status(404).json({ message: error.message });
 			}
-			return res.status(500).json({ error: "Internal Server Error" });
+			return res.status(500).json({ message: "Internal Server Error" });
 		}
 	}
 
@@ -157,9 +157,9 @@ export class JobRolesController {
 			return res.status(200).json(capabilities);
 		} catch (error) {
 			if (error instanceof NotFoundError) {
-				return res.status(404).json({ error: error.message });
+				return res.status(404).json({ message: error.message });
 			}
-			return res.status(500).json({ error: "Internal Server Error" });
+			return res.status(500).json({ message: "Internal Server Error" });
 		}
 	}
 
@@ -169,9 +169,9 @@ export class JobRolesController {
 			return res.status(200).json(locations);
 		} catch (error) {
 			if (error instanceof NotFoundError) {
-				return res.status(404).json({ error: error.message });
+				return res.status(404).json({ message: error.message });
 			}
-			return res.status(500).json({ error: "Internal Server Error" });
+			return res.status(500).json({ message: "Internal Server Error" });
 		}
 	}
 }

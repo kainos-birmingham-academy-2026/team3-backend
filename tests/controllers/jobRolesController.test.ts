@@ -83,7 +83,7 @@ describe("JobRolesController", () => {
 			await controller.getAll(req as never, res as never);
 
 			expect(res.status).toHaveBeenCalledWith(500);
-			expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
+			expect(res.json).toHaveBeenCalledWith({ message: "Internal Server Error" });
 		});
 	});
 
@@ -111,7 +111,7 @@ describe("JobRolesController", () => {
 
 			expect(res.status).toHaveBeenCalledWith(404);
 			expect(res.json).toHaveBeenCalledWith({
-				error: "JobRole with id 999 not found",
+				message: "JobRole with id 999 not found",
 			});
 		});
 	});
@@ -162,7 +162,7 @@ describe("JobRolesController", () => {
 
 			expect(res.status).toHaveBeenCalledWith(404);
 			expect(res.json).toHaveBeenCalledWith({
-				error: "JobRole with id 999 not found",
+				message: "JobRole with id 999 not found",
 			});
 		});
 
@@ -173,7 +173,7 @@ describe("JobRolesController", () => {
 			await controller.getById(req as never, res as never);
 
 			expect(res.status).toHaveBeenCalledWith(400);
-			expect(res.json).toHaveBeenCalledWith({ error: "Invalid job role ID" });
+			expect(res.json).toHaveBeenCalledWith({ message: "Invalid job role ID" });
 		});
 
 		it("should return 500 when the service throws", async () => {
@@ -185,7 +185,7 @@ describe("JobRolesController", () => {
 			await controller.getById(req as never, res as never);
 
 			expect(res.status).toHaveBeenCalledWith(500);
-			expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
+			expect(res.json).toHaveBeenCalledWith({ message: "Internal Server Error" });
 		});
 	});
 
@@ -243,7 +243,7 @@ describe("JobRolesController", () => {
 
 			expect(res.status).toHaveBeenCalledWith(400);
 			expect(res.json).toHaveBeenCalledWith({
-				error: "Closing date cannot be in the past",
+				message: "Closing date cannot be in the past",
 			});
 			expect(mockService.createJobRole).not.toHaveBeenCalled();
 		});
@@ -270,7 +270,7 @@ describe("JobRolesController", () => {
 			await controller.createJobRole(req as never, res as never);
 
 			expect(res.status).toHaveBeenCalledWith(500);
-			expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
+			expect(res.json).toHaveBeenCalledWith({ message: "Internal Server Error" });
 		});
 	});
 
@@ -307,7 +307,7 @@ describe("JobRolesController", () => {
 
 			expect(res.status).toHaveBeenCalledWith(404);
 			expect(res.json).toHaveBeenCalledWith({
-				error: "JobRole with id 999 not found",
+				message: "JobRole with id 999 not found",
 			});
 		});
 	});
@@ -357,7 +357,7 @@ describe("JobRolesController", () => {
 
 			expect(res.status).toHaveBeenCalledWith(404);
 			expect(res.json).toHaveBeenCalledWith({
-				error: "JobRole with id 999 not found",
+				message: "JobRole with id 999 not found",
 			});
 		});
 
@@ -380,7 +380,7 @@ describe("JobRolesController", () => {
 
 			expect(res.status).toHaveBeenCalledWith(409);
 			expect(res.json).toHaveBeenCalledWith({
-				error: "User with id 1 has already applied for JobRole with id 1",
+				message: "User with id 1 has already applied for JobRole with id 1",
 			});
 		});
 
@@ -395,7 +395,7 @@ describe("JobRolesController", () => {
 			await controller.createApplication(req as never, res as never);
 
 			expect(res.status).toHaveBeenCalledWith(401);
-			expect(res.json).toHaveBeenCalledWith({ error: "Invalid token" });
+			expect(res.json).toHaveBeenCalledWith({ message: "Invalid token" });
 		});
 
 		it("should return 500 when an unexpected error occurs", async () => {
@@ -413,7 +413,7 @@ describe("JobRolesController", () => {
 			await controller.createApplication(req as never, res as never);
 
 			expect(res.status).toHaveBeenCalledWith(500);
-			expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
+			expect(res.json).toHaveBeenCalledWith({ message: "Internal Server Error" });
 		});
 	});
 
@@ -456,7 +456,7 @@ describe("JobRolesController", () => {
 				await controller[method](req as never, res as never);
 
 				expect(res.status).toHaveBeenCalledWith(404);
-				expect(res.json).toHaveBeenCalledWith({ error: message });
+				expect(res.json).toHaveBeenCalledWith({ message });
 			},
 		);
 
@@ -478,7 +478,7 @@ describe("JobRolesController", () => {
 
 				expect(res.status).toHaveBeenCalledWith(500);
 				expect(res.json).toHaveBeenCalledWith({
-					error: "Internal Server Error",
+					message: "Internal Server Error",
 				});
 			},
 		);

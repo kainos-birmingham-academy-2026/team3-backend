@@ -77,7 +77,7 @@ describe("jobApplicationAdminController", () => {
 			);
 
 			expect(res.status).toHaveBeenCalledWith(500);
-			expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
+			expect(res.json).toHaveBeenCalledWith({ message: "Internal Server Error" });
 		});
 
 		it("should return 200 with applications list", async () => {
@@ -124,7 +124,7 @@ describe("jobApplicationAdminController", () => {
 			);
 
 			expect(res.status).toHaveBeenCalledWith(500);
-			expect(res.json).toHaveBeenCalledWith({ error: "Internal Server Error" });
+			expect(res.json).toHaveBeenCalledWith({ message: "Internal Server Error" });
 		});
 	});
 

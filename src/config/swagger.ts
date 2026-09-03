@@ -160,12 +160,7 @@ const options: swaggerJsdoc.Options = {
 					},
 				},
 				ErrorResponse: {
-					type: "object",
-					additionalProperties: false,
-					required: ["error"],
-					properties: {
-						error: { type: "string", example: "Internal Server Error" },
-					},
+					$ref: "#/components/schemas/MessageErrorResponse",
 				},
 				HealthResponse: {
 					type: "object",

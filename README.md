@@ -512,7 +512,7 @@ Authentication error (401):
 
 ```json
 {
-  "error": "Token error"
+  "message": "Token error"
 }
 ```
 
@@ -575,7 +575,7 @@ Not found error (`404`) example:
 
 ```json
 {
-  "error": "JobRole with id 999 not found"
+  "message": "JobRole with id 999 not found"
 }
 ```
 
@@ -583,7 +583,7 @@ Conflict error (`409`) example:
 
 ```json
 {
-  "error": "User has already applied for this job role"
+  "message": "User has already applied for this job role"
 }
 ```
 
@@ -591,7 +591,7 @@ Authentication error (`401`) example:
 
 ```json
 {
-  "error": "Token error"
+  "message": "Token error"
 }
 ```
 
@@ -665,7 +665,7 @@ Not found error (`404`) example:
 
 ```json
 {
-  "error": "JobRole with id 999 not found"
+  "message": "JobRole with id 999 not found"
 }
 ```
 

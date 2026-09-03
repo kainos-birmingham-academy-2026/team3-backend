@@ -87,7 +87,7 @@ describe("requireAuth middleware", () => {
 		requireAuth(req as Request, res as Response, next);
 
 		expect(res.status).toHaveBeenCalledWith(500);
-		expect(res.json).toHaveBeenCalledWith({ error: "Internal server error" });
+		expect(res.json).toHaveBeenCalledWith({ message: "Internal server error" });
 		expect(next).not.toHaveBeenCalled();
 	});
 

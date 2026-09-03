@@ -14,7 +14,7 @@ export class UserApplicationsController {
 
 			return res.status(200).send(applications);
 		} catch {
-			return res.status(500).json({ error: "Internal Server Error" });
+			return res.status(500).json({ message: "Internal Server Error" });
 		}
 	}
 
@@ -39,7 +39,7 @@ export class UserApplicationsController {
 				}
 			}
 
-			return res.status(500).json({ error: "Internal Server Error" });
+			return res.status(500).json({ message: "Internal Server Error" });
 		}
 	}
 }
