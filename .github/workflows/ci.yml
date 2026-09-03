@@ -6,6 +6,22 @@ on:
   pull_request:
     branches: ["**"]
   workflow_dispatch:
+    inputs:
+      deploy_test:
+        description: Create or update the complete isolated test environment
+        required: true
+        type: boolean
+        default: false
+      backend_ref:
+        description: Backend branch, tag, or commit to deploy to test
+        required: true
+        type: string
+        default: main
+      frontend_ref:
+        description: Frontend branch, tag, or commit to deploy to test
+        required: true
+        type: string
+        default: main
 
 permissions:
   contents: read
@@ -36,14 +52,41 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  resolve-source:
+    name: Resolve source
+    runs-on: ubuntu-latest
+    outputs:
+      backend_sha: ${{ steps.backend_source.outputs.sha }}
+      frontend_sha: ${{ steps.frontend_source.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.deploy_test && inputs.backend_ref || github.sha }}
+      - name: Record backend source commit
+        id: backend_source
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Resolve frontend source commit
+        if: github.event_name == 'workflow_dispatch' && inputs.deploy_test
+        id: frontend_source
+        env:
+          FRONTEND_REF: ${{ inputs.frontend_ref }}
+          GH_TOKEN: ${{ secrets.FRONTEND_REPOSITORY_DISPATCH_TOKEN }}
+        run: |
+          encoded_ref=$(jq --null-input --raw-output --arg ref "$FRONTEND_REF" '$ref | @uri')
+          sha=$(gh api "repos/kainos-birmingham-academy-2026/team3-frontend/commits/${encoded_ref}" --jq '.sha')
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
   test:
     name: Test and lint
+    needs: resolve-source
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL != '' && secrets.DATABASE_URL || 'file:./dev.db' }}
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resolve-source.outputs.backend_sha }}
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -61,11 +104,13 @@ jobs:
 
   build:
     name: Build container image
-    needs: test
+    needs: [resolve-source, test]
     runs-on: ubuntu-latest
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resolve-source.outputs.backend_sha }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Build image with registry-free cache
@@ -74,7 +119,7 @@ jobs:
           context: .
           push: false
           tags: |
-            team3-backend:${{ github.sha }}
+            team3-backend:${{ needs.resolve-source.outputs.backend_sha }}
             team3-backend:latest
           cache-from: type=gha,scope=team3-backend
           cache-to: type=gha,mode=max,scope=team3-backend
@@ -82,7 +127,7 @@ jobs:
   push-image:
     name: Push image to ACR
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: build
+    needs: [resolve-source, build]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -90,6 +135,8 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resolve-source.outputs.backend_sha }}
       - name: Sign in to Azure
         uses: azure/login@v2
         with:
@@ -106,19 +153,57 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ needs.resolve-source.outputs.backend_sha }}
             ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:dev-latest
           cache-from: type=gha,scope=team3-backend
           cache-to: type=gha,mode=max,scope=team3-backend
       - name: Verify images exist in ACR
+        env:
+          SOURCE_SHA: ${{ needs.resolve-source.outputs.backend_sha }}
         run: |
-          az acr repository show --name "$ACR_NAME" --image "${IMAGE_NAME}:${GITHUB_SHA}" --only-show-errors
+          az acr repository show --name "$ACR_NAME" --image "${IMAGE_NAME}:${SOURCE_SHA}" --only-show-errors
           az acr repository show --name "$ACR_NAME" --image "${IMAGE_NAME}:dev-latest" --only-show-errors
+
+  push-test-image:
+    name: Push test image to ACR
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy_test
+    needs: [resolve-source, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resolve-source.outputs.backend_sha }}
+      - name: Sign in to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Sign in to ACR
+        run: az acr login --name "$ACR_NAME"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and push test image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:test-${{ needs.resolve-source.outputs.backend_sha }}
+          cache-from: type=gha,scope=team3-backend
+          cache-to: type=gha,mode=max,scope=team3-backend
+      - name: Verify test image exists in ACR
+        env:
+          SOURCE_SHA: ${{ needs.resolve-source.outputs.backend_sha }}
+        run: az acr repository show --name "$ACR_NAME" --image "${IMAGE_NAME}:test-${SOURCE_SHA}" --only-show-errors
 
   terraform-plan:
     name: Plan dev infrastructure
     if: github.event_name == 'pull_request'
-    needs: build
+    needs: [resolve-source, build]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -176,13 +261,14 @@ jobs:
   terraform-deploy:
     name: Deploy dev infrastructure
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: push-image
+    needs: [resolve-source, push-image]
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
     env:
       TF_VAR_postgresql_administrator_password: ${{ secrets.POSTGRESQL_ADMINISTRATOR_PASSWORD }}
+      TF_VAR_backend_image_tag: ${{ needs.resolve-source.outputs.backend_sha }}
     defaults:
       run:
         working-directory: infrastructure/environments/dev
@@ -226,3 +312,61 @@ jobs:
           --method POST
           repos/kainos-birmingham-academy-2026/team3-frontend/dispatches
           --field event_type=backend-dev-deployed
+
+  terraform-deploy-test:
+    name: Deploy complete test environment
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy_test
+    needs: [resolve-source, push-test-image]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      TF_VAR_environment: test
+      TF_VAR_backend_image_tag: test-${{ needs.resolve-source.outputs.backend_sha }}
+      TF_VAR_container_revision_suffix: test-${{ github.run_id }}
+    defaults:
+      run:
+        working-directory: infrastructure/environments/test
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Sign in to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+      - name: Check Terraform formatting
+        run: terraform fmt -check -recursive ../..
+      - name: Initialize isolated test state
+        run: >-
+          terraform init
+          -backend-config="resource_group_name=${TF_STATE_RESOURCE_GROUP}"
+          -backend-config="storage_account_name=${TF_STATE_STORAGE_ACCOUNT}"
+          -backend-config="container_name=${TF_STATE_CONTAINER}"
+          -backend-config="key=team3-backend-test.tfstate"
+          -backend-config="use_azuread_auth=true"
+      - name: Validate Terraform
+        run: terraform validate
+      - name: Bootstrap test Key Vault secret permissions
+        run: >-
+          terraform apply
+          -auto-approve
+          -target=time_sleep.secrets_rbac_propagation
+      - name: Create test Terraform plan
+        run: terraform plan -out=tfplan
+      - name: Apply test Terraform plan
+        run: terraform apply -auto-approve tfplan
+      - name: Trigger frontend test deployment
+        env:
+          FRONTEND_SHA: ${{ needs.resolve-source.outputs.frontend_sha }}
+          GH_TOKEN: ${{ secrets.FRONTEND_REPOSITORY_DISPATCH_TOKEN }}
+        run: >-
+          gh api
+          --method POST
+          repos/kainos-birmingham-academy-2026/team3-frontend/dispatches
+          --field event_type=backend-test-deployed
+          --raw-field "client_payload[frontend_ref]=${FRONTEND_SHA}"
