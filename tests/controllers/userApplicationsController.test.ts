@@ -107,7 +107,7 @@ describe("UserApplicationsController", () => {
 
 		expect(mockService.findAllForUser).toHaveBeenCalledWith(42);
 		expect(res.status).toHaveBeenCalledWith(200);
-		expect(res.send).toHaveBeenCalledWith(applications);
+		expect(res.json).toHaveBeenCalledWith(applications);
 	});
 
 	it("returns 500 when the service fails", async () => {

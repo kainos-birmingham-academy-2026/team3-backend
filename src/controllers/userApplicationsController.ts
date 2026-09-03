@@ -40,7 +40,7 @@ export class UserApplicationsController {
 			const applications =
 				await this.userApplicationsService.findAllForUser(userId);
 
-			return res.status(200).send(applications);
+			return res.status(200).json(applications);
 		} catch {
 			return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
 		}

@@ -55,7 +55,7 @@ describe("jobApplicationAdminController", () => {
 
 			expect(mockService.findAllAdmin).toHaveBeenCalledWith(undefined);
 			expect(res.status).toHaveBeenCalledWith(200);
-			expect(res.send).toHaveBeenCalledWith([
+			expect(res.json).toHaveBeenCalledWith([
 				{
 					applicationId: 1,
 					jobRoleId: 1,
@@ -102,7 +102,7 @@ describe("jobApplicationAdminController", () => {
 
 			expect(mockService.findAllAdmin).toHaveBeenCalledWith(1);
 			expect(res.status).toHaveBeenCalledWith(200);
-			expect(res.send).toHaveBeenCalledWith([
+			expect(res.json).toHaveBeenCalledWith([
 				{
 					applicationId: 1,
 					jobRoleId: 1,

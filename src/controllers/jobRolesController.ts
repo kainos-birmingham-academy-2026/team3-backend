@@ -19,7 +19,7 @@ export class JobRolesController {
 		try {
 			const filters = res.locals.validatedQuery as JobRoleFiltersDto;
 			const jobRoles = await this.service.findAll(filters);
-			return res.status(200).send(jobRoles);
+			return res.status(200).json(jobRoles);
 		} catch {
 			return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
 		}
@@ -35,7 +35,7 @@ export class JobRolesController {
 
 		try {
 			const jobRole = await this.service.findById(jobRoleId);
-			return res.status(200).send(jobRole);
+			return res.status(200).json(jobRole);
 		} catch (error) {
 			if (error instanceof NotFoundError) {
 				return res.status(404).json({ message: error.message });

@@ -15,7 +15,7 @@ export class JobApplicationAdminController {
 				jobRoleId?: number;
 			};
 			const jobApplications = await this.service.findAllAdmin(jobRoleId);
-			return res.status(200).send(jobApplications);
+			return res.status(200).json(jobApplications);
 		} catch (error) {
 			return this.handleStatusErrors(error, res);
 		}

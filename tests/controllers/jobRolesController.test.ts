@@ -62,7 +62,7 @@ describe("JobRolesController", () => {
 			await controller.getAll(req as never, res as never);
 
 			expect(res.status).toHaveBeenCalledWith(200);
-			const [payload] = vi.mocked(res.send).mock.calls.at(-1) ?? [];
+			const [payload] = vi.mocked(res.json).mock.calls.at(-1) ?? [];
 			expect(payload).toSatisfy(
 				(value) =>
 					Array.isArray(value) &&
@@ -140,7 +140,7 @@ describe("JobRolesController", () => {
 			await controller.getById(req as never, res as never);
 
 			expect(res.status).toHaveBeenCalledWith(200);
-			const [payload] = vi.mocked(res.send).mock.calls.at(-1) ?? [];
+			const [payload] = vi.mocked(res.json).mock.calls.at(-1) ?? [];
 			expect(payload).toSatisfy(
 				(value) =>
 					value.jobRoleId === 1 &&
