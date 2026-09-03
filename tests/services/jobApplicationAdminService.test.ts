@@ -156,25 +156,34 @@ describe("jobApplicationAdminService", () => {
 		expect(result[0]?.actions).toBeUndefined();
 	});
 
-	it("should map APPROVED status to hire flow", async () => {
+	it("should map HIRED status to hire flow", async () => {
 		const hireSpy = vi
 			.spyOn(service, "hireApplicantById")
 			.mockResolvedValueOnce({ message: "Applicant hired" } as never);
 
-		await service.updateApplicationStatusById(9, "APPROVED");
+		await service.updateApplicationStatusById(9, "HIRED");
 
 		expect(hireSpy).toHaveBeenCalledWith(9);
 	});
 
-	it("should map REJECT alias to reject flow", async () => {
+	it("should map REJECTED status to reject flow", async () => {
 		const rejectSpy = vi
 			.spyOn(service, "rejectApplicantById")
 			.mockResolvedValueOnce({ message: "Applicant rejected" } as never);
 
-		await service.updateApplicationStatusById(10, "REJECT");
+		await service.updateApplicationStatusById(10, "REJECTED");
 
 		expect(rejectSpy).toHaveBeenCalledWith(10);
 	});
+
+	it.each(["APPROVED", "REJECT", "hired", "rejected"])(
+		"should reject non-canonical status %s",
+		async (status) => {
+			await expect(
+				service.updateApplicationStatusById(10, status),
+			).rejects.toThrow("Unsupported application status");
+		},
+	);
 
 	it("should hire applicant when application is in progress and positions remain", async () => {
 		mockFindFirst.mockResolvedValueOnce({

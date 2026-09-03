@@ -281,7 +281,7 @@ const options: swaggerJsdoc.Options = {
 					properties: {
 						status: {
 							type: "string",
-							enum: ["HIRED", "APPROVED", "REJECTED", "REJECT"],
+							enum: ["HIRED", "REJECTED"],
 							example: "HIRED",
 						},
 					},

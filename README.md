@@ -704,21 +704,19 @@ Request body:
 
 Allowed status values:
 
-- `HIRED` or `APPROVED` - Mark applicant as hired
-- `REJECTED` or `REJECT` - Reject the application
+- `HIRED` - Mark applicant as hired
+- `REJECTED` - Reject the application
 
 Success response (`200`):
 
 ```json
 {
-  "applicationId": 1,
-  "jobRoleId": 1,
-  "applicant": "test@example.com",
-  "email": "test@example.com",
-  "appliedRole": "Software Engineer",
-  "applicationDate": "2026-08-15T10:30:00.000Z",
-  "status": "HIRED",
-  "cvText": "Lorem ipsum dolor sit amet..."
+	"message": "Applicant hired",
+	"application": {
+		"applicationId": 1,
+		"applicantEmail": "test@example.com",
+		"status": "HIRED"
+	}
 }
 ```
 
@@ -726,7 +724,12 @@ Validation error (`400`) example:
 
 ```json
 {
-  "message": "Unsupported status. Use HIRED/APPROVED or REJECTED"
+  "errors": [
+    {
+      "field": "status",
+      "message": "Invalid option: expected one of HIRED or REJECTED"
+    }
+  ]
 }
 ```
 

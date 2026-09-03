@@ -21,7 +21,7 @@ const ApplicationIdParamSchema = z.object({
 });
 
 const UpdateApplicationStatusSchema = z.strictObject({
-	status: z.string().trim().min(1),
+	status: z.enum(["HIRED", "REJECTED"]),
 });
 
 jobApplicationsAdminRouter.use(requireAuth);

@@ -43,7 +43,7 @@ export class JobApplicationAdminController {
 				error.message === "Unsupported application status"
 			) {
 				return res.status(400).json({
-					message: "Unsupported status. Use HIRED/APPROVED or REJECTED",
+					message: "Unsupported status. Use HIRED or REJECTED",
 				});
 			}
 

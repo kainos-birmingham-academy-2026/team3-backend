@@ -1,8 +1,5 @@
 import prisma from "../prismaClient";
 
-const HIRE_STATUSES = ["HIRED", "APPROVED"] as const;
-const REJECT_STATUSES = ["REJECTED", "REJECT"] as const;
-
 type ApplicationListItem = {
 	applicationId: number;
 	jobRoleId: number;
@@ -218,19 +215,11 @@ export class JobApplicationAdminService {
 	}
 
 	async updateApplicationStatusById(applicationId: number, status: string) {
-		const normalisedStatus = status.trim().toUpperCase();
-
-		if (
-			HIRE_STATUSES.includes(normalisedStatus as (typeof HIRE_STATUSES)[number])
-		) {
+		if (status === "HIRED") {
 			return this.hireApplicantById(applicationId);
 		}
 
-		if (
-			REJECT_STATUSES.includes(
-				normalisedStatus as (typeof REJECT_STATUSES)[number],
-			)
-		) {
+		if (status === "REJECTED") {
 			return this.rejectApplicantById(applicationId);
 		}
 

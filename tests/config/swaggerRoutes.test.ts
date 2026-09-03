@@ -70,6 +70,10 @@ describe("registerSwaggerRoutes", () => {
 				.UpdateApplicationStatusRequest;
 		expect(statusUpdateSchema.required).toEqual(["status"]);
 		expect(Object.keys(statusUpdateSchema.properties)).toEqual(["status"]);
+		expect(statusUpdateSchema.properties.status.enum).toEqual([
+			"HIRED",
+			"REJECTED",
+		]);
 		const messageErrorSchema =
 			specificationResponse.body.components.schemas.MessageErrorResponse;
 		expect(messageErrorSchema.required).toEqual(["message"]);

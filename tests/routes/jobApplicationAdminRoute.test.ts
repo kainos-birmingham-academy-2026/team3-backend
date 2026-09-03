@@ -106,10 +106,10 @@ describe("Admin hire API behaviour", () => {
 	});
 
 	it("Given an unsupported status, when the admin attempts to update the application, then a 400 response is returned", async () => {
-		vi.spyOn(
+		const updateStatus = vi.spyOn(
 			JobApplicationAdminService.prototype,
 			"updateApplicationStatusById",
-		).mockRejectedValueOnce(new Error("Unsupported application status"));
+		);
 
 		const response = await request(app)
 			.patch("/api/job-applications/admin/7/status")
@@ -117,9 +117,12 @@ describe("Admin hire API behaviour", () => {
 			.send({ status: "PENDING" });
 
 		expect(response.status).toBe(400);
-		expect(response.body).toEqual({
-			message: "Unsupported status. Use HIRED/APPROVED or REJECTED",
-		});
+		expect(response.body.errors).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({ field: "status" }),
+			]),
+		);
+		expect(updateStatus).not.toHaveBeenCalled();
 	});
 
 	it("Given a status alias, when the admin attempts to update the application, then validation fails", async () => {
@@ -131,7 +134,7 @@ describe("Admin hire API behaviour", () => {
 		const response = await request(app)
 			.patch("/api/job-applications/admin/7/status")
 			.set("Authorization", `Bearer ${adminToken()}`)
-			.send({ decision: "APPROVED" });
+			.send({ decision: "HIRED" });
 
 		expect(response.status).toBe(400);
 		expect(response.body.errors).toEqual(
