@@ -12,7 +12,7 @@ import type { CapabilityResponse } from "../models/capabilityResponse.js";
 import type { JobRoleDetailedResponse } from "../models/jobRoleDetailedResponse.js";
 import type { JobRoleApplication } from "../models/jobRoleApplication.js";
 import { JobRoleDao } from "../models/jobRoleDao.js";
-import type { JobRoleResponse } from "../models/jobRoleResponse.ts";
+import type { JobRoleResponse } from "../models/jobRoleResponse.js";
 import type { LocationResponse } from "../models/locationResponse.js";
 import type { StatusResponse } from "../models/statusResponse.js";
 
