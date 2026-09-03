@@ -275,7 +275,7 @@ jobRolesRouter.get(
 
 /**
  * @openapi
- * /api/job-roles/create:
+ * /api/job-roles:
  *   post:
  *     tags: [Job Roles]
  *     summary: Create a job role
@@ -321,7 +321,7 @@ jobRolesRouter.get(
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 jobRolesRouter.post(
-	"/create",
+	"/",
 	requireAuth,
 	allowRoles([USER_ROLES.ADMIN]),
 	validateBody(CreateJobRoleSchema),

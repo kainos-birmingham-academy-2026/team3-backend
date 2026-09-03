@@ -447,7 +447,7 @@ Role behaviour:
 - Passwords are salted and hashed with Argon2id before storage
 
 
-### `POST /api/job-roles/create`
+### `POST /api/job-roles`
 
 Creates a new job role.
 
@@ -751,7 +751,7 @@ curl -X POST http://localhost:4000/api/job-roles/1/apply \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <jwt-token>" \
   -d '{"cvText":"Lorem ipsum dolor sit amet. Qui repellendus exercitationem sed reiciendis..."}'
-curl -X POST http://localhost:4000/api/job-roles/create \
+curl -X POST http://localhost:4000/api/job-roles \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <admin-jwt-token>" \
   -d '{

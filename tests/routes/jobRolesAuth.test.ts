@@ -208,7 +208,7 @@ describe("Job role route auth protection", () => {
 		};
 
 		const response = await request(app)
-			.post("/api/job-roles/create")
+			.post("/api/job-roles")
 			.set("Authorization", `Bearer ${token}`)
 			.send(payload);
 
@@ -248,7 +248,7 @@ describe("Job role route auth protection", () => {
 		);
 
 		const response = await request(app)
-			.post("/api/job-roles/create")
+			.post("/api/job-roles")
 			.set("Authorization", `Bearer ${token}`)
 			.send(payload);
 
@@ -267,7 +267,7 @@ describe("Job role route auth protection", () => {
 		);
 
 		const response = await request(app)
-			.post("/api/job-roles/create")
+			.post("/api/job-roles")
 			.set("Authorization", `Bearer ${token}`)
 			.send({ roleName: "" });
 
