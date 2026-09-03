@@ -305,13 +305,13 @@ jobRolesRouter.get(
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/MessageErrorResponse'
+ *               $ref: '#/components/schemas/MessageResponse'
  *       403:
  *         description: Forbidden for non-admin roles
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/MessageErrorResponse'
+ *               $ref: '#/components/schemas/MessageResponse'
  *       500:
  *         description: Internal server error
  *         content:

@@ -89,13 +89,13 @@ describe("registerSwaggerRoutes", () => {
 			"HIRED",
 			"REJECTED",
 		]);
-		const messageErrorSchema =
-			specificationResponse.body.components.schemas.MessageErrorResponse;
-		expect(messageErrorSchema.required).toEqual(["message"]);
-		expect(Object.keys(messageErrorSchema.properties)).toEqual(["message"]);
+		const messageSchema =
+			specificationResponse.body.components.schemas.MessageResponse;
+		expect(messageSchema.required).toEqual(["message"]);
+		expect(Object.keys(messageSchema.properties)).toEqual(["message"]);
 		expect(
 			specificationResponse.body.components.schemas.ErrorResponse.$ref,
-		).toBe("#/components/schemas/MessageErrorResponse");
+		).toBe("#/components/schemas/MessageResponse");
 		expect(
 			specificationResponse.body.paths[
 				"/api/job-applications/admin/{applicationId}/status"

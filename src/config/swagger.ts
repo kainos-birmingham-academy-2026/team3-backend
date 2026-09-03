@@ -156,7 +156,7 @@ const options: swaggerJsdoc.Options = {
 						},
 					},
 				},
-				MessageErrorResponse: {
+				MessageResponse: {
 					type: "object",
 					additionalProperties: false,
 					required: ["message"],
@@ -165,7 +165,7 @@ const options: swaggerJsdoc.Options = {
 					},
 				},
 				ErrorResponse: {
-					$ref: "#/components/schemas/MessageErrorResponse",
+					$ref: "#/components/schemas/MessageResponse",
 				},
 				HealthResponse: {
 					type: "object",

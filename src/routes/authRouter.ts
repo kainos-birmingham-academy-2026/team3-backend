@@ -39,7 +39,7 @@ const controller = new AuthController(new AuthService());
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/MessageErrorResponse'
+ *               $ref: '#/components/schemas/MessageResponse'
  *       500:
  *         description: Internal server error
  *         content:
@@ -86,7 +86,7 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/MessageErrorResponse'
+ *               $ref: '#/components/schemas/MessageResponse'
  *       500:
  *         description: Internal server error
  *         content:

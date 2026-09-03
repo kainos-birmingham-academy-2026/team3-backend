@@ -115,7 +115,7 @@ userApplicationsRouter.get("/", controller.getAll.bind(controller));
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/MessageErrorResponse'
+ *               $ref: '#/components/schemas/MessageResponse'
  *       400:
  *         description: Request validation failed
  *       401:
