@@ -13,9 +13,39 @@ variable "location" {
   type        = string
 }
 
-variable "subscription_id" {
-  description = "Azure subscription containing the existing resource group."
+variable "deployment_principal_object_id" {
+  description = "Object ID of the service principal that writes Terraform-managed Key Vault secrets."
   type        = string
+}
+
+variable "postgresql_administrator_password" {
+  description = "Administrator password for the dev PostgreSQL Flexible Server."
+  type        = string
+  sensitive   = true
+
+  validation {
+    condition = (
+      length(var.postgresql_administrator_password) >= 8 &&
+      length(var.postgresql_administrator_password) <= 128 &&
+      sum([
+        for pattern in ["[A-Z]", "[a-z]", "[0-9]", "[^A-Za-z0-9]"] :
+        can(regex(pattern, var.postgresql_administrator_password)) ? 1 : 0
+      ]) >= 3
+    )
+    error_message = "The PostgreSQL administrator password must be 8-128 characters and contain characters from at least three of: uppercase, lowercase, numbers, and special characters."
+  }
+}
+
+variable "postgresql_administrator_password_version" {
+  description = "Version incremented whenever the dev PostgreSQL administrator password is rotated."
+  type        = number
+  default     = 1
+}
+
+variable "application_secret_version" {
+  description = "Version incremented to rotate the generated JWT and session secrets."
+  type        = number
+  default     = 1
 }
 
 variable "acr_name" {

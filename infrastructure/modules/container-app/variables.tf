@@ -50,6 +50,12 @@ variable "enable_swagger_docs" {
   default     = false
 }
 
+variable "seed_database" {
+  description = "Whether to run the idempotent Prisma seed before starting the application."
+  type        = bool
+  default     = false
+}
+
 variable "tags" {
   description = "Tags to apply to the Container App."
   type        = map(string)

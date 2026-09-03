@@ -47,3 +47,18 @@ output "grafana_endpoint" {
   description = "URL of the dev Grafana dashboard."
   value       = module.grafana.endpoint
 }
+
+output "postgresql_server_name" {
+  description = "Name of the dev PostgreSQL Flexible Server."
+  value       = module.postgresql.name
+}
+
+output "postgresql_fqdn" {
+  description = "Fully qualified domain name of the dev PostgreSQL Flexible Server."
+  value       = module.postgresql.fqdn
+}
+
+output "postgresql_database_name" {
+  description = "Name of the dev application database."
+  value       = module.postgresql.database_name
+}
