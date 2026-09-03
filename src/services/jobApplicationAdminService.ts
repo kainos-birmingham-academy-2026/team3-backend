@@ -8,7 +8,7 @@ type ApplicationListItem = {
 	jobRoleId: number;
 	cvText: string;
 	createdAt: Date;
-	applicationStatus: "IN_PROGRESS" | "HIRED" | "REJECTED";
+	applicationStatus: "IN_PROGRESS" | "HIRED" | "REJECTED" | "WITHDRAWN";
 	jobRole: {
 		roleName: string;
 	};

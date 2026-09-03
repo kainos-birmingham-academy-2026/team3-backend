@@ -6,6 +6,7 @@ import authRouter from "./routes/authRouter";
 import jobApplicationRouter from "./routes/jobApplicationsAdminRouter";
 import jobRolesRouter from "./routes/jobRolesRouter";
 import teapotRouter from "./routes/teapotRouter";
+import userApplicationsRouter from "./routes/userApplicationsRouter";
 
 const app = express();
 const PORT = 4000;
@@ -19,6 +20,7 @@ registerSwaggerRoutes(app, swaggerDocsEnabled);
 app.use("/job-roles", jobRolesRouter);
 app.use("/api", authRouter);
 app.use("/job-applications/admin", jobApplicationRouter);
+app.use("/job-applications", userApplicationsRouter);
 app.use("/teapot", teapotRouter);
 
 // Root endpoint
