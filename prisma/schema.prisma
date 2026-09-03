@@ -121,4 +121,5 @@ enum ApplicationStatus {
   IN_PROGRESS
   HIRED
   REJECTED
+  WITHDRAWN
 }
