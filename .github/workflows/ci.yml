@@ -21,10 +21,10 @@ env:
   TF_VAR_environment: dev
   TF_VAR_location: uksouth
   TF_VAR_project_name: team3
-  TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  TF_VAR_deployment_principal_object_id: 8bdf433d-761a-4cd1-ba09-85754a1e0eef
   TF_VAR_acr_name: acraiacademy26
   TF_VAR_acr_resource_group_name: rg-ai-academy-26
-  TF_VAR_backend_image_tag: dev-latest
+  TF_VAR_backend_image_tag: ${{ github.sha }}
   TF_VAR_container_revision_suffix: rev-${{ github.run_id }}
   TF_VAR_enable_swagger_docs: "true"
   TF_VAR_log_retention_in_days: "30"
@@ -209,7 +209,20 @@ jobs:
           -backend-config="use_azuread_auth=true"
       - name: Validate Terraform
         run: terraform validate
+      - name: Bootstrap Key Vault secret permissions
+        run: >-
+          terraform apply
+          -auto-approve
+          -target=time_sleep.secrets_rbac_propagation
       - name: Create Terraform plan
         run: terraform plan -out=tfplan
       - name: Apply Terraform plan
         run: terraform apply -auto-approve tfplan
+      - name: Trigger frontend dev deployment
+        env:
+          GH_TOKEN: ${{ secrets.FRONTEND_REPOSITORY_DISPATCH_TOKEN }}
+        run: >-
+          gh api
+          --method POST
+          repos/kainos-birmingham-academy-2026/team3-frontend/dispatches
+          --field event_type=backend-dev-deployed

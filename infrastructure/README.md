@@ -72,11 +72,16 @@ The `dev` root manages:
 	identity.
 
 The Container App pulls `team3-backend:<commit-sha>` from the shared ACR. It
-reads `database-url` and `jwt-secret` from Key Vault without storing their
-values in Terraform. The backend is not exposed through public ingress.
+reads Terraform-managed `database-url` and `jwt-secret` values from Key Vault.
+The backend is not exposed through public ingress. The backend root also owns
+the frontend's `session-secret`, keeping application secret ownership in one
+state.
+
 The PostgreSQL administrator password is supplied through a sensitive Terraform
-write-only variable, so it is not committed or stored in Terraform state. Key
-Vault secret values remain manually managed.
+write-only variable. Key Vault values use write-only arguments, so neither that
+password nor the constructed database URL is stored in state. Generated JWT and
+session credentials are stored as sensitive values in the encrypted remote
+state so Terraform can recreate them after resource loss.
 
 The dev container runs `prisma migrate deploy` and the idempotent Prisma seed
 before starting the API, so a recreated empty database receives its schema and
@@ -114,14 +119,9 @@ write production Key Vault secrets. Remove that permission after bootstrap.
 Before deploying either environment:
 
 - Create the remote-state resource group, storage account, and blob container.
-- Ensure `database-url` and `jwt-secret` exist in `kv-team3-dev` before
-	deploying a dev backend revision. Use the production bootstrap sequence above
-	for `kv-team3-prod`.
-- Before the first dev PostgreSQL import, set
-	`POSTGRESQL_ADMINISTRATOR_PASSWORD` to the existing server administrator
-	password. Changing it rotates the server password, so update `database-url`
-	at the same time and increment `postgresql_administrator_password_version`
-	whenever this secret changes.
+- Set `POSTGRESQL_ADMINISTRATOR_PASSWORD` to the server administrator password.
+	Changing it rotates the server password and rewrites `database-url`; increment
+	`postgresql_administrator_password_version` whenever it changes.
 - Configure the GitHub Actions secrets listed below.
 
 ## GitHub configuration
@@ -134,7 +134,8 @@ The repository uses these existing Actions secrets:
 | `AZURE_TENANT_ID` | Azure tenant ID |
 | `AZURE_SUBSCRIPTION_ID` | Azure subscription ID |
 | `ACR_NAME` | ACR resource name, without `.azurecr.io` |
-| `POSTGRESQL_ADMINISTRATOR_PASSWORD` | Existing dev PostgreSQL administrator password used by Terraform |
+| `POSTGRESQL_ADMINISTRATOR_PASSWORD` | Dev PostgreSQL administrator password used by Terraform |
+| `FRONTEND_REPOSITORY_DISPATCH_TOKEN` | Fine-grained token with Contents write permission on `team3-frontend`, used to start frontend deployment after backend succeeds |
 
 Azure federated credentials trust pull requests and the `main` branch from this
 repository, so the workflow uses short-lived OIDC tokens instead of a client
@@ -146,13 +147,14 @@ Grant the service principal only the roles it needs:
 - `Contributor` on the subscription so Terraform can recreate `rg-team3-dev`
 	after deletion.
 - `Role Based Access Control Administrator` on the subscription, conditioned to
-	allow `AcrPull`, `Key Vault Secrets User`, `Monitoring Reader`, and
-	`Grafana Admin` assignments.
+	allow `AcrPull`, `Key Vault Secrets User`, `Key Vault Secrets Officer`,
+	`Monitoring Reader`, and `Grafana Admin` assignments.
 
-The dev root imports the existing resource group and PostgreSQL resources into
-the separately stored remote state. Resource-group-scoped permissions are not
-sufficient for recovery because their assignments are deleted with the resource
-group.
+The dev resources and pre-existing Key Vault secrets have been adopted into the
+separately stored remote state. The configuration contains no permanent import
+blocks, so missing resources are recreated instead of producing failed import
+attempts. Resource-group-scoped permissions are not sufficient for recovery
+because their assignments are deleted with the resource group.
 
 ## Terraform variables
 
@@ -161,9 +163,10 @@ group.
 | `project_name` | Short name used in Azure resource names |
 | `environment` | Deployment environment: `dev` or `prod` for the matching root |
 | `location` | Azure region, currently `uksouth` for dev |
-| `subscription_id` | Subscription containing the imported dev resource group (dev only) |
+| `deployment_principal_object_id` | Object ID granted vault-scoped Secrets Officer so Terraform can write application secrets |
 | `postgresql_administrator_password` | Sensitive dev PostgreSQL administrator password supplied by GitHub Actions |
 | `postgresql_administrator_password_version` | Rotation counter for the write-only PostgreSQL password; increment when changing it |
+| `application_secret_version` | Rotation counter for generated JWT and session credentials |
 | `acr_name` | Existing shared ACR name |
 | `acr_resource_group_name` | Resource group containing the shared ACR |
 | `backend_image_tag` | `dev-latest` in dev; an immutable commit SHA or release version in prod |
@@ -179,8 +182,11 @@ requests also run Terraform format checks, validation, and a dev plan. A push
 to `main` additionally:
 
 1. Builds and pushes SHA-tagged and `dev-latest` images to ACR.
-2. Creates and applies a Terraform plan for dev.
-3. Deploys `dev-latest` in a new Container App revision identified by the commit SHA.
+2. Creates the Key Vault and deployment-principal Secrets Officer assignment if
+	they are missing.
+3. Creates and applies a complete Terraform plan for dev using the immutable
+	commit SHA image.
+4. Dispatches the frontend workflow only after the backend apply succeeds.
 
 Feature branches do not push images or deploy infrastructure.
 

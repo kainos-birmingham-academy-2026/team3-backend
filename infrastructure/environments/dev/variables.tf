@@ -13,8 +13,8 @@ variable "location" {
   type        = string
 }
 
-variable "subscription_id" {
-  description = "Azure subscription containing the existing resource group."
+variable "deployment_principal_object_id" {
+  description = "Object ID of the service principal that writes Terraform-managed Key Vault secrets."
   type        = string
 }
 
@@ -38,6 +38,12 @@ variable "postgresql_administrator_password" {
 
 variable "postgresql_administrator_password_version" {
   description = "Version incremented whenever the dev PostgreSQL administrator password is rotated."
+  type        = number
+  default     = 1
+}
+
+variable "application_secret_version" {
+  description = "Version incremented to rotate the generated JWT and session secrets."
   type        = number
   default     = 1
 }

@@ -103,9 +103,69 @@ module "postgresql" {
   }
 }
 
+resource "random_password" "jwt_secret" {
+  length  = 64
+  special = false
+
+  keepers = {
+    version = var.application_secret_version
+  }
+}
+
+resource "random_password" "session_secret" {
+  length  = 64
+  special = false
+
+  keepers = {
+    version = var.application_secret_version
+  }
+}
+
 data "azurerm_container_registry" "shared" {
   name                = var.acr_name
   resource_group_name = var.acr_resource_group_name
+}
+
+resource "azurerm_role_assignment" "deployment_secrets_officer" {
+  scope                = module.key_vault.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = var.deployment_principal_object_id
+  principal_type       = "ServicePrincipal"
+}
+
+resource "time_sleep" "secrets_rbac_propagation" {
+  create_duration = "30s"
+
+  triggers = {
+    role_assignment_id = azurerm_role_assignment.deployment_secrets_officer.id
+  }
+}
+
+resource "azurerm_key_vault_secret" "database_url" {
+  name             = "database-url"
+  key_vault_id     = module.key_vault.id
+  value_wo         = "postgresql://${module.postgresql.administrator_login}:${urlencode(var.postgresql_administrator_password)}@${module.postgresql.fqdn}:5432/${module.postgresql.database_name}?sslmode=require"
+  value_wo_version = var.postgresql_administrator_password_version
+
+  depends_on = [time_sleep.secrets_rbac_propagation]
+}
+
+resource "azurerm_key_vault_secret" "jwt_secret" {
+  name             = "jwt-secret"
+  key_vault_id     = module.key_vault.id
+  value_wo         = random_password.jwt_secret.result
+  value_wo_version = var.application_secret_version
+
+  depends_on = [time_sleep.secrets_rbac_propagation]
+}
+
+resource "azurerm_key_vault_secret" "session_secret" {
+  name             = "session-secret"
+  key_vault_id     = module.key_vault.id
+  value_wo         = random_password.session_secret.result
+  value_wo_version = var.application_secret_version
+
+  depends_on = [time_sleep.secrets_rbac_propagation]
 }
 
 resource "azurerm_role_assignment" "key_vault_secrets_user" {
@@ -149,6 +209,8 @@ module "backend_container_app" {
   depends_on = [
     azurerm_role_assignment.acr_pull,
     azurerm_role_assignment.key_vault_secrets_user,
+    azurerm_key_vault_secret.database_url,
+    azurerm_key_vault_secret.jwt_secret,
   ]
 }
 
@@ -157,24 +219,4 @@ resource "azurerm_postgresql_flexible_server_firewall_rule" "backend_container_a
   server_id        = module.postgresql.id
   start_ip_address = one(module.backend_container_app.outbound_ip_addresses)
   end_ip_address   = one(module.backend_container_app.outbound_ip_addresses)
-}
-
-import {
-  to = module.resource_group.azurerm_resource_group.this
-  id = "/subscriptions/${var.subscription_id}/resourceGroups/rg-${var.project_name}-${var.environment}"
-}
-
-import {
-  to = module.postgresql.azurerm_postgresql_flexible_server.this
-  id = "/subscriptions/${var.subscription_id}/resourceGroups/rg-${var.project_name}-${var.environment}/providers/Microsoft.DBforPostgreSQL/flexibleServers/psql-${var.project_name}-${var.environment}"
-}
-
-import {
-  to = module.postgresql.azurerm_postgresql_flexible_server_database.this
-  id = "/subscriptions/${var.subscription_id}/resourceGroups/rg-${var.project_name}-${var.environment}/providers/Microsoft.DBforPostgreSQL/flexibleServers/psql-${var.project_name}-${var.environment}/databases/jobRoles"
-}
-
-import {
-  to = azurerm_postgresql_flexible_server_firewall_rule.backend_container_app
-  id = "/subscriptions/${var.subscription_id}/resourceGroups/rg-${var.project_name}-${var.environment}/providers/Microsoft.DBforPostgreSQL/flexibleServers/psql-${var.project_name}-${var.environment}/firewallRules/allow-team3-backend-container-app"
 }
