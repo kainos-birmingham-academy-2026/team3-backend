@@ -143,6 +143,28 @@ describe("JobRoleChatService", () => {
 		expect(aiService.answer).not.toHaveBeenCalled();
 	});
 
+	it("returns no roles when a requested location has no matches", async () => {
+		const jobRolesService = {
+			findAll: vi.fn().mockResolvedValue([
+				roleSummary(1, "Senior Software Engineer", "Glasgow"),
+				roleSummary(2, "Associate Software Engineer", "London"),
+				roleSummary(3, "Trainee Software Engineer", "Belfast"),
+			]),
+			findById: vi.fn(),
+		} as unknown as JobRolesService;
+		const aiService = { answer: vi.fn() } as unknown as AzureOpenAIService;
+		const service = new JobRoleChatService(jobRolesService, aiService);
+
+		const result = await service.answer("What jobs are available in Norway?");
+
+		expect(result).toEqual({
+			answer: "I couldn't find any jobs in Norway.",
+			roles: [],
+		});
+		expect(jobRolesService.findById).not.toHaveBeenCalled();
+		expect(aiService.answer).not.toHaveBeenCalled();
+	});
+
 	it("uses Azure for detailed questions about multiple roles", async () => {
 		const role = roleSummary(1, "Software Engineer", "Belfast");
 		const jobRolesService = {
