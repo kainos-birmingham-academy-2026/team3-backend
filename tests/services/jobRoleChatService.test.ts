@@ -205,6 +205,67 @@ describe("JobRoleChatService", () => {
 		expect(aiService.answer).not.toHaveBeenCalled();
 	});
 
+	it("requires every requested filter category to match", async () => {
+		const roles = [
+			roleSummary(1, "Software Engineer", "Belfast"),
+			roleSummary(2, "Software Engineer", "London"),
+			{
+				...roleSummary(3, "Software Engineer", "Belfast"),
+				statusName: "CLOSED",
+			},
+			roleSummary(4, "Delivery Manager", "Belfast"),
+		];
+		const jobRolesService = {
+			findAll: vi.fn().mockResolvedValue(roles),
+			findById: vi.fn(async (jobRoleId: number) => {
+				const role = roles.find((item) => item.jobRoleId === jobRoleId);
+				if (!role) throw new Error("Role not found");
+				return {
+					...roleDetail(role.jobRoleId, role.roleName, role.locationName),
+					statusName: role.statusName,
+				};
+			}),
+		} as unknown as JobRolesService;
+		const aiService = { answer: vi.fn() } as unknown as AzureOpenAIService;
+		const service = new JobRoleChatService(jobRolesService, aiService);
+
+		const result = await service.answer(
+			"What open Software Engineer jobs are in Belfast?",
+		);
+
+		expect(result.roles).toEqual([
+			expect.objectContaining({
+				jobRoleId: 1,
+				roleName: "Software Engineer",
+				location: "Belfast",
+				status: "OPEN",
+			}),
+		]);
+		expect(aiService.answer).not.toHaveBeenCalled();
+	});
+
+	it("does not use unrelated roles for an unknown detailed role", async () => {
+		const jobRolesService = {
+			findAll: vi
+				.fn()
+				.mockResolvedValue([roleSummary(1, "Software Engineer", "Belfast")]),
+			findById: vi.fn(),
+		} as unknown as JobRolesService;
+		const aiService = { answer: vi.fn() } as unknown as AzureOpenAIService;
+		const service = new JobRoleChatService(jobRolesService, aiService);
+
+		const result = await service.answer(
+			"What are the responsibilities of the Astronaut role?",
+		);
+
+		expect(result).toEqual({
+			answer: "I couldn't find any matching roles.",
+			roles: [],
+		});
+		expect(jobRolesService.findById).not.toHaveBeenCalled();
+		expect(aiService.answer).not.toHaveBeenCalled();
+	});
+
 	it("uses Azure for detailed questions about multiple roles", async () => {
 		const role = roleSummary(1, "Software Engineer", "Belfast");
 		const jobRolesService = {
