@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: ["**"]
+    branches: [main]
   pull_request:
     branches: ["**"]
   workflow_dispatch:
@@ -48,7 +48,7 @@ env:
   TF_VAR_grafana_admin_object_ids: ${{ vars.GRAFANA_ADMIN_OBJECT_IDS != '' && vars.GRAFANA_ADMIN_OBJECT_IDS || '[]' }}
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.event_name == 'workflow_dispatch' && inputs.deploy_test && 'test-environment-deployment' || format('ci-{0}-{1}', github.workflow, github.event.pull_request.number || github.ref) }}
   cancel-in-progress: true
 
 jobs:
