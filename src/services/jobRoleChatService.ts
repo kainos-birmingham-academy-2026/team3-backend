@@ -61,7 +61,14 @@ const STOP_WORDS = new Set([
 
 export interface JobRoleChatResponse {
 	answer: string;
-	roles: Array<{ jobRoleId: number; roleName: string }>;
+	roles: Array<{
+		jobRoleId: number;
+		roleName: string;
+		location: string;
+		status: string;
+		openPositions: number;
+		closingDate: Date | null;
+	}>;
 }
 
 export class JobRoleChatService {
@@ -91,10 +98,23 @@ export class JobRoleChatService {
 			answer:
 				answer ||
 				"I couldn't find that information in the current job role details.",
-			roles: detailedRoles.map(({ jobRoleId, roleName }) => ({
-				jobRoleId,
-				roleName,
-			})),
+			roles: detailedRoles.map(
+				({
+					jobRoleId,
+					roleName,
+					locationName,
+					statusName,
+					numberOfOpenPositions,
+					closingDate,
+				}) => ({
+					jobRoleId,
+					roleName,
+					location: locationName,
+					status: statusName,
+					openPositions: numberOfOpenPositions,
+					closingDate,
+				}),
+			),
 		};
 	}
 
@@ -162,7 +182,8 @@ export class JobRoleChatService {
 			"You answer applicant questions about Kainos job roles.",
 			"Use only the job role JSON below. Never infer or invent missing facts.",
 			"If the JSON does not answer the question, say that the current job role information does not include it.",
-			"Keep the answer concise and mention the relevant role name.",
+			"Keep the answer to one or two short sentences.",
+			"Do not make a list or repeat location, status, vacancies, or closing dates because the interface displays those facts separately.",
 			`Job roles: ${JSON.stringify(roles)}`,
 		].join("\n");
 	}
