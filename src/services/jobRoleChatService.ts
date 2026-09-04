@@ -170,12 +170,12 @@ export class JobRoleChatService {
 		const detailedRoles = await Promise.all(
 			matchedRoles.map((role) => this.jobRolesService.findById(role.jobRoleId)),
 		);
-		const answer = this.isRoleDiscoveryQuestion(message)
-			? this.buildDiscoveryAnswer(detailedRoles.length, message)
-			: await this.aiService.answer(
+		const answer = this.hasRoleDetailTerm(message)
+			? await this.aiService.answer(
 					this.buildSystemPrompt(detailedRoles),
 					message,
-				);
+				)
+			: this.buildDiscoveryAnswer(detailedRoles.length, message);
 
 		return {
 			answer:
@@ -206,7 +206,7 @@ export class JobRoleChatService {
 			.toLowerCase()
 			.split(/[^a-z0-9]+/)
 			.filter(Boolean);
-		if (terms.some((term) => ROLE_DETAIL_TERMS.has(term))) {
+		if (this.hasRoleDetailTerm(message)) {
 			return false;
 		}
 
@@ -225,6 +225,13 @@ export class JobRoleChatService {
 				"vacancy",
 			].includes(term),
 		);
+	}
+
+	private hasRoleDetailTerm(message: string): boolean {
+		return message
+			.toLowerCase()
+			.split(/[^a-z0-9]+/)
+			.some((term) => ROLE_DETAIL_TERMS.has(term));
 	}
 
 	private buildDiscoveryAnswer(roleCount: number, message: string): string {
