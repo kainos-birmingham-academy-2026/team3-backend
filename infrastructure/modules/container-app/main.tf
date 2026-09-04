@@ -69,6 +69,42 @@ resource "azurerm_container_app" "this" {
         value = tostring(var.seed_database)
       }
 
+      dynamic "env" {
+        for_each = var.azure_openai_endpoint == null ? [] : [var.azure_openai_endpoint]
+
+        content {
+          name  = "AZURE_OPENAI_ENDPOINT"
+          value = env.value
+        }
+      }
+
+      dynamic "env" {
+        for_each = var.azure_openai_deployment == null ? [] : [var.azure_openai_deployment]
+
+        content {
+          name  = "AZURE_OPENAI_DEPLOYMENT"
+          value = env.value
+        }
+      }
+
+      dynamic "env" {
+        for_each = var.azure_openai_endpoint == null ? [] : [var.azure_openai_api_version]
+
+        content {
+          name  = "AZURE_OPENAI_API_VERSION"
+          value = env.value
+        }
+      }
+
+      dynamic "env" {
+        for_each = var.azure_openai_endpoint == null ? [] : [var.managed_identity_client_id]
+
+        content {
+          name  = "AZURE_CLIENT_ID"
+          value = env.value
+        }
+      }
+
       liveness_probe {
         transport = "HTTP"
         port      = 4000
