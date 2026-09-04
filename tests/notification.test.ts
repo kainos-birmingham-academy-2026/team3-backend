@@ -1,16 +1,21 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { publishNotification } from "../src/notificationPublisher";
 
-const { mockCreateSender, mockSendMessages, mockServiceBusClient } = vi.hoisted(
-  () => ({
+const { mockCreateSender, mockSendMessages, mockServiceBusConstructor } =
+  vi.hoisted(() => ({
     mockCreateSender: vi.fn(),
     mockSendMessages: vi.fn(),
-    mockServiceBusClient: vi.fn(),
-  }),
-);
+    mockServiceBusConstructor: vi.fn(),
+  }));
 
 vi.mock("@azure/service-bus", () => ({
-  ServiceBusClient: mockServiceBusClient,
+  ServiceBusClient: class {
+    public createSender = mockCreateSender;
+
+    public constructor(connectionString: string) {
+      mockServiceBusConstructor(connectionString);
+    }
+  },
 }));
 
 beforeEach(() => {
@@ -18,11 +23,6 @@ beforeEach(() => {
   process.env.AZURE_SERVICE_BUS_CONNECTION_STRING = "test-connection-string";
   delete process.env.AZURE_SERVICE_BUS_TOPIC;
   mockCreateSender.mockReturnValue({ sendMessages: mockSendMessages });
-  mockServiceBusClient.mockImplementation(
-    class {
-      public createSender = mockCreateSender;
-    },
-  );
 });
 
 afterEach(() => {
@@ -35,7 +35,9 @@ test("publishes an account-created notification", async () => {
     name: "Mahdi",
   });
 
-  expect(mockServiceBusClient).toHaveBeenCalledWith("test-connection-string");
+  expect(mockServiceBusConstructor).toHaveBeenCalledWith(
+    "test-connection-string",
+  );
   expect(mockCreateSender).toHaveBeenCalledWith("notifications");
   expect(mockSendMessages).toHaveBeenCalledWith({
     body: {
@@ -47,11 +49,12 @@ test("publishes an account-created notification", async () => {
   });
 });
 
-test("throws a clear error when Service Bus is not configured", async () => {
+test("skips publishing when Service Bus is not configured", async () => {
   delete process.env.AZURE_SERVICE_BUS_CONNECTION_STRING;
 
   await expect(
     publishNotification("AccountCreated", "user@example.com"),
-  ).rejects.toThrow("AZURE_SERVICE_BUS_CONNECTION_STRING is not configured");
-  expect(mockServiceBusClient).not.toHaveBeenCalled();
+  ).resolves.toBeUndefined();
+  expect(mockServiceBusConstructor).not.toHaveBeenCalled();
+  expect(mockSendMessages).not.toHaveBeenCalled();
 });
