@@ -11,36 +11,60 @@ const ROLE_FILTER_FIELDS = [
 	"locationName",
 	"statusName",
 ] as const;
+const METADATA_QUERIES = [
+	{ terms: ["band", "bands"], field: "bandName", label: "bands" },
+	{
+		terms: ["capability", "capabilities"],
+		field: "capabilityName",
+		label: "capabilities",
+	},
+	{
+		terms: ["location", "locations"],
+		field: "locationName",
+		label: "locations",
+	},
+	{ terms: ["status", "statuses"], field: "statusName", label: "statuses" },
+] as const;
 const OUT_OF_SCOPE_ANSWER =
 	"I can only help with questions about the available job roles.";
 const JOB_ROLE_TERMS = new Set([
 	"application",
 	"apply",
 	"band",
+	"bands",
 	"benefits",
 	"capability",
+	"capabilities",
 	"career",
 	"careers",
 	"closing",
 	"deadline",
+	"describe",
 	"description",
 	"job",
 	"jobs",
 	"location",
+	"locations",
 	"open",
 	"position",
 	"positions",
 	"responsibilities",
 	"responsibility",
+	"requirements",
 	"role",
 	"roles",
 	"salary",
+	"status",
+	"statuses",
 	"vacancies",
 	"vacancy",
 ]);
 const ROLE_DETAIL_TERMS = new Set([
+	"application",
 	"apply",
 	"benefits",
+	"closing",
+	"deadline",
 	"describe",
 	"description",
 	"requirements",
@@ -48,12 +72,24 @@ const ROLE_DETAIL_TERMS = new Set([
 	"responsibility",
 	"salary",
 ]);
+const DETAIL_QUESTION_NOISE_TERMS = new Set([
+	"date",
+	"details",
+	"how",
+	"know",
+	"much",
+	"please",
+	"tell",
+	"when",
+]);
 const DISCOVERY_NOISE_TERMS = new Set([
 	"all",
 	"any",
 	"available",
 	"based",
 	"currently",
+	"career",
+	"careers",
 	"find",
 	"located",
 	"near",
@@ -116,6 +152,16 @@ export class JobRoleChatService {
 		if (!this.isJobRoleQuestion(message, roles)) {
 			return { answer: OUT_OF_SCOPE_ANSWER, roles: [] };
 		}
+		const metadataAnswer = this.buildMetadataAnswer(message, roles);
+		if (metadataAnswer) {
+			return { answer: metadataAnswer, roles: [] };
+		}
+		if (this.needsRoleClarification(message, roles)) {
+			return {
+				answer: "Which role would you like to know about?",
+				roles: [],
+			};
+		}
 
 		const matchedRoles = this.selectRoles(message, roles);
 		if (matchedRoles.length === 0) {
@@ -165,7 +211,19 @@ export class JobRoleChatService {
 		}
 
 		return terms.some((term) =>
-			["jobs", "positions", "roles", "vacancies"].includes(term),
+			[
+				"career",
+				"careers",
+				"job",
+				"jobs",
+				"position",
+				"positions",
+				"open",
+				"role",
+				"roles",
+				"vacancies",
+				"vacancy",
+			].includes(term),
 		);
 	}
 
@@ -199,6 +257,57 @@ export class JobRoleChatService {
 				.toLowerCase()
 				.split(/[^a-z0-9]+/)
 				.some((term) => term.length > 2 && terms.includes(term)),
+		);
+	}
+
+	private buildMetadataAnswer(
+		message: string,
+		roles: JobRoleResponse[],
+	): string | null {
+		const normalizedMessage = message.toLowerCase();
+		const terms = normalizedMessage.split(/[^a-z0-9]+/).filter(Boolean);
+		const query = METADATA_QUERIES.find(({ terms: queryTerms }) =>
+			queryTerms.some((term) => terms.includes(term)),
+		);
+		if (!query) return null;
+
+		if (this.mentionsSpecificValue(normalizedMessage, roles)) return null;
+
+		const values = [...new Set(roles.map((role) => role[query.field]))].sort(
+			(left, right) => left.localeCompare(right),
+		);
+		return values.length > 0
+			? `Available ${query.label}: ${values.join(", ")}.`
+			: `There are no available ${query.label}.`;
+	}
+
+	private needsRoleClarification(
+		message: string,
+		roles: JobRoleResponse[],
+	): boolean {
+		const normalizedMessage = message.toLowerCase();
+		const terms = normalizedMessage.split(/[^a-z0-9]+/).filter(Boolean);
+		return (
+			terms.some((term) => ROLE_DETAIL_TERMS.has(term)) &&
+			!this.mentionsSpecificValue(normalizedMessage, roles) &&
+			terms.every(
+				(term) =>
+					term.length <= 1 ||
+					ROLE_DETAIL_TERMS.has(term) ||
+					DETAIL_QUESTION_NOISE_TERMS.has(term) ||
+					STOP_WORDS.has(term),
+			)
+		);
+	}
+
+	private mentionsSpecificValue(
+		normalizedMessage: string,
+		roles: JobRoleResponse[],
+	): boolean {
+		return roles.some((role) =>
+			ROLE_FILTER_FIELDS.some((field) =>
+				normalizedMessage.includes(role[field].toLowerCase()),
+			),
 		);
 	}
 
