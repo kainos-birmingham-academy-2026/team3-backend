@@ -20,7 +20,8 @@ export class JobRoleChatController {
 				console.error("Job role assistant request failed", error);
 			}
 			res.status(503).json({
-				message: "The job role assistant is unavailable. Please try again later.",
+				message:
+					"The job role assistant is unavailable. Please try again later.",
 			});
 		}
 	}

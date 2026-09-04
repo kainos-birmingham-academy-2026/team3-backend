@@ -7,10 +7,8 @@ import { JobRolesService } from "../services/jobRolesService.js";
 const jobRoleChatRouter = Router();
 const controller = new JobRoleChatController(new JobRolesService());
 
-jobRoleChatRouter.post(
-	"/",
-	validateBody(JobRoleChatSchema),
-	(req, res) => controller.answer(req, res),
+jobRoleChatRouter.post("/", validateBody(JobRoleChatSchema), (req, res) =>
+	controller.answer(req, res),
 );
 
 export default jobRoleChatRouter;

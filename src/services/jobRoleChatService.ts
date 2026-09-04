@@ -95,9 +95,7 @@ export class JobRoleChatService {
 
 		const matchedRoles = this.selectRoles(message, roles);
 		const detailedRoles = await Promise.all(
-			matchedRoles.map((role) =>
-				this.jobRolesService.findById(role.jobRoleId),
-			),
+			matchedRoles.map((role) => this.jobRolesService.findById(role.jobRoleId)),
 		);
 		const answer = this.isRoleDiscoveryQuestion(message)
 			? this.buildDiscoveryAnswer(detailedRoles.length)
@@ -131,7 +129,10 @@ export class JobRoleChatService {
 	}
 
 	private isRoleDiscoveryQuestion(message: string): boolean {
-		const terms = message.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+		const terms = message
+			.toLowerCase()
+			.split(/[^a-z0-9]+/)
+			.filter(Boolean);
 		if (terms.some((term) => ROLE_DETAIL_TERMS.has(term))) {
 			return false;
 		}
@@ -156,12 +157,7 @@ export class JobRoleChatService {
 		}
 
 		return roles.some((role) =>
-			[
-				role.roleName,
-				role.capabilityName,
-				role.bandName,
-				role.locationName,
-			]
+			[role.roleName, role.capabilityName, role.bandName, role.locationName]
 				.join(" ")
 				.toLowerCase()
 				.split(/[^a-z0-9]+/)
@@ -188,7 +184,9 @@ export class JobRoleChatService {
 				]
 					.join(" ")
 					.toLowerCase();
-				const score = terms.filter((term) => searchableFields.includes(term)).length;
+				const score = terms.filter((term) =>
+					searchableFields.includes(term),
+				).length;
 				const exactRoleBonus = normalizedMessage.includes(
 					role.roleName.toLowerCase(),
 				)

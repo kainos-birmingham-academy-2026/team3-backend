@@ -4,7 +4,11 @@ import { z } from "zod";
 import { JobApplicationAdminController } from "../controllers/jobApplicationAdminController";
 import { allowRoles, USER_ROLES } from "../middleware/authorise";
 import { requireAuth } from "../middleware/requireAuth";
-import { validateBody, validateParams, validateQuery } from "../middleware/validate";
+import {
+	validateBody,
+	validateParams,
+	validateQuery,
+} from "../middleware/validate";
 import { JobApplicationAdminService } from "../services/jobApplicationAdminService";
 
 const jobApplicationsAdminRouter = Router();

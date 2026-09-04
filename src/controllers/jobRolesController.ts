@@ -77,10 +77,7 @@ export class JobRolesController {
 		}
 	}
 
-	async deleteJobRole(
-		req: Request<{ jobRoleId: string }>,
-		res: Response,
-	) {
+	async deleteJobRole(req: Request<{ jobRoleId: string }>, res: Response) {
 		const idParam = req.params.jobRoleId;
 		const jobRoleId = parseInt(
 			Array.isArray(idParam) ? idParam[0] : idParam,
