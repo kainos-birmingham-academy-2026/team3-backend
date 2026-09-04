@@ -36,6 +36,8 @@ Then set these values in `.env`:
 - `DATABASE_URL` for your local Postgres instance
 - `JWT_SECRET` for signing login tokens
 - `ENABLE_SWAGGER_DOCS` to `true` when you want to expose the Swagger routes
+- `AZURE_SERVICE_BUS_CONNECTION_STRING` for publishing notification events
+- `AZURE_SERVICE_BUS_TOPIC` for the notification topic (defaults to `notifications`)
 
 Generate a strong JWT secret in your terminal:
 
@@ -49,7 +51,12 @@ Example:
 DATABASE_URL="postgresql://YOUR_USER:password@localhost:5432/jobRoles?schema=public"
 JWT_SECRET="replace-with-a-strong-local-secret"
 ENABLE_SWAGGER_DOCS=false
+AZURE_SERVICE_BUS_CONNECTION_STRING="replace-with-your-service-bus-connection-string"
+AZURE_SERVICE_BUS_TOPIC="notifications"
 ```
+
+Do not commit a real Service Bus connection string. The backend requires it when
+registering a user because successful registration publishes a notification.
 
 ### 3. Ensure Docker is running and start Postgres
 
@@ -445,6 +452,8 @@ Role behaviour:
 
 - New registrations default to role `USER`
 - Passwords are salted and hashed with Argon2id before storage
+- After the user is created, the backend publishes an `AccountCreated` event to
+  Azure Service Bus with the user's email address
 
 
 ### `POST /api/job-roles`

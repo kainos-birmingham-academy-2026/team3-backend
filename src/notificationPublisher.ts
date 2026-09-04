@@ -1,23 +1,21 @@
 import { ServiceBusClient } from "@azure/service-bus";
 import "dotenv/config";
 
-const connectionString =
-  process.env.AZURE_SERVICE_BUS_CONNECTION_STRING!;
-
-console.log("Connection String Loaded:", !!connectionString);
-
-const topicName =
-  process.env.AZURE_SERVICE_BUS_TOPIC ?? "notifications";
-
-const client = new ServiceBusClient(connectionString);
-
-const sender = client.createSender(topicName);
-
 export async function publishNotification(
   type: string,
   email: string,
-  data: Record<string, unknown> = {}
+  data: Record<string, unknown> = {},
 ) {
+  const connectionString = process.env.AZURE_SERVICE_BUS_CONNECTION_STRING;
+
+  if (!connectionString) {
+    throw new Error("AZURE_SERVICE_BUS_CONNECTION_STRING is not configured");
+  }
+
+  const topicName = process.env.AZURE_SERVICE_BUS_TOPIC ?? "notifications";
+  const client = new ServiceBusClient(connectionString);
+  const sender = client.createSender(topicName);
+
   console.log("Publishing notification...");
 
   const payload = {
