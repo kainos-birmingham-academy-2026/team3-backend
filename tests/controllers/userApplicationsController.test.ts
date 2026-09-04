@@ -100,10 +100,7 @@ describe("UserApplicationsController", () => {
 		const applications = [{ applicationId: 1, status: "IN_PROGRESS" }];
 		vi.mocked(mockService.findAllForUser).mockResolvedValue(applications);
 
-		await controller.getAll(
-			req as Request,
-			res as unknown as Response,
-		);
+		await controller.getAll(req as Request, res as unknown as Response);
 
 		expect(mockService.findAllForUser).toHaveBeenCalledWith(42);
 		expect(res.status).toHaveBeenCalledWith(200);
@@ -115,10 +112,7 @@ describe("UserApplicationsController", () => {
 		const res = createMockResponse();
 		vi.mocked(mockService.findAllForUser).mockRejectedValue(new Error("boom"));
 
-		await controller.getAll(
-			req as Request,
-			res as unknown as Response,
-		);
+		await controller.getAll(req as Request, res as unknown as Response);
 
 		expect(res.status).toHaveBeenCalledWith(500);
 		expect(res.json).toHaveBeenCalledWith({ message: "Internal server error" });

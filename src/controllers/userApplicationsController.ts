@@ -62,7 +62,9 @@ export class UserApplicationsController {
 					return res.status(404).json({ message: error.message });
 				}
 
-				if (error.message === "Only IN_PROGRESS applications can be withdrawn") {
+				if (
+					error.message === "Only IN_PROGRESS applications can be withdrawn"
+				) {
 					return res.status(409).json({ message: error.message });
 				}
 			}

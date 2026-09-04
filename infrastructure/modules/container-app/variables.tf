@@ -18,6 +18,29 @@ variable "managed_identity_id" {
   type        = string
 }
 
+variable "managed_identity_client_id" {
+  description = "Client ID of the user-assigned managed identity."
+  type        = string
+}
+
+variable "azure_openai_endpoint" {
+  description = "Optional Azure OpenAI endpoint for the job role chatbot."
+  type        = string
+  default     = null
+}
+
+variable "azure_openai_deployment" {
+  description = "Optional Azure OpenAI model deployment for the job role chatbot."
+  type        = string
+  default     = null
+}
+
+variable "azure_openai_api_version" {
+  description = "Azure OpenAI API version used by the job role chatbot."
+  type        = string
+  default     = "2025-04-01-preview"
+}
+
 variable "registry_server" {
   description = "Login server of the Azure Container Registry."
   type        = string

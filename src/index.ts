@@ -4,6 +4,7 @@ import { registerSwaggerRoutes } from "./config/swaggerRoutes.js";
 import { requestLogger } from "./middleware/requestLogger.js";
 import authRouter from "./routes/authRouter";
 import jobApplicationRouter from "./routes/jobApplicationsAdminRouter";
+import jobRoleChatRouter from "./routes/jobRoleChatRouter";
 import jobRolesRouter from "./routes/jobRolesRouter";
 import teapotRouter from "./routes/teapotRouter";
 import userApplicationsRouter from "./routes/userApplicationsRouter";
@@ -18,6 +19,7 @@ app.use(requestLogger);
 registerSwaggerRoutes(app, swaggerDocsEnabled);
 
 app.use("/api/job-roles", jobRolesRouter);
+app.use("/api/job-role-chat", jobRoleChatRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/job-applications/admin", jobApplicationRouter);
 app.use("/api/job-applications", userApplicationsRouter);

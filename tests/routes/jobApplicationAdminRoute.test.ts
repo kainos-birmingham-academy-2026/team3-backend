@@ -101,9 +101,7 @@ describe("Admin hire API behaviour", () => {
 
 		expect(response.status).toBe(400);
 		expect(response.body.errors).toEqual(
-			expect.arrayContaining([
-				expect.objectContaining({ field: "jobRoleId" }),
-			]),
+			expect.arrayContaining([expect.objectContaining({ field: "jobRoleId" })]),
 		);
 		expect(findAllAdmin).not.toHaveBeenCalled();
 	});
@@ -158,9 +156,7 @@ describe("Admin hire API behaviour", () => {
 
 		expect(response.status).toBe(400);
 		expect(response.body.errors).toEqual(
-			expect.arrayContaining([
-				expect.objectContaining({ field: "status" }),
-			]),
+			expect.arrayContaining([expect.objectContaining({ field: "status" })]),
 		);
 		expect(updateStatus).not.toHaveBeenCalled();
 	});
@@ -178,9 +174,7 @@ describe("Admin hire API behaviour", () => {
 
 		expect(response.status).toBe(400);
 		expect(response.body.errors).toEqual(
-			expect.arrayContaining([
-				expect.objectContaining({ field: "status" }),
-			]),
+			expect.arrayContaining([expect.objectContaining({ field: "status" })]),
 		);
 		expect(updateStatus).not.toHaveBeenCalled();
 	});

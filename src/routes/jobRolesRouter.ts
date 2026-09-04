@@ -2,8 +2,8 @@ import { type Request as R, type Response as Res, Router } from "express";
 import { JobRolesController } from "../controllers/jobRolesController";
 import {
 	CreateJobRoleSchema,
-	JobRoleIdParamSchema,
 	JobRoleFiltersSchema,
+	JobRoleIdParamSchema,
 	UpdateJobRoleSchema,
 } from "../dtos/jobRoleDto";
 import { allowRoles, USER_ROLES } from "../middleware/authorise";
