@@ -184,9 +184,9 @@ GitHub Actions currently sets `enable_swagger_docs` to `true` for dev.
 
 ## CI/CD behaviour
 
-Every push and pull request runs linting, tests, and a container build. Pull
-requests also run Terraform format checks, validation, and a dev plan. A push
-to `main` additionally:
+Every pull request runs linting, tests, a container build, Terraform format
+checks, validation, and a dev plan. Feature-branch pushes do not run CI until a
+pull request is opened. A push to `main`:
 
 1. Builds and pushes SHA-tagged and `dev-latest` images to ACR.
 2. Creates the Key Vault and deployment-principal Secrets Officer assignment if
