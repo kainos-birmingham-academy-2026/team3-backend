@@ -55,9 +55,15 @@ describe("JobRoleChatService", () => {
 			"Which roles are based in Belfast?",
 		);
 		expect(result.roles).toEqual([
-			{ jobRoleId: 1, roleName: "Software Engineer" },
-			{ jobRoleId: 2, roleName: "Platform Engineer" },
-			{ jobRoleId: 3, roleName: "Test Engineer" },
+			expect.objectContaining({
+				jobRoleId: 1,
+				roleName: "Software Engineer",
+				location: "Belfast",
+				openPositions: 2,
+				status: "OPEN",
+			}),
+			expect.objectContaining({ jobRoleId: 2, roleName: "Platform Engineer" }),
+			expect.objectContaining({ jobRoleId: 3, roleName: "Test Engineer" }),
 		]);
 	});
 
@@ -80,10 +86,11 @@ describe("JobRoleChatService", () => {
 
 		const result = await service.answer("When does Delivery Manager close?");
 
-		expect(result.roles[0]).toEqual({
+		expect(result.roles[0]).toEqual(expect.objectContaining({
 			jobRoleId: 2,
 			roleName: "Delivery Manager",
-		});
+			location: "Birmingham",
+		}));
 	});
 
 	it("rejects unrelated questions without calling Azure", async () => {
