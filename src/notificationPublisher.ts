@@ -18,12 +18,20 @@ export async function publishNotification(
   email: string,
   data: Record<string, unknown> = {}
 ) {
+  console.log("Publishing notification...");
+
+  const payload = {
+    type,
+    email,
+    ...data,
+    createdAt: new Date().toISOString(),
+  };
+
+  console.log("Payload:", JSON.stringify(payload, null, 2));
+
   await sender.sendMessages({
-    body: {
-      type,
-      email,
-      ...data,
-      createdAt: new Date().toISOString(),
-    },
+    body: payload,
   });
+
+  console.log("Notification published successfully");
 }
