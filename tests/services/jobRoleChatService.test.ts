@@ -3,7 +3,11 @@ import type { AzureOpenAIService } from "../../src/services/azureOpenAIService.j
 import { JobRoleChatService } from "../../src/services/jobRoleChatService.js";
 import type { JobRolesService } from "../../src/services/jobRolesService.js";
 
-const roleSummary = (jobRoleId: number, roleName: string, locationName: string) => ({
+const roleSummary = (
+	jobRoleId: number,
+	roleName: string,
+	locationName: string,
+) => ({
 	jobRoleId,
 	roleName,
 	closingDate: new Date("2026-10-01"),
@@ -13,7 +17,11 @@ const roleSummary = (jobRoleId: number, roleName: string, locationName: string) 
 	statusName: "OPEN",
 });
 
-const roleDetail = (jobRoleId: number, roleName: string, locationName: string) => ({
+const roleDetail = (
+	jobRoleId: number,
+	roleName: string,
+	locationName: string,
+) => ({
 	...roleSummary(jobRoleId, roleName, locationName),
 	description: `${roleName} description`,
 	responsibilities: `${roleName} responsibilities`,
@@ -42,7 +50,9 @@ describe("JobRoleChatService", () => {
 			findById,
 		} as unknown as JobRolesService;
 		const aiService = {
-			answer: vi.fn().mockResolvedValue("Three roles are available in Belfast."),
+			answer: vi
+				.fn()
+				.mockResolvedValue("Three roles are available in Belfast."),
 		} as unknown as AzureOpenAIService;
 		const service = new JobRoleChatService(jobRolesService, aiService);
 
@@ -73,7 +83,8 @@ describe("JobRoleChatService", () => {
 		const jobRolesService = {
 			findAll: vi.fn().mockResolvedValue(roles),
 			findById: vi.fn(async (jobRoleId: number) => {
-				const role = roles.find((item) => item.jobRoleId === jobRoleId) ?? roles[0];
+				const role =
+					roles.find((item) => item.jobRoleId === jobRoleId) ?? roles[0];
 				return roleDetail(role.jobRoleId, role.roleName, role.locationName);
 			}),
 		} as unknown as JobRolesService;
@@ -84,11 +95,13 @@ describe("JobRoleChatService", () => {
 
 		const result = await service.answer("When does Delivery Manager close?");
 
-		expect(result.roles[0]).toEqual(expect.objectContaining({
-			jobRoleId: 2,
-			roleName: "Delivery Manager",
-			location: "Birmingham",
-		}));
+		expect(result.roles[0]).toEqual(
+			expect.objectContaining({
+				jobRoleId: 2,
+				roleName: "Delivery Manager",
+				location: "Birmingham",
+			}),
+		);
 	});
 
 	it("rejects unrelated questions without calling Azure", async () => {
@@ -139,7 +152,9 @@ describe("JobRoleChatService", () => {
 				.mockResolvedValue(roleDetail(1, "Software Engineer", "Belfast")),
 		} as unknown as JobRolesService;
 		const aiService = {
-			answer: vi.fn().mockResolvedValue("The role involves software development."),
+			answer: vi
+				.fn()
+				.mockResolvedValue("The role involves software development."),
 		} as unknown as AzureOpenAIService;
 		const service = new JobRoleChatService(jobRolesService, aiService);
 

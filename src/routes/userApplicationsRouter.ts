@@ -10,14 +10,14 @@ import { UserApplicationsService } from "../services/userApplicationsService";
 
 const userApplicationsRouter = Router();
 const controller = new UserApplicationsController(
-    new UserApplicationsService(),
-    new JobRolesService(),
+	new UserApplicationsService(),
+	new JobRolesService(),
 );
 const ApplicationIdParamSchema = z.object({
-    applicationId: z.coerce.number().int().positive(),
+	applicationId: z.coerce.number().int().positive(),
 });
 const WithdrawalStatusSchema = z.strictObject({
-    status: z.literal("WITHDRAWN"),
+	status: z.literal("WITHDRAWN"),
 });
 
 userApplicationsRouter.use(requireAuth);
@@ -59,9 +59,9 @@ userApplicationsRouter.use(requireAuth);
  *         description: Internal server error
  */
 userApplicationsRouter.post(
-    "/",
-    validateBody(CreateApplicationSchema),
-    controller.create.bind(controller),
+	"/",
+	validateBody(CreateApplicationSchema),
+	controller.create.bind(controller),
 );
 
 /**
@@ -128,10 +128,10 @@ userApplicationsRouter.get("/", controller.getAll.bind(controller));
  *         description: Internal server error
  */
 userApplicationsRouter.patch(
-    "/:applicationId/status",
-    validateParams(ApplicationIdParamSchema),
-    validateBody(WithdrawalStatusSchema),
-    controller.updateStatus.bind(controller),
+	"/:applicationId/status",
+	validateParams(ApplicationIdParamSchema),
+	validateBody(WithdrawalStatusSchema),
+	controller.updateStatus.bind(controller),
 );
 
 export default userApplicationsRouter;

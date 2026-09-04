@@ -1,4 +1,7 @@
-import { DefaultAzureCredential, getBearerTokenProvider } from "@azure/identity";
+import {
+	DefaultAzureCredential,
+	getBearerTokenProvider,
+} from "@azure/identity";
 import { AzureOpenAI } from "openai";
 
 const AZURE_OPENAI_SCOPE = "https://cognitiveservices.azure.com/.default";

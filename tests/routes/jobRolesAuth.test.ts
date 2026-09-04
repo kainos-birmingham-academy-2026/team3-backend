@@ -67,7 +67,9 @@ describe("Job role route auth protection", () => {
 	});
 
 	it("should return 400 for invalid list filters", async () => {
-		const response = await request(app).get("/api/job-roles?locationId=invalid");
+		const response = await request(app).get(
+			"/api/job-roles?locationId=invalid",
+		);
 
 		expect(response.status).toBe(400);
 		expect(response.body.errors[0].field).toBe("locationId.0");

@@ -107,9 +107,11 @@ describe("registerSwaggerRoutes", () => {
 			].patch.responses["200"].content["application/json"].schema.$ref,
 		).toBe("#/components/schemas/AdminApplicationStatusResponse");
 		const statusResponseApplicationProperties =
-			specificationResponse.body.components.schemas.AdminApplicationStatusResponse
-				.properties.application.properties;
-		expect(statusResponseApplicationProperties).toHaveProperty("applicantEmail");
+			specificationResponse.body.components.schemas
+				.AdminApplicationStatusResponse.properties.application.properties;
+		expect(statusResponseApplicationProperties).toHaveProperty(
+			"applicantEmail",
+		);
 		expect(statusResponseApplicationProperties).not.toHaveProperty(
 			"applicantName",
 		);

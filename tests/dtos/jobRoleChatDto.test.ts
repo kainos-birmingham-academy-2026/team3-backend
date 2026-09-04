@@ -3,9 +3,9 @@ import { JobRoleChatSchema } from "../../src/dtos/jobRoleChatDto.js";
 
 describe("JobRoleChatSchema", () => {
 	it("accepts and trims a question", () => {
-		expect(JobRoleChatSchema.parse({ message: "  What roles are open?  " })).toEqual(
-			{ message: "What roles are open?" },
-		);
+		expect(
+			JobRoleChatSchema.parse({ message: "  What roles are open?  " }),
+		).toEqual({ message: "What roles are open?" });
 	});
 
 	it.each([

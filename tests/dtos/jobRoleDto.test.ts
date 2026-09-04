@@ -58,9 +58,7 @@ describe("job role DTO schemas", () => {
 			["decimal", "1.5"],
 			["non-numeric", "abc"],
 		])("should reject a %s job role id", (_name, jobRoleId) => {
-			expect(
-				JobRoleIdParamSchema.safeParse({ jobRoleId }).success,
-			).toBe(false);
+			expect(JobRoleIdParamSchema.safeParse({ jobRoleId }).success).toBe(false);
 		});
 	});
 

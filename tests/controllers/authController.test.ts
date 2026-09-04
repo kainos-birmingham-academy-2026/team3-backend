@@ -86,7 +86,9 @@ describe("AuthController", () => {
 			await controller.register(req as never, res as never);
 
 			expect(res.status).toHaveBeenCalledWith(500);
-			expect(res.json).toHaveBeenCalledWith({ message: "Internal server error" });
+			expect(res.json).toHaveBeenCalledWith({
+				message: "Internal server error",
+			});
 		});
 	});
 
@@ -146,7 +148,9 @@ describe("AuthController", () => {
 			await controller.login(req as never, res as never);
 
 			expect(res.status).toHaveBeenCalledWith(500);
-			expect(res.json).toHaveBeenCalledWith({ message: "Internal server error" });
+			expect(res.json).toHaveBeenCalledWith({
+				message: "Internal server error",
+			});
 		});
 	});
 });
