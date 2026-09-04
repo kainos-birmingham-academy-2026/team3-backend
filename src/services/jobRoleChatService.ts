@@ -98,7 +98,7 @@ export class JobRoleChatService {
 			matchedRoles.map((role) => this.jobRolesService.findById(role.jobRoleId)),
 		);
 		const answer = this.isRoleDiscoveryQuestion(message)
-			? this.buildDiscoveryAnswer(detailedRoles.length)
+			? this.buildDiscoveryAnswer(detailedRoles.length, message)
 			: await this.aiService.answer(
 					this.buildSystemPrompt(detailedRoles),
 					message,
@@ -142,7 +142,17 @@ export class JobRoleChatService {
 		);
 	}
 
-	private buildDiscoveryAnswer(roleCount: number): string {
+	private buildDiscoveryAnswer(roleCount: number, message: string): string {
+		if (roleCount === 0) {
+			const requestedLocation = message
+				.match(/\bin\s+([a-z][a-z -]*?)[?.!]*$/i)?.[1]
+				.trim();
+			if (requestedLocation) {
+				return `I couldn't find any jobs in ${requestedLocation}.`;
+			}
+			return "I couldn't find any matching roles.";
+		}
+
 		return `I found ${roleCount} matching ${roleCount === 1 ? "role" : "roles"}.`;
 	}
 
@@ -170,10 +180,36 @@ export class JobRoleChatService {
 		roles: JobRoleResponse[],
 	): JobRoleResponse[] {
 		const normalizedMessage = message.toLowerCase();
+		const discoveryFilterTerms = this.isRoleDiscoveryQuestion(message)
+			? normalizedMessage
+					.match(/\bin\s+(.+)$/)?.[1]
+					.split(/[^a-z0-9]+/)
+					.filter((term) => term.length > 1 && !STOP_WORDS.has(term)) ?? []
+			: [];
+		const candidateRoles = discoveryFilterTerms.length
+			? roles.filter((role) => {
+					const searchableFields = [
+						role.roleName,
+						role.capabilityName,
+						role.bandName,
+						role.locationName,
+						role.statusName,
+					]
+						.join(" ")
+						.toLowerCase();
+					return discoveryFilterTerms.every((term) =>
+						searchableFields.includes(term),
+					);
+				})
+			: roles;
+		if (discoveryFilterTerms.length > 0 && candidateRoles.length === 0) {
+			return [];
+		}
+
 		const terms = normalizedMessage
 			.split(/[^a-z0-9]+/)
 			.filter((term) => term.length > 1 && !STOP_WORDS.has(term));
-		const scoredRoles = roles
+		const scoredRoles = candidateRoles
 			.map((role) => {
 				const searchableFields = [
 					role.roleName,
