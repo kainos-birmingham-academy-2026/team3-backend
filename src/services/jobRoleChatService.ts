@@ -248,8 +248,9 @@ export class JobRoleChatService {
 		);
 		const scoredRoles = matchingRoles
 			.map((role) => {
-				const score = categoryFilters.filter(({ field, terms: categoryTerms }) =>
-					categoryTerms.some((term) => role.fields[field].includes(term)),
+				const score = categoryFilters.filter(
+					({ field, terms: categoryTerms }) =>
+						categoryTerms.some((term) => role.fields[field].includes(term)),
 				).length;
 				const exactRoleBonus = normalizedMessage.includes(
 					role.role.roleName.toLowerCase(),
@@ -260,9 +261,7 @@ export class JobRoleChatService {
 			})
 			.sort((left, right) => right.score - left.score);
 
-		return scoredRoles
-			.slice(0, MAX_MATCHED_ROLES)
-			.map(({ role }) => role);
+		return scoredRoles.slice(0, MAX_MATCHED_ROLES).map(({ role }) => role);
 	}
 
 	private buildSystemPrompt(roles: JobRoleDetailedResponse[]): string {
