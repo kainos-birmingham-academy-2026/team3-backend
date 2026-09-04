@@ -143,6 +143,109 @@ describe("JobRoleChatService", () => {
 		expect(aiService.answer).not.toHaveBeenCalled();
 	});
 
+	it("handles a generic singular role prompt without calling Azure", async () => {
+		const role = roleSummary(1, "Software Engineer", "Belfast");
+		const jobRolesService = {
+			findAll: vi.fn().mockResolvedValue([role]),
+			findById: vi
+				.fn()
+				.mockResolvedValue(roleDetail(1, "Software Engineer", "Belfast")),
+		} as unknown as JobRolesService;
+		const aiService = { answer: vi.fn() } as unknown as AzureOpenAIService;
+		const service = new JobRoleChatService(jobRolesService, aiService);
+
+		const result = await service.answer("role");
+
+		expect(result.answer).toBe("Here is 1 role.");
+		expect(result.roles).toHaveLength(1);
+		expect(aiService.answer).not.toHaveBeenCalled();
+	});
+
+	it.each([
+		["band", "Available bands: Associate, Senior Engineer."],
+		["capabilities", "Available capabilities: Data & AI, Engineering."],
+		["location", "Available locations: Belfast, London."],
+		["statuses", "Available statuses: CLOSED, OPEN."],
+	])(
+		"lists available metadata locally for a generic %s prompt",
+		async (message, expectedAnswer) => {
+			const roles = [
+				{
+					...roleSummary(1, "Software Engineer", "Belfast"),
+					bandName: "Associate",
+					capabilityName: "Engineering",
+				},
+				{
+					...roleSummary(2, "Data Analyst", "London"),
+					bandName: "Senior Engineer",
+					capabilityName: "Data & AI",
+					statusName: "CLOSED",
+				},
+			];
+			const jobRolesService = {
+				findAll: vi.fn().mockResolvedValue(roles),
+				findById: vi.fn(),
+			} as unknown as JobRolesService;
+			const aiService = { answer: vi.fn() } as unknown as AzureOpenAIService;
+			const service = new JobRoleChatService(jobRolesService, aiService);
+
+			const result = await service.answer(message);
+
+			expect(result).toEqual({ answer: expectedAnswer, roles: [] });
+			expect(jobRolesService.findById).not.toHaveBeenCalled();
+			expect(aiService.answer).not.toHaveBeenCalled();
+		},
+	);
+
+	it.each([
+		"application",
+		"benefits",
+		"closing date",
+		"description",
+		"requirements",
+		"responsibilities",
+		"salary",
+	])("asks for a role when a detail topic is vague: %s", async (message) => {
+		const jobRolesService = {
+			findAll: vi
+				.fn()
+				.mockResolvedValue([roleSummary(1, "Software Engineer", "Belfast")]),
+			findById: vi.fn(),
+		} as unknown as JobRolesService;
+		const aiService = { answer: vi.fn() } as unknown as AzureOpenAIService;
+		const service = new JobRoleChatService(jobRolesService, aiService);
+
+		const result = await service.answer(message);
+
+		expect(result).toEqual({
+			answer: "Which role would you like to know about?",
+			roles: [],
+		});
+		expect(jobRolesService.findById).not.toHaveBeenCalled();
+		expect(aiService.answer).not.toHaveBeenCalled();
+	});
+
+	it.each(["open", "careers"])(
+		"handles a generic discovery term locally: %s",
+		async (message) => {
+			const role = roleSummary(1, "Software Engineer", "Belfast");
+			const jobRolesService = {
+				findAll: vi.fn().mockResolvedValue([role]),
+				findById: vi
+					.fn()
+					.mockResolvedValue(roleDetail(1, role.roleName, role.locationName)),
+			} as unknown as JobRolesService;
+			const aiService = { answer: vi.fn() } as unknown as AzureOpenAIService;
+			const service = new JobRoleChatService(jobRolesService, aiService);
+
+			const result = await service.answer(message);
+
+			expect(result.answer).toBe("Here is 1 role.");
+			expect(result.roles).toHaveLength(1);
+			expect(aiService.answer).not.toHaveBeenCalled();
+		},
+	);
+
 	it.each([
 		["What jobs are available in Norway?", "Norway"],
 		["Show me open jobs near Norway", null],
@@ -266,7 +369,7 @@ describe("JobRoleChatService", () => {
 		expect(aiService.answer).not.toHaveBeenCalled();
 	});
 
-	it("uses Azure for detailed questions about multiple roles", async () => {
+	it("uses Azure for detailed questions about a named role", async () => {
 		const role = roleSummary(1, "Software Engineer", "Belfast");
 		const jobRolesService = {
 			findAll: vi.fn().mockResolvedValue([role]),
@@ -281,7 +384,9 @@ describe("JobRoleChatService", () => {
 		} as unknown as AzureOpenAIService;
 		const service = new JobRoleChatService(jobRolesService, aiService);
 
-		await service.answer("What responsibilities do these roles have?");
+		await service.answer(
+			"What responsibilities does the Software Engineer role have?",
+		);
 
 		expect(aiService.answer).toHaveBeenCalledOnce();
 	});
