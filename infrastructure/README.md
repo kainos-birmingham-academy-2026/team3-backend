@@ -84,7 +84,8 @@ The `dev` root manages:
 	identity.
 
 The Container App pulls `team3-backend:<commit-sha>` from the shared ACR. It
-reads Terraform-managed `database-url` and `jwt-secret` values from Key Vault.
+reads Terraform-managed `database-url` and `jwt-secret` values, plus the
+externally populated `service-bus-connection-string`, from Key Vault.
 The backend is not exposed through public ingress. The backend root also owns
 the frontend's `session-secret`, keeping application secret ownership in one
 state.
@@ -116,8 +117,9 @@ Terraform run. These recovery settings apply only to test.
 The `prod` root currently defines the resource group, Key Vault, backend
 identity, Container Apps Environment, RBAC, and backend Container App. It does
 not define PostgreSQL, application secrets, monitoring, or a CI/CD deployment
-job. The Container App expects `database-url` and `jwt-secret` to exist, so this
-root is not yet an end-to-end production deployment.
+job. The Container App expects `database-url`, `jwt-secret`, and
+`service-bus-connection-string` to exist, so this root is not yet an end-to-end
+production deployment.
 
 Before deploying production, add the missing database and secret ownership,
 grant production-scoped permissions, and introduce a protected workflow with

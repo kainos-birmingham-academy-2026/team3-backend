@@ -37,6 +37,11 @@ Then set these values in `.env`:
 - `JWT_SECRET` for signing login tokens
 - `ENABLE_SWAGGER_DOCS` to `true` when you want to expose the Swagger routes
 
+Azure deployments can additionally set:
+
+- `AZURE_SERVICE_BUS_CONNECTION_STRING` to enable notification events
+- `AZURE_SERVICE_BUS_TOPIC` for the notification topic (defaults to `notifications`)
+
 Generate a strong JWT secret in your terminal:
 
 ```bash
@@ -50,6 +55,11 @@ DATABASE_URL="postgresql://YOUR_USER:password@localhost:5432/jobRoles?schema=pub
 JWT_SECRET="replace-with-a-strong-local-secret"
 ENABLE_SWAGGER_DOCS=false
 ```
+
+When the Service Bus connection string is omitted, notification publishing is
+skipped. Local registration therefore works without Azure credentials. Azure
+receives the connection string from Key Vault through the Terraform-managed
+Container App configuration. Do not commit a real connection string.
 
 ### 3. Ensure Docker is running and start Postgres
 
@@ -445,6 +455,8 @@ Role behaviour:
 
 - New registrations default to role `USER`
 - Passwords are salted and hashed with Argon2id before storage
+- After the user is created, the backend publishes an `AccountCreated` event to
+  Azure Service Bus with the user's email address when Service Bus is configured
 
 
 ### `POST /api/job-roles`

@@ -75,15 +75,16 @@ resource "azurerm_role_assignment" "acr_pull" {
 module "backend_container_app" {
   source = "../../modules/container-app"
 
-  name                         = "ca-${var.project_name}-backend-${var.environment}"
-  container_app_environment_id = module.container_app_environment.id
-  resource_group_name          = module.resource_group.name
-  managed_identity_id          = module.managed_identity.id
-  registry_server              = data.azurerm_container_registry.shared.login_server
-  image                        = "${data.azurerm_container_registry.shared.login_server}/team3-backend:${var.backend_image_tag}"
-  database_url_secret_id       = "${module.key_vault.vault_uri}secrets/database-url"
-  jwt_secret_id                = "${module.key_vault.vault_uri}secrets/jwt-secret"
-  enable_swagger_docs          = var.enable_swagger_docs
+  name                                    = "ca-${var.project_name}-backend-${var.environment}"
+  container_app_environment_id            = module.container_app_environment.id
+  resource_group_name                     = module.resource_group.name
+  managed_identity_id                     = module.managed_identity.id
+  registry_server                         = data.azurerm_container_registry.shared.login_server
+  image                                   = "${data.azurerm_container_registry.shared.login_server}/team3-backend:${var.backend_image_tag}"
+  database_url_secret_id                  = "${module.key_vault.vault_uri}secrets/database-url"
+  jwt_secret_id                           = "${module.key_vault.vault_uri}secrets/jwt-secret"
+  service_bus_connection_string_secret_id = "${module.key_vault.vault_uri}secrets/service-bus-connection-string"
+  enable_swagger_docs                     = var.enable_swagger_docs
   tags = {
     environment = var.environment
     managed_by  = "terraform"
