@@ -41,6 +41,21 @@ const ROLE_DETAIL_TERMS = new Set([
 	"responsibility",
 	"salary",
 ]);
+const DISCOVERY_NOISE_TERMS = new Set([
+	"all",
+	"any",
+	"available",
+	"based",
+	"currently",
+	"find",
+	"located",
+	"near",
+	"now",
+	"please",
+	"right",
+	"show",
+	"us",
+]);
 const STOP_WORDS = new Set([
 	"a",
 	"about",
@@ -59,6 +74,7 @@ const STOP_WORDS = new Set([
 	"me",
 	"of",
 	"on",
+	"or",
 	"role",
 	"roles",
 	"the",
@@ -180,55 +196,43 @@ export class JobRoleChatService {
 		roles: JobRoleResponse[],
 	): JobRoleResponse[] {
 		const normalizedMessage = message.toLowerCase();
-		const discoveryFilterTerms = this.isRoleDiscoveryQuestion(message)
-			? (normalizedMessage
-					.match(/\bin\s+(.+)$/)?.[1]
-					.split(/[^a-z0-9]+/)
-					.filter((term) => term.length > 1 && !STOP_WORDS.has(term)) ?? [])
-			: [];
-		const candidateRoles = discoveryFilterTerms.length
-			? roles.filter((role) => {
-					const searchableFields = [
-						role.roleName,
-						role.capabilityName,
-						role.bandName,
-						role.locationName,
-						role.statusName,
-					]
-						.join(" ")
-						.toLowerCase();
-					return discoveryFilterTerms.every((term) =>
-						searchableFields.includes(term),
-					);
-				})
-			: roles;
-		if (discoveryFilterTerms.length > 0 && candidateRoles.length === 0) {
-			return [];
-		}
-
 		const terms = normalizedMessage
 			.split(/[^a-z0-9]+/)
 			.filter((term) => term.length > 1 && !STOP_WORDS.has(term));
-		const scoredRoles = candidateRoles
-			.map((role) => {
-				const searchableFields = [
-					role.roleName,
-					role.capabilityName,
-					role.bandName,
-					role.locationName,
-					role.statusName,
-				]
-					.join(" ")
-					.toLowerCase();
-				const score = terms.filter((term) =>
+		const searchableRoles = roles.map((role) => ({
+			role,
+			searchableFields: [
+				role.roleName,
+				role.capabilityName,
+				role.bandName,
+				role.locationName,
+				role.statusName,
+			]
+				.join(" ")
+				.toLowerCase(),
+		}));
+		const unmatchedTerms = terms.filter(
+			(term) =>
+				!DISCOVERY_NOISE_TERMS.has(term) &&
+				!searchableRoles.some(({ searchableFields }) =>
 					searchableFields.includes(term),
+				),
+		);
+		if (this.isRoleDiscoveryQuestion(message) && unmatchedTerms.length > 0) {
+			return [];
+		}
+
+		const scoredRoles = searchableRoles
+			.map((role) => {
+				const score = terms.filter((term) =>
+					role.searchableFields.includes(term),
 				).length;
 				const exactRoleBonus = normalizedMessage.includes(
-					role.roleName.toLowerCase(),
+					role.role.roleName.toLowerCase(),
 				)
 					? 10
 					: 0;
-				return { role, score: score + exactRoleBonus };
+				return { role: role.role, score: score + exactRoleBonus };
 			})
 			.sort((left, right) => right.score - left.score);
 		const relevantRoles = scoredRoles.filter(({ score }) => score > 0);
