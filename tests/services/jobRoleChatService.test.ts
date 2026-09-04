@@ -145,11 +145,13 @@ describe("JobRoleChatService", () => {
 
 	it("returns no roles when a requested location has no matches", async () => {
 		const jobRolesService = {
-			findAll: vi.fn().mockResolvedValue([
-				roleSummary(1, "Senior Software Engineer", "Glasgow"),
-				roleSummary(2, "Associate Software Engineer", "London"),
-				roleSummary(3, "Trainee Software Engineer", "Belfast"),
-			]),
+			findAll: vi
+				.fn()
+				.mockResolvedValue([
+					roleSummary(1, "Senior Software Engineer", "Glasgow"),
+					roleSummary(2, "Associate Software Engineer", "London"),
+					roleSummary(3, "Trainee Software Engineer", "Belfast"),
+				]),
 			findById: vi.fn(),
 		} as unknown as JobRolesService;
 		const aiService = { answer: vi.fn() } as unknown as AzureOpenAIService;
