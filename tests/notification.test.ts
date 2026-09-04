@@ -7,7 +7,7 @@ test("publishes notification", async () => {
     "AccountCreated",
     "mhadi071004@gmail.com",
     {
-      name: "Mohammed"
+      name: "Mhadi"
     }
   );
 });
