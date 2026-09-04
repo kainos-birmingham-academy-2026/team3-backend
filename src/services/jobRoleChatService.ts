@@ -181,10 +181,10 @@ export class JobRoleChatService {
 	): JobRoleResponse[] {
 		const normalizedMessage = message.toLowerCase();
 		const discoveryFilterTerms = this.isRoleDiscoveryQuestion(message)
-			? normalizedMessage
+			? (normalizedMessage
 					.match(/\bin\s+(.+)$/)?.[1]
 					.split(/[^a-z0-9]+/)
-					.filter((term) => term.length > 1 && !STOP_WORDS.has(term)) ?? []
+					.filter((term) => term.length > 1 && !STOP_WORDS.has(term)) ?? [])
 			: [];
 		const candidateRoles = discoveryFilterTerms.length
 			? roles.filter((role) => {
