@@ -15,7 +15,7 @@ resource "azurerm_container_registry_task" "image_cleanup" {
       steps:
         - cmd: >-
             acr purge
-          --filter 'team3-backend:^dev-[0-9a-f]{40}$'
+            --filter 'team3-backend:^dev-[0-9a-f]{40}$'
             --filter 'team3-frontend:^dev-[0-9a-f]{40}$'
             --ago 2d
             --keep 1
