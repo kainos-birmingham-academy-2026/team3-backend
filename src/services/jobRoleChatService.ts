@@ -31,6 +31,16 @@ const JOB_ROLE_TERMS = new Set([
 	"vacancies",
 	"vacancy",
 ]);
+const ROLE_DETAIL_TERMS = new Set([
+	"apply",
+	"benefits",
+	"describe",
+	"description",
+	"requirements",
+	"responsibilities",
+	"responsibility",
+	"salary",
+]);
 const STOP_WORDS = new Set([
 	"a",
 	"about",
@@ -89,10 +99,12 @@ export class JobRoleChatService {
 				this.jobRolesService.findById(role.jobRoleId),
 			),
 		);
-		const answer = await this.aiService.answer(
-			this.buildSystemPrompt(detailedRoles),
-			message,
-		);
+		const answer = this.isRoleDiscoveryQuestion(message)
+			? this.buildDiscoveryAnswer(detailedRoles.length)
+			: await this.aiService.answer(
+					this.buildSystemPrompt(detailedRoles),
+					message,
+				);
 
 		return {
 			answer:
@@ -116,6 +128,21 @@ export class JobRoleChatService {
 				}),
 			),
 		};
+	}
+
+	private isRoleDiscoveryQuestion(message: string): boolean {
+		const terms = message.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+		if (terms.some((term) => ROLE_DETAIL_TERMS.has(term))) {
+			return false;
+		}
+
+		return terms.some((term) =>
+			["jobs", "positions", "roles", "vacancies"].includes(term),
+		);
+	}
+
+	private buildDiscoveryAnswer(roleCount: number): string {
+		return `I found ${roleCount} matching ${roleCount === 1 ? "role" : "roles"}.`;
 	}
 
 	private isJobRoleQuestion(
@@ -184,6 +211,7 @@ export class JobRoleChatService {
 			"If the JSON does not answer the question, say that the current job role information does not include it.",
 			"Keep the answer to one or two short sentences.",
 			"Do not make a list or repeat location, status, vacancies, or closing dates because the interface displays those facts separately.",
+			"Do not add follow-up guidance asking the applicant to choose a role.",
 			`Job roles: ${JSON.stringify(roles)}`,
 		].join("\n");
 	}
