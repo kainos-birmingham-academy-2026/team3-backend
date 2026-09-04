@@ -85,4 +85,42 @@ describe("JobRoleChatService", () => {
 			roleName: "Delivery Manager",
 		});
 	});
+
+	it("rejects unrelated questions without calling Azure", async () => {
+		const jobRolesService = {
+			findAll: vi
+				.fn()
+				.mockResolvedValue([roleSummary(1, "Software Engineer", "Belfast")]),
+			findById: vi.fn(),
+		} as unknown as JobRolesService;
+		const aiService = { answer: vi.fn() } as unknown as AzureOpenAIService;
+		const service = new JobRoleChatService(jobRolesService, aiService);
+
+		const result = await service.answer("What is the weather today?");
+
+		expect(result).toEqual({
+			answer: "I can only help with questions about the available job roles.",
+			roles: [],
+		});
+		expect(jobRolesService.findById).not.toHaveBeenCalled();
+		expect(aiService.answer).not.toHaveBeenCalled();
+	});
+
+	it("allows broad job role questions", async () => {
+		const role = roleSummary(1, "Software Engineer", "Belfast");
+		const jobRolesService = {
+			findAll: vi.fn().mockResolvedValue([role]),
+			findById: vi
+				.fn()
+				.mockResolvedValue(roleDetail(1, "Software Engineer", "Belfast")),
+		} as unknown as JobRolesService;
+		const aiService = {
+			answer: vi.fn().mockResolvedValue("The Software Engineer role is open."),
+		} as unknown as AzureOpenAIService;
+		const service = new JobRoleChatService(jobRolesService, aiService);
+
+		await service.answer("What jobs are open?");
+
+		expect(aiService.answer).toHaveBeenCalledOnce();
+	});
 });
