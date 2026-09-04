@@ -3,6 +3,7 @@ import { JobApplicationAdminService } from "../../src/services/jobApplicationAdm
 
 const {
 	mockFindMany,
+	mockCount,
 	mockFindFirst,
 	mockFindUnique,
 	mockUpdate,
@@ -11,6 +12,7 @@ const {
 } = vi.hoisted(() => {
 	return {
 		mockFindMany: vi.fn(),
+		mockCount: vi.fn(),
 		mockFindFirst: vi.fn(),
 		mockFindUnique: vi.fn(),
 		mockUpdate: vi.fn(),
@@ -35,6 +37,7 @@ vi.mock("../../src/prismaClient.ts", () => {
 		default: {
 			application: {
 				findMany: mockFindMany,
+				count: mockCount,
 				findFirst: mockFindFirst,
 				findUnique: mockFindUnique,
 				update: mockUpdate,
@@ -73,7 +76,7 @@ describe("jobApplicationAdminService", () => {
 		service = new JobApplicationAdminService();
 	});
 
-	it("should return an array", async () => {
+	it("should return a paginated application response", async () => {
 		mockFindMany.mockResolvedValueOnce([
 			{
 				applicationId: 1,
@@ -90,28 +93,40 @@ describe("jobApplicationAdminService", () => {
 				},
 			},
 		]);
+		mockCount.mockResolvedValueOnce(11);
 
-		const result = await service.findAllAdmin(1);
+		const result = await service.findAllAdmin({
+			jobRoleId: 1,
+			page: 2,
+			pageSize: 10,
+		});
 
-		expect(Array.isArray(result)).toBe(true);
-		expect(result).toEqual([
-			{
-				applicationId: 1,
-				jobRoleId: 1,
-				applicantEmail: "candidate@example.com",
-				roleName: "Software Engineer",
-				applicationDate: new Date("2026-08-12T10:00:00.000Z"),
-				cvText: "cv-1.pdf",
-				status: "IN_PROGRESS",
-				actions: {
-					canHire: true,
-					canReject: true,
+		expect(result).toEqual({
+			items: [
+				{
+					applicationId: 1,
+					jobRoleId: 1,
+					applicantEmail: "candidate@example.com",
+					roleName: "Software Engineer",
+					applicationDate: new Date("2026-08-12T10:00:00.000Z"),
+					cvText: "cv-1.pdf",
+					status: "IN_PROGRESS",
+					actions: {
+						canHire: true,
+						canReject: true,
+					},
 				},
-			},
-		]);
+			],
+			page: 2,
+			pageSize: 10,
+			totalItems: 11,
+			totalPages: 2,
+		});
 		expect(mockFindMany).toHaveBeenCalledWith({
 			where: { jobRoleId: 1 },
 			orderBy: { createdAt: "desc" },
+			skip: 10,
+			take: 10,
 			select: {
 				applicationId: true,
 				jobRoleId: true,
@@ -131,6 +146,7 @@ describe("jobApplicationAdminService", () => {
 				},
 			},
 		});
+		expect(mockCount).toHaveBeenCalledWith({ where: { jobRoleId: 1 } });
 	});
 
 	it("should omit actions for non IN_PROGRESS statuses", async () => {
@@ -150,19 +166,26 @@ describe("jobApplicationAdminService", () => {
 				},
 			},
 		]);
+		mockCount.mockResolvedValueOnce(1);
 
-		const result = await service.findAllAdmin(1);
+		const result = await service.findAllAdmin({
+			jobRoleId: 1,
+			page: 1,
+			pageSize: 10,
+		});
 
-		expect(result[0]?.actions).toBeUndefined();
+		expect(result.items[0]?.actions).toBeUndefined();
 	});
 
 	it("should omit the job role filter when none is supplied", async () => {
 		mockFindMany.mockResolvedValueOnce([]);
+		mockCount.mockResolvedValueOnce(0);
 
-		await service.findAllAdmin();
+		await service.findAllAdmin({ page: 1, pageSize: 10 });
 
 		const [query] = mockFindMany.mock.calls[0] ?? [];
 		expect(query).not.toHaveProperty("where");
+		expect(mockCount).toHaveBeenCalledWith(undefined);
 	});
 
 	it("should map HIRED status to hire flow", async () => {

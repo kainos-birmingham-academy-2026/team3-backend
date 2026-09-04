@@ -66,27 +66,72 @@ describe("Admin hire API behaviour", () => {
 		vi.spyOn(
 			JobApplicationAdminService.prototype,
 			"findAllAdmin",
-		).mockResolvedValueOnce(applications as never);
+		).mockResolvedValueOnce({
+			items: applications,
+			page: 1,
+			pageSize: 10,
+			totalItems: 1,
+			totalPages: 1,
+		} as never);
 
 		const response = await request(app)
 			.get("/api/job-applications/admin")
 			.set("Authorization", `Bearer ${adminToken()}`);
 
 		expect(response.status).toBe(200);
-		expect(response.body).toEqual(applications);
+		expect(response.body).toEqual({
+			items: applications,
+			page: 1,
+			pageSize: 10,
+			totalItems: 1,
+			totalPages: 1,
+		});
 	});
 
 	it("filters applications by a valid job role query", async () => {
 		const findAllAdmin = vi
 			.spyOn(JobApplicationAdminService.prototype, "findAllAdmin")
-			.mockResolvedValueOnce([]);
+			.mockResolvedValueOnce({
+				items: [],
+				page: 1,
+				pageSize: 10,
+				totalItems: 0,
+				totalPages: 0,
+			});
 
 		const response = await request(app)
 			.get("/api/job-applications/admin?jobRoleId=3")
 			.set("Authorization", `Bearer ${adminToken()}`);
 
 		expect(response.status).toBe(200);
-		expect(findAllAdmin).toHaveBeenCalledWith(3);
+		expect(findAllAdmin).toHaveBeenCalledWith({
+			jobRoleId: 3,
+			page: 1,
+			pageSize: 10,
+		});
+	});
+
+	it("passes valid pagination values to the service", async () => {
+		const findAllAdmin = vi
+			.spyOn(JobApplicationAdminService.prototype, "findAllAdmin")
+			.mockResolvedValueOnce({
+				items: [],
+				page: 2,
+				pageSize: 5,
+				totalItems: 0,
+				totalPages: 0,
+			});
+
+		const response = await request(app)
+			.get("/api/job-applications/admin?page=2&pageSize=5")
+			.set("Authorization", `Bearer ${adminToken()}`);
+
+		expect(response.status).toBe(200);
+		expect(findAllAdmin).toHaveBeenCalledWith({
+			jobRoleId: undefined,
+			page: 2,
+			pageSize: 5,
+		});
 	});
 
 	it("rejects an invalid job role query", async () => {
@@ -101,9 +146,7 @@ describe("Admin hire API behaviour", () => {
 
 		expect(response.status).toBe(400);
 		expect(response.body.errors).toEqual(
-			expect.arrayContaining([
-				expect.objectContaining({ field: "jobRoleId" }),
-			]),
+			expect.arrayContaining([expect.objectContaining({ field: "jobRoleId" })]),
 		);
 		expect(findAllAdmin).not.toHaveBeenCalled();
 	});
@@ -158,9 +201,7 @@ describe("Admin hire API behaviour", () => {
 
 		expect(response.status).toBe(400);
 		expect(response.body.errors).toEqual(
-			expect.arrayContaining([
-				expect.objectContaining({ field: "status" }),
-			]),
+			expect.arrayContaining([expect.objectContaining({ field: "status" })]),
 		);
 		expect(updateStatus).not.toHaveBeenCalled();
 	});
@@ -178,9 +219,7 @@ describe("Admin hire API behaviour", () => {
 
 		expect(response.status).toBe(400);
 		expect(response.body.errors).toEqual(
-			expect.arrayContaining([
-				expect.objectContaining({ field: "status" }),
-			]),
+			expect.arrayContaining([expect.objectContaining({ field: "status" })]),
 		);
 		expect(updateStatus).not.toHaveBeenCalled();
 	});

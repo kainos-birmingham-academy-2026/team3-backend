@@ -6,7 +6,13 @@ import type { JobApplicationAdminService } from "../../src/services/jobApplicati
 
 const createMockResponse = () => {
 	const res = {
-		locals: { validatedQuery: {} },
+		locals: {
+			validatedQuery: {
+				jobRoleId: undefined as number | undefined,
+				page: 1,
+				pageSize: 10,
+			},
+		},
 		status: vi.fn(),
 		send: vi.fn(),
 		json: vi.fn(),
@@ -39,30 +45,46 @@ describe("jobApplicationAdminController", () => {
 			const req = { params: {} };
 			const res = createMockResponse();
 
-			vi.mocked(mockService.findAllAdmin).mockResolvedValue([
-				{
-					applicationId: 1,
-					jobRoleId: 1,
-					applicantEmail: "candidate@example.com",
-					status: "IN_PROGRESS",
-				},
-			]);
+			vi.mocked(mockService.findAllAdmin).mockResolvedValue({
+				items: [
+					{
+						applicationId: 1,
+						jobRoleId: 1,
+						applicantEmail: "candidate@example.com",
+						status: "IN_PROGRESS",
+					},
+				],
+				page: 1,
+				pageSize: 10,
+				totalItems: 1,
+				totalPages: 1,
+			});
 
 			await controller.getAllAdmin(
 				req as unknown as Request,
 				res as unknown as Response,
 			);
 
-			expect(mockService.findAllAdmin).toHaveBeenCalledWith(undefined);
+			expect(mockService.findAllAdmin).toHaveBeenCalledWith({
+				jobRoleId: undefined,
+				page: 1,
+				pageSize: 10,
+			});
 			expect(res.status).toHaveBeenCalledWith(200);
-			expect(res.json).toHaveBeenCalledWith([
-				{
-					applicationId: 1,
-					jobRoleId: 1,
-					applicantEmail: "candidate@example.com",
-					status: "IN_PROGRESS",
-				},
-			]);
+			expect(res.json).toHaveBeenCalledWith({
+				items: [
+					{
+						applicationId: 1,
+						jobRoleId: 1,
+						applicantEmail: "candidate@example.com",
+						status: "IN_PROGRESS",
+					},
+				],
+				page: 1,
+				pageSize: 10,
+				totalItems: 1,
+				totalPages: 1,
+			});
 		});
 
 		it("should return 500 when getAllAdmin throws", async () => {
@@ -77,42 +99,44 @@ describe("jobApplicationAdminController", () => {
 			);
 
 			expect(res.status).toHaveBeenCalledWith(500);
-			expect(res.json).toHaveBeenCalledWith({ message: "Internal server error" });
+			expect(res.json).toHaveBeenCalledWith({
+				message: "Internal server error",
+			});
 		});
 
 		it("should return 200 with applications filtered by job role", async () => {
 			const req = {};
 			const res = createMockResponse();
-			res.locals.validatedQuery = { jobRoleId: 1 };
+			res.locals.validatedQuery = { jobRoleId: 1, page: 2, pageSize: 5 };
 
-			vi.mocked(mockService.findAllAdmin).mockResolvedValue([
-				{
-					applicationId: 1,
-					jobRoleId: 1,
-					applicantEmail: "candidate@example.com",
-					status: "IN_PROGRESS",
-					actions: { canHire: true, canReject: true },
-				},
-			]);
+			vi.mocked(mockService.findAllAdmin).mockResolvedValue({
+				items: [
+					{
+						applicationId: 1,
+						jobRoleId: 1,
+						applicantEmail: "candidate@example.com",
+						status: "IN_PROGRESS",
+						actions: { canHire: true, canReject: true },
+					},
+				],
+				page: 2,
+				pageSize: 5,
+				totalItems: 6,
+				totalPages: 2,
+			});
 
 			await controller.getAllAdmin(
 				req as unknown as Request,
 				res as unknown as Response,
 			);
 
-			expect(mockService.findAllAdmin).toHaveBeenCalledWith(1);
+			expect(mockService.findAllAdmin).toHaveBeenCalledWith({
+				jobRoleId: 1,
+				page: 2,
+				pageSize: 5,
+			});
 			expect(res.status).toHaveBeenCalledWith(200);
-			expect(res.json).toHaveBeenCalledWith([
-				{
-					applicationId: 1,
-					jobRoleId: 1,
-					applicantEmail: "candidate@example.com",
-					status: "IN_PROGRESS",
-					actions: { canHire: true, canReject: true },
-				},
-			]);
 		});
-
 	});
 
 	describe("updateStatus", () => {
@@ -143,6 +167,5 @@ describe("jobApplicationAdminController", () => {
 			);
 			expect(res.status).toHaveBeenCalledWith(200);
 		});
-
 	});
 });

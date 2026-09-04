@@ -9,9 +9,9 @@ import { ConflictError } from "../errors/conflictError.js";
 import { JobRoleMapper } from "../mappers/jobRoleMapper.js";
 import type { BandResponse } from "../models/bandResponse.js";
 import type { CapabilityResponse } from "../models/capabilityResponse.js";
-import type { JobRoleDetailedResponse } from "../models/jobRoleDetailedResponse.js";
 import type { JobRoleApplication } from "../models/jobRoleApplication.js";
 import { JobRoleDao } from "../models/jobRoleDao.js";
+import type { JobRoleDetailedResponse } from "../models/jobRoleDetailedResponse.js";
 import type { JobRoleResponse } from "../models/jobRoleResponse.js";
 import type { LocationResponse } from "../models/locationResponse.js";
 import type { StatusResponse } from "../models/statusResponse.js";
@@ -25,11 +25,26 @@ export class JobRolesService {
 		this.jobRoleMapper = new JobRoleMapper();
 	}
 
-	async findAll(filters: JobRoleFiltersDto = {}): Promise<JobRoleResponse[]> {
-		const jobRoles = await this.jobRoleDao.findAll(filters);
-		return jobRoles.map((jobRole) =>
-			this.jobRoleMapper.jobRoleToResponse(jobRole),
-		);
+	async findAll(
+		filters: JobRoleFiltersDto = { page: 1, pageSize: 10 },
+	): Promise<{
+		items: JobRoleResponse[];
+		page: number;
+		pageSize: number;
+		totalItems: number;
+		totalPages: number;
+	}> {
+		const { items, totalItems } = await this.jobRoleDao.findAll(filters);
+
+		return {
+			items: items.map((jobRole) =>
+				this.jobRoleMapper.jobRoleToResponse(jobRole),
+			),
+			page: filters.page,
+			pageSize: filters.pageSize,
+			totalItems,
+			totalPages: Math.ceil(totalItems / filters.pageSize),
+		};
 	}
 
 	async findById(jobRoleId: number): Promise<JobRoleDetailedResponse> {

@@ -47,7 +47,12 @@ function toApplicationDomain(
 }
 
 export class JobRoleDao {
-	async findAll(filters: JobRoleFiltersDto = {}): Promise<JobRole[]> {
+	async findAll(
+		filters: JobRoleFiltersDto = { page: 1, pageSize: 10 },
+	): Promise<{
+		items: JobRole[];
+		totalItems: number;
+	}> {
 		const closingDateFrom = filters.closingDateFrom
 			? new Date(`${filters.closingDateFrom}T00:00:00.000Z`)
 			: undefined;
@@ -57,30 +62,38 @@ export class JobRoleDao {
 		const dayAfterClosingDateTo = closingDateTo
 			? new Date(closingDateTo.getTime() + 24 * 60 * 60 * 1000)
 			: undefined;
-		const rows = await prisma.jobRole.findMany({
-			where: {
-				roleName: filters.roleName
-					? { contains: filters.roleName, mode: "insensitive" }
+		const where = {
+			roleName: filters.roleName
+				? { contains: filters.roleName, mode: "insensitive" }
+				: undefined,
+			locationId: filters.locationId ? { in: filters.locationId } : undefined,
+			capabilityId: filters.capabilityId
+				? { in: filters.capabilityId }
+				: undefined,
+			bandId: filters.bandId ? { in: filters.bandId } : undefined,
+			closingDate:
+				closingDateFrom || dayAfterClosingDateTo
+					? { gte: closingDateFrom, lt: dayAfterClosingDateTo }
 					: undefined,
-				locationId: filters.locationId ? { in: filters.locationId } : undefined,
-				capabilityId: filters.capabilityId
-					? { in: filters.capabilityId }
-					: undefined,
-				bandId: filters.bandId ? { in: filters.bandId } : undefined,
-				closingDate:
-					closingDateFrom || dayAfterClosingDateTo
-						? { gte: closingDateFrom, lt: dayAfterClosingDateTo }
-						: undefined,
-			},
-			relationLoadStrategy: "join",
-			include: {
-				status: true,
-				capability: true,
-				band: true,
-				location: true,
-			},
-		});
-		return rows.map(toJobRoleDomain);
+		} satisfies Prisma.JobRoleWhereInput;
+		const [rows, totalItems] = await Promise.all([
+			prisma.jobRole.findMany({
+				where,
+				orderBy: { jobRoleId: "asc" },
+				skip: (filters.page - 1) * filters.pageSize,
+				take: filters.pageSize,
+				relationLoadStrategy: "join",
+				include: {
+					status: true,
+					capability: true,
+					band: true,
+					location: true,
+				},
+			}),
+			prisma.jobRole.count({ where }),
+		]);
+
+		return { items: rows.map(toJobRoleDomain), totalItems };
 	}
 
 	async findById(jobRoleId: number): Promise<JobRole | null> {
