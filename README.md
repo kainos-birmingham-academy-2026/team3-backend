@@ -67,7 +67,7 @@ these settings:
 - Account: `aoai-team3-chatbot-dev` in UK South, Standard S0
 - Deployment: `team3-chatbot-gpt5-nano`
 - Model: `gpt-5-nano`, version `2025-08-07`
-- SKU and capacity: Global Standard, 5K TPM
+- SKU and capacity: Global Standard, 10K TPM
 
 Terraform fails while reading the account if that prerequisite is absent. It
 manages the backend identity's OpenAI role assignment and injects the endpoint,
