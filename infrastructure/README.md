@@ -133,8 +133,6 @@ Before deploying dev or test:
 - Create the remote-state resource group, storage account, and blob container.
 - Set `POSTGRESQL_ADMINISTRATOR_PASSWORD` for dev. Test generates its own
 	PostgreSQL administrator password.
-- Add `service-bus-connection-string` to the environment's Key Vault through
-	the Azure portal or an approved secret-management process.
 - Configure the GitHub Actions secrets listed below.
 
 ## GitHub configuration
