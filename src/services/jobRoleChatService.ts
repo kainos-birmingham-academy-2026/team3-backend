@@ -4,6 +4,13 @@ import type { AzureOpenAIService } from "./azureOpenAIService.js";
 import type { JobRolesService } from "./jobRolesService.js";
 
 const MAX_MATCHED_ROLES = 3;
+const ROLE_FILTER_FIELDS = [
+	"roleName",
+	"capabilityName",
+	"bandName",
+	"locationName",
+	"statusName",
+] as const;
 const OUT_OF_SCOPE_ANSWER =
 	"I can only help with questions about the available job roles.";
 const JOB_ROLE_TERMS = new Set([
@@ -79,6 +86,7 @@ const STOP_WORDS = new Set([
 	"roles",
 	"the",
 	"there",
+	"these",
 	"to",
 	"what",
 	"which",
@@ -110,6 +118,9 @@ export class JobRoleChatService {
 		}
 
 		const matchedRoles = this.selectRoles(message, roles);
+		if (matchedRoles.length === 0) {
+			return { answer: this.buildDiscoveryAnswer(0, message), roles: [] };
+		}
 		const detailedRoles = await Promise.all(
 			matchedRoles.map((role) => this.jobRolesService.findById(role.jobRoleId)),
 		);
@@ -201,31 +212,44 @@ export class JobRoleChatService {
 			.filter((term) => term.length > 1 && !STOP_WORDS.has(term));
 		const searchableRoles = roles.map((role) => ({
 			role,
-			searchableFields: [
-				role.roleName,
-				role.capabilityName,
-				role.bandName,
-				role.locationName,
-				role.statusName,
-			]
-				.join(" ")
-				.toLowerCase(),
+			fields: Object.fromEntries(
+				ROLE_FILTER_FIELDS.map((field) => [field, role[field].toLowerCase()]),
+			) as Record<(typeof ROLE_FILTER_FIELDS)[number], string>,
 		}));
+		const categoryFilters = ROLE_FILTER_FIELDS.map((field) => ({
+			field,
+			terms: terms.filter((term) =>
+				searchableRoles.some(({ fields }) => fields[field].includes(term)),
+			),
+		})).filter(({ terms: categoryTerms }) => categoryTerms.length > 0);
+		const recognizedTerms = new Set(
+			categoryFilters.flatMap(({ terms: categoryTerms }) => categoryTerms),
+		);
 		const unmatchedTerms = terms.filter(
 			(term) =>
 				!DISCOVERY_NOISE_TERMS.has(term) &&
-				!searchableRoles.some(({ searchableFields }) =>
-					searchableFields.includes(term),
-				),
+				!ROLE_DETAIL_TERMS.has(term) &&
+				!recognizedTerms.has(term),
 		);
-		if (this.isRoleDiscoveryQuestion(message) && unmatchedTerms.length > 0) {
+		const hasIdentifyingFilter = categoryFilters.some(
+			({ field }) => field !== "statusName",
+		);
+		if (
+			unmatchedTerms.length > 0 &&
+			(this.isRoleDiscoveryQuestion(message) || !hasIdentifyingFilter)
+		) {
 			return [];
 		}
 
-		const scoredRoles = searchableRoles
+		const matchingRoles = searchableRoles.filter(({ fields }) =>
+			categoryFilters.every(({ field, terms: categoryTerms }) =>
+				categoryTerms.some((term) => fields[field].includes(term)),
+			),
+		);
+		const scoredRoles = matchingRoles
 			.map((role) => {
-				const score = terms.filter((term) =>
-					role.searchableFields.includes(term),
+				const score = categoryFilters.filter(({ field, terms: categoryTerms }) =>
+					categoryTerms.some((term) => role.fields[field].includes(term)),
 				).length;
 				const exactRoleBonus = normalizedMessage.includes(
 					role.role.roleName.toLowerCase(),
@@ -235,9 +259,8 @@ export class JobRoleChatService {
 				return { role: role.role, score: score + exactRoleBonus };
 			})
 			.sort((left, right) => right.score - left.score);
-		const relevantRoles = scoredRoles.filter(({ score }) => score > 0);
 
-		return (relevantRoles.length > 0 ? relevantRoles : scoredRoles)
+		return scoredRoles
 			.slice(0, MAX_MATCHED_ROLES)
 			.map(({ role }) => role);
 	}
