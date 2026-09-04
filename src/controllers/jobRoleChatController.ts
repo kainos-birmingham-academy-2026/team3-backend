@@ -15,7 +15,10 @@ export class JobRoleChatController {
 				new AzureOpenAIService(),
 			);
 			res.status(200).json(await service.answer(message));
-		} catch {
+		} catch (error) {
+			if (process.env.NODE_ENV !== "production") {
+				console.error("Job role assistant request failed", error);
+			}
 			res.status(503).json({
 				message: "The job role assistant is unavailable. Please try again later.",
 			});
