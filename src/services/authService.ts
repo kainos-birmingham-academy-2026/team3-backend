@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import type { LoginRequestDto, RegisterRequestDto } from "../dtos/authDto.js";
 import { AuthError, LOGIN_ERROR } from "../errors/authError.js";
 import { ConflictError } from "../errors/conflictError.js";
+import { publishNotification } from "../notificationPublisher.js";
 import prisma from "../prismaClient.js";
 
 export class AuthService {
@@ -26,6 +27,8 @@ export class AuthService {
 				role: "USER",
 			},
 		});
+
+		await publishNotification("AccountCreated", input.email);
 	}
 
 	public async login(input: LoginRequestDto): Promise<string> {
