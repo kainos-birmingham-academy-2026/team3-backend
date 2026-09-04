@@ -32,6 +32,7 @@ export class AzureOpenAIService {
 			model: this.deployment,
 			instructions: systemPrompt,
 			input: question,
+			reasoning: { effort: "minimal" },
 			max_output_tokens: MAX_OUTPUT_TOKENS,
 			store: false,
 		});
