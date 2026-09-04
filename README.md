@@ -59,6 +59,24 @@ with an account assigned the `Cognitive Services OpenAI User` role. In Azure,
 the backend Container App uses its user-assigned managed identity. Do not add an
 Azure OpenAI API key to the environment.
 
+The development Azure OpenAI account and model deployment are intentionally
+academy-managed prerequisites rather than resources owned by this Terraform
+state. Before planning or deploying dev, they must exist in `rg-team3-dev` with
+these settings:
+
+- Account: `aoai-team3-chatbot-dev` in UK South, Standard S0
+- Deployment: `team3-chatbot-gpt5-nano`
+- Model: `gpt-5-nano`, version `2025-08-07`
+- SKU and capacity: Global Standard, 5K TPM
+
+Terraform fails while reading the account if that prerequisite is absent. It
+manages the backend identity's OpenAI role assignment and injects the endpoint,
+deployment name, API version, and managed identity client ID. Model deployment
+and quota changes remain owned by the academy Azure administrators.
+
+The deployed backend has private Container App ingress. Public chatbot traffic
+must pass through the frontend, where the per-IP request limit is enforced.
+
 ### 3. Ensure Docker is running and start Postgres
 
 Make sure Docker is running, then start the local Postgres container:

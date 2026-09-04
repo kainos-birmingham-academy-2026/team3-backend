@@ -126,6 +126,8 @@ data "azurerm_container_registry" "shared" {
   resource_group_name = var.acr_resource_group_name
 }
 
+# The academy-managed Azure OpenAI account and deployment are external prerequisites.
+# Terraform validates the account and manages this application's access to it.
 data "azurerm_cognitive_account" "openai" {
   name                = "aoai-team3-chatbot-dev"
   resource_group_name = module.resource_group.name

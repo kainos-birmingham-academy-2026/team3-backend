@@ -8,10 +8,17 @@ const AZURE_OPENAI_SCOPE = "https://cognitiveservices.azure.com/.default";
 const MAX_OUTPUT_TOKENS = 250;
 
 export class AzureOpenAIService {
-	private readonly client: AzureOpenAI;
-	private readonly deployment: string;
+	private client?: AzureOpenAI;
+	private deployment?: string;
 
-	constructor() {
+	private getConfiguration(): {
+		client: AzureOpenAI;
+		deployment: string;
+	} {
+		if (this.client && this.deployment) {
+			return { client: this.client, deployment: this.deployment };
+		}
+
 		const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
 		const deployment = process.env.AZURE_OPENAI_DEPLOYMENT;
 
@@ -19,7 +26,6 @@ export class AzureOpenAIService {
 			throw new Error("Azure OpenAI configuration is missing");
 		}
 
-		this.deployment = deployment;
 		this.client = new AzureOpenAI({
 			endpoint,
 			apiVersion: process.env.AZURE_OPENAI_API_VERSION ?? "2025-04-01-preview",
@@ -28,11 +34,15 @@ export class AzureOpenAIService {
 				AZURE_OPENAI_SCOPE,
 			),
 		});
+		this.deployment = deployment;
+
+		return { client: this.client, deployment };
 	}
 
 	async answer(systemPrompt: string, question: string): Promise<string> {
-		const response = await this.client.responses.create({
-			model: this.deployment,
+		const { client, deployment } = this.getConfiguration();
+		const response = await client.responses.create({
+			model: deployment,
 			instructions: systemPrompt,
 			input: question,
 			reasoning: { effort: "minimal" },
