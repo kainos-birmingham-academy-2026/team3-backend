@@ -75,6 +75,38 @@ describe("JobRoleChatService", () => {
 		]);
 	});
 
+	it("does not return closed roles to applicants", async () => {
+		const openRole = roleSummary(1, "Software Engineer", "Belfast");
+		const closedRole = {
+			...roleSummary(2, "Delivery Manager", "Belfast"),
+			statusName: "CLOSED",
+		};
+		const jobRolesService = {
+			findAll: vi.fn().mockResolvedValue([openRole, closedRole]),
+			findById: vi
+				.fn()
+				.mockResolvedValue(
+					roleDetail(1, openRole.roleName, openRole.locationName),
+				),
+		} as unknown as JobRolesService;
+		const aiService = { answer: vi.fn() } as unknown as AzureOpenAIService;
+		const service = new JobRoleChatService(jobRolesService, aiService);
+
+		const result = await service.answer("roles in Belfast");
+
+		expect(result.answer).toBe("Here is 1 role.");
+		expect(result.roles).toEqual([
+			expect.objectContaining({
+				jobRoleId: 1,
+				roleName: "Software Engineer",
+				status: "OPEN",
+			}),
+		]);
+		expect(jobRolesService.findById).toHaveBeenCalledOnce();
+		expect(jobRolesService.findById).not.toHaveBeenCalledWith(2);
+		expect(aiService.answer).not.toHaveBeenCalled();
+	});
+
 	it("prioritises an exact role name", async () => {
 		const roles = [
 			roleSummary(1, "Software Engineer", "Belfast"),
@@ -165,7 +197,7 @@ describe("JobRoleChatService", () => {
 		["band", "Available bands: Associate, Senior Engineer."],
 		["capabilities", "Available capabilities: Data & AI, Engineering."],
 		["location", "Available locations: Belfast, London."],
-		["statuses", "Available statuses: CLOSED, OPEN."],
+		["statuses", "Available statuses: OPEN."],
 	])(
 		"lists available metadata locally for a generic %s prompt",
 		async (message, expectedAnswer) => {
@@ -179,6 +211,11 @@ describe("JobRoleChatService", () => {
 					...roleSummary(2, "Data Analyst", "London"),
 					bandName: "Senior Engineer",
 					capabilityName: "Data & AI",
+				},
+				{
+					...roleSummary(3, "Former Consultant", "Manchester"),
+					bandName: "Principal",
+					capabilityName: "Consulting",
 					statusName: "CLOSED",
 				},
 			];
