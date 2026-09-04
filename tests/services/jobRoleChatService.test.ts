@@ -246,29 +246,26 @@ describe("JobRoleChatService", () => {
 		},
 	);
 
-	it.each([
-		"Birmingham",
-		"Band 3",
-		"Engineering",
-		"OPEN",
-		"Software Engineer",
-	])("handles a bare known role value locally: %s", async (message) => {
-		const role = roleSummary(1, "Software Engineer", "Birmingham");
-		const jobRolesService = {
-			findAll: vi.fn().mockResolvedValue([role]),
-			findById: vi
-				.fn()
-				.mockResolvedValue(roleDetail(1, role.roleName, role.locationName)),
-		} as unknown as JobRolesService;
-		const aiService = { answer: vi.fn() } as unknown as AzureOpenAIService;
-		const service = new JobRoleChatService(jobRolesService, aiService);
+	it.each(["Birmingham", "Band 3", "Engineering", "OPEN", "Software Engineer"])(
+		"handles a bare known role value locally: %s",
+		async (message) => {
+			const role = roleSummary(1, "Software Engineer", "Birmingham");
+			const jobRolesService = {
+				findAll: vi.fn().mockResolvedValue([role]),
+				findById: vi
+					.fn()
+					.mockResolvedValue(roleDetail(1, role.roleName, role.locationName)),
+			} as unknown as JobRolesService;
+			const aiService = { answer: vi.fn() } as unknown as AzureOpenAIService;
+			const service = new JobRoleChatService(jobRolesService, aiService);
 
-		const result = await service.answer(message);
+			const result = await service.answer(message);
 
-		expect(result.answer).toBe("Here is 1 role.");
-		expect(result.roles).toHaveLength(1);
-		expect(aiService.answer).not.toHaveBeenCalled();
-	});
+			expect(result.answer).toBe("Here is 1 role.");
+			expect(result.roles).toHaveLength(1);
+			expect(aiService.answer).not.toHaveBeenCalled();
+		},
+	);
 
 	it.each([
 		["What jobs are available in Norway?", "Norway"],
