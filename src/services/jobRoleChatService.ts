@@ -4,6 +4,33 @@ import type { AzureOpenAIService } from "./azureOpenAIService.js";
 import type { JobRolesService } from "./jobRolesService.js";
 
 const MAX_MATCHED_ROLES = 3;
+const OUT_OF_SCOPE_ANSWER =
+	"I can only help with questions about the available job roles.";
+const JOB_ROLE_TERMS = new Set([
+	"application",
+	"apply",
+	"band",
+	"benefits",
+	"capability",
+	"career",
+	"careers",
+	"closing",
+	"deadline",
+	"description",
+	"job",
+	"jobs",
+	"location",
+	"open",
+	"position",
+	"positions",
+	"responsibilities",
+	"responsibility",
+	"role",
+	"roles",
+	"salary",
+	"vacancies",
+	"vacancy",
+]);
 const STOP_WORDS = new Set([
 	"a",
 	"about",
@@ -45,6 +72,10 @@ export class JobRoleChatService {
 
 	async answer(message: string): Promise<JobRoleChatResponse> {
 		const roles = await this.jobRolesService.findAll();
+		if (!this.isJobRoleQuestion(message, roles)) {
+			return { answer: OUT_OF_SCOPE_ANSWER, roles: [] };
+		}
+
 		const matchedRoles = this.selectRoles(message, roles);
 		const detailedRoles = await Promise.all(
 			matchedRoles.map((role) =>
@@ -65,6 +96,30 @@ export class JobRoleChatService {
 				roleName,
 			})),
 		};
+	}
+
+	private isJobRoleQuestion(
+		message: string,
+		roles: JobRoleResponse[],
+	): boolean {
+		const normalizedMessage = message.toLowerCase();
+		const terms = normalizedMessage.split(/[^a-z0-9]+/).filter(Boolean);
+		if (terms.some((term) => JOB_ROLE_TERMS.has(term))) {
+			return true;
+		}
+
+		return roles.some((role) =>
+			[
+				role.roleName,
+				role.capabilityName,
+				role.bandName,
+				role.locationName,
+			]
+				.join(" ")
+				.toLowerCase()
+				.split(/[^a-z0-9]+/)
+				.some((term) => term.length > 2 && terms.includes(term)),
+		);
 	}
 
 	private selectRoles(
