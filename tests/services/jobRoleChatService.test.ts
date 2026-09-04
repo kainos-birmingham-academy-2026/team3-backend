@@ -1,0 +1,88 @@
+import { describe, expect, it, vi } from "vitest";
+import type { AzureOpenAIService } from "../../src/services/azureOpenAIService.js";
+import { JobRoleChatService } from "../../src/services/jobRoleChatService.js";
+import type { JobRolesService } from "../../src/services/jobRolesService.js";
+
+const roleSummary = (jobRoleId: number, roleName: string, locationName: string) => ({
+	jobRoleId,
+	roleName,
+	closingDate: new Date("2026-10-01"),
+	capabilityName: "Engineering",
+	bandName: "Band 3",
+	locationName,
+	statusName: "OPEN",
+});
+
+const roleDetail = (jobRoleId: number, roleName: string, locationName: string) => ({
+	...roleSummary(jobRoleId, roleName, locationName),
+	description: `${roleName} description`,
+	responsibilities: `${roleName} responsibilities`,
+	sharepointUrl: "https://example.com/spec",
+	numberOfOpenPositions: 2,
+	addressLine1: "1 Example Street",
+	addressLine2: null,
+	postcode: "B1 1AA",
+});
+
+describe("JobRoleChatService", () => {
+	it("grounds the answer in no more than three relevant role details", async () => {
+		const roles = [
+			roleSummary(1, "Software Engineer", "Belfast"),
+			roleSummary(2, "Platform Engineer", "Belfast"),
+			roleSummary(3, "Test Engineer", "Belfast"),
+			roleSummary(4, "Delivery Manager", "Birmingham"),
+		];
+		const findById = vi.fn(async (jobRoleId: number) => {
+			const role = roles.find((item) => item.jobRoleId === jobRoleId);
+			if (!role) throw new Error("Role not found");
+			return roleDetail(role.jobRoleId, role.roleName, role.locationName);
+		});
+		const jobRolesService = {
+			findAll: vi.fn().mockResolvedValue(roles),
+			findById,
+		} as unknown as JobRolesService;
+		const aiService = {
+			answer: vi.fn().mockResolvedValue("Three roles are available in Belfast."),
+		} as unknown as AzureOpenAIService;
+		const service = new JobRoleChatService(jobRolesService, aiService);
+
+		const result = await service.answer("Which roles are based in Belfast?");
+
+		expect(findById).toHaveBeenCalledTimes(3);
+		expect(findById).not.toHaveBeenCalledWith(4);
+		expect(aiService.answer).toHaveBeenCalledWith(
+			expect.stringContaining('"locationName":"Belfast"'),
+			"Which roles are based in Belfast?",
+		);
+		expect(result.roles).toEqual([
+			{ jobRoleId: 1, roleName: "Software Engineer" },
+			{ jobRoleId: 2, roleName: "Platform Engineer" },
+			{ jobRoleId: 3, roleName: "Test Engineer" },
+		]);
+	});
+
+	it("prioritises an exact role name", async () => {
+		const roles = [
+			roleSummary(1, "Software Engineer", "Belfast"),
+			roleSummary(2, "Delivery Manager", "Birmingham"),
+		];
+		const jobRolesService = {
+			findAll: vi.fn().mockResolvedValue(roles),
+			findById: vi.fn(async (jobRoleId: number) => {
+				const role = roles.find((item) => item.jobRoleId === jobRoleId) ?? roles[0];
+				return roleDetail(role.jobRoleId, role.roleName, role.locationName);
+			}),
+		} as unknown as JobRolesService;
+		const aiService = {
+			answer: vi.fn().mockResolvedValue("The role closes on 1 October."),
+		} as unknown as AzureOpenAIService;
+		const service = new JobRoleChatService(jobRolesService, aiService);
+
+		const result = await service.answer("When does Delivery Manager close?");
+
+		expect(result.roles[0]).toEqual({
+			jobRoleId: 2,
+			roleName: "Delivery Manager",
+		});
+	});
+});
