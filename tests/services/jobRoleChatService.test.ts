@@ -61,7 +61,7 @@ describe("JobRoleChatService", () => {
 		expect(findById).toHaveBeenCalledTimes(3);
 		expect(findById).not.toHaveBeenCalledWith(4);
 		expect(aiService.answer).not.toHaveBeenCalled();
-		expect(result.answer).toBe("I found 3 matching roles.");
+		expect(result.answer).toBe("Here are 3 roles.");
 		expect(result.roles).toEqual([
 			expect.objectContaining({
 				jobRoleId: 1,
@@ -139,7 +139,7 @@ describe("JobRoleChatService", () => {
 
 		const result = await service.answer("What jobs are open?");
 
-		expect(result.answer).toBe("I found 1 matching role.");
+		expect(result.answer).toBe("Here is 1 role.");
 		expect(aiService.answer).not.toHaveBeenCalled();
 	});
 

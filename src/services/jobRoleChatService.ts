@@ -169,7 +169,7 @@ export class JobRoleChatService {
 			return "I couldn't find any matching roles.";
 		}
 
-		return `I found ${roleCount} matching ${roleCount === 1 ? "role" : "roles"}.`;
+		return roleCount === 1 ? "Here is 1 role." : `Here are ${roleCount} roles.`;
 	}
 
 	private isJobRoleQuestion(
