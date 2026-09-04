@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import type { JobRoleChatRequestDto } from "../dtos/jobRoleChatDto.js";
-import { JobRoleChatService } from "../services/jobRoleChatService.js";
+import type { JobRoleChatService } from "../services/jobRoleChatService.js";
 
 export class JobRoleChatController {
 	constructor(private readonly service: JobRoleChatService) {}

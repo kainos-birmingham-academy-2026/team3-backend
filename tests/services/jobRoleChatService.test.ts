@@ -149,29 +149,29 @@ describe("JobRoleChatService", () => {
 	])(
 		"returns no roles when a requested location has no matches: %s",
 		async (message, location) => {
-		const jobRolesService = {
-			findAll: vi
-				.fn()
-				.mockResolvedValue([
-					roleSummary(1, "Senior Software Engineer", "Glasgow"),
-					roleSummary(2, "Associate Software Engineer", "London"),
-					roleSummary(3, "Trainee Software Engineer", "Belfast"),
-				]),
-			findById: vi.fn(),
-		} as unknown as JobRolesService;
-		const aiService = { answer: vi.fn() } as unknown as AzureOpenAIService;
-		const service = new JobRoleChatService(jobRolesService, aiService);
+			const jobRolesService = {
+				findAll: vi
+					.fn()
+					.mockResolvedValue([
+						roleSummary(1, "Senior Software Engineer", "Glasgow"),
+						roleSummary(2, "Associate Software Engineer", "London"),
+						roleSummary(3, "Trainee Software Engineer", "Belfast"),
+					]),
+				findById: vi.fn(),
+			} as unknown as JobRolesService;
+			const aiService = { answer: vi.fn() } as unknown as AzureOpenAIService;
+			const service = new JobRoleChatService(jobRolesService, aiService);
 
-		const result = await service.answer(message);
+			const result = await service.answer(message);
 
-		expect(result).toEqual({
-			answer: location
-				? `I couldn't find any jobs in ${location}.`
-				: "I couldn't find any matching roles.",
-			roles: [],
-		});
-		expect(jobRolesService.findById).not.toHaveBeenCalled();
-		expect(aiService.answer).not.toHaveBeenCalled();
+			expect(result).toEqual({
+				answer: location
+					? `I couldn't find any jobs in ${location}.`
+					: "I couldn't find any matching roles.",
+				roles: [],
+			});
+			expect(jobRolesService.findById).not.toHaveBeenCalled();
+			expect(aiService.answer).not.toHaveBeenCalled();
 		},
 	);
 
@@ -197,9 +197,11 @@ describe("JobRoleChatService", () => {
 		const result = await service.answer(message);
 
 		expect(result.roles.length).toBeGreaterThan(0);
-		expect(result.roles.every((role) =>
-			["Belfast", "London"].includes(role.location),
-		)).toBe(true);
+		expect(
+			result.roles.every((role) =>
+				["Belfast", "London"].includes(role.location),
+			),
+		).toBe(true);
 		expect(aiService.answer).not.toHaveBeenCalled();
 	});
 
