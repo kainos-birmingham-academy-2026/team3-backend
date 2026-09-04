@@ -49,7 +49,15 @@ Example:
 DATABASE_URL="postgresql://YOUR_USER:password@localhost:5432/jobRoles?schema=public"
 JWT_SECRET="replace-with-a-strong-local-secret"
 ENABLE_SWAGGER_DOCS=false
+AZURE_OPENAI_ENDPOINT="https://aoai-team3-chatbot-dev.openai.azure.com"
+AZURE_OPENAI_DEPLOYMENT="team3-chatbot-gpt5-nano"
+AZURE_OPENAI_API_VERSION="2025-04-01-preview"
 ```
+
+The chatbot uses keyless Microsoft Entra authentication. Run `az login` locally
+with an account assigned the `Cognitive Services OpenAI User` role. In Azure,
+the backend Container App uses its user-assigned managed identity. Do not add an
+Azure OpenAI API key to the environment.
 
 ### 3. Ensure Docker is running and start Postgres
 
@@ -235,6 +243,17 @@ docker logs team3-backend
 - `npm run seed` - Seeds the database.
 
 ## API Endpoints
+
+### `POST /api/job-role-chat`
+
+Answers public applicant questions using current job role records.
+
+- Accepts `{ "message": "Which roles are based in Belfast?" }`
+- Rejects blank messages, messages over 500 characters, and unknown fields
+- Sends no conversation history and at most three matching role details to AI
+- Limits generated output to 250 tokens and does not store the response
+- Returns source role IDs and names so clients can link to role details
+- Returns `503` without exposing provider details when AI is unavailable
 
 ### `GET /`
 
