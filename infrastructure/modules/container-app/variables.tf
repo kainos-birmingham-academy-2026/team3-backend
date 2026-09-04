@@ -44,6 +44,11 @@ variable "jwt_secret_id" {
   type        = string
 }
 
+variable "service_bus_connection_string_secret_id" {
+  description = "Versionless Key Vault secret ID for AZURE_SERVICE_BUS_CONNECTION_STRING."
+  type        = string
+}
+
 variable "enable_swagger_docs" {
   description = "Whether Swagger documentation routes are enabled."
   type        = bool

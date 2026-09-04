@@ -9,7 +9,7 @@ export async function publishNotification(
   const connectionString = process.env.AZURE_SERVICE_BUS_CONNECTION_STRING;
 
   if (!connectionString) {
-    throw new Error("AZURE_SERVICE_BUS_CONNECTION_STRING is not configured");
+    return;
   }
 
   const topicName = process.env.AZURE_SERVICE_BUS_TOPIC ?? "notifications";
