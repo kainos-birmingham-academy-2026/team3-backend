@@ -28,7 +28,11 @@ export class AuthService {
 			},
 		});
 
-		await publishNotification("AccountCreated", input.email);
+		try {
+			await publishNotification("AccountCreated", input.email);
+		} catch {
+			console.error("Failed to publish AccountCreated notification");
+		}
 	}
 
 	public async login(input: LoginRequestDto): Promise<string> {

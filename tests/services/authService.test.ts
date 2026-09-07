@@ -175,6 +175,30 @@ describe("AuthService", () => {
 			);
 		});
 
+		it("should complete registration when notification publishing fails", async () => {
+			const consoleError = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => undefined);
+			mockFindUnique.mockResolvedValueOnce(null);
+			mockHash.mockResolvedValueOnce("hashed-password");
+			mockCreate.mockResolvedValueOnce({});
+			mockPublishNotification.mockRejectedValueOnce(
+				new Error("Service Bus unavailable"),
+			);
+
+			await expect(
+				service.register({
+					email: "new@example.com",
+					password: "password123",
+				}),
+			).resolves.toBeUndefined();
+
+			expect(mockCreate).toHaveBeenCalledOnce();
+			expect(consoleError).toHaveBeenCalledWith(
+				"Failed to publish AccountCreated notification",
+			);
+		});
+
 		it("should throw ConflictError when email is already in use", async () => {
 			mockFindUnique.mockResolvedValueOnce({
 				id: 20,
