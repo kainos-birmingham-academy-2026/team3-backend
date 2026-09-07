@@ -138,8 +138,9 @@ Terraform run. These recovery settings apply only to test.
 The `prod` root currently defines the resource group, Key Vault, backend
 identity, Container Apps Environment, RBAC, and backend Container App. It does
 not define PostgreSQL, application secrets, monitoring, or a CI/CD deployment
-job. The Container App expects `database-url` and `jwt-secret` to exist, so this
-root is not yet an end-to-end production deployment.
+job. The Container App expects `database-url`, `jwt-secret`, and
+`service-bus-connection-string` to exist, so this root is not yet an end-to-end
+production deployment.
 
 Before deploying production, add the missing database and secret ownership,
 grant production-scoped permissions, and introduce a protected workflow with
@@ -153,6 +154,8 @@ Before deploying dev or test:
 - Create the remote-state resource group, storage account, and blob container.
 - Set `POSTGRESQL_ADMINISTRATOR_PASSWORD` for dev. Test generates its own
 	PostgreSQL administrator password.
+- Add `service-bus-connection-string` to the environment's Key Vault through
+	the Azure portal or an approved secret-management process.
 - Configure the GitHub Actions secrets listed below.
 
 ## GitHub configuration

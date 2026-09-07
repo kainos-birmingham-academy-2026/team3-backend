@@ -1,16 +1,23 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthService } from "../../src/services/authService.ts";
 
-const { mockFindUnique, mockCreate, mockHash, mockVerify, mockSign } =
-	vi.hoisted(() => {
-		return {
-			mockFindUnique: vi.fn(),
-			mockCreate: vi.fn(),
-			mockHash: vi.fn(),
-			mockVerify: vi.fn(),
-			mockSign: vi.fn(),
-		};
-	});
+const {
+	mockFindUnique,
+	mockCreate,
+	mockHash,
+	mockVerify,
+	mockSign,
+	mockPublishNotification,
+} = vi.hoisted(() => {
+	return {
+		mockFindUnique: vi.fn(),
+		mockCreate: vi.fn(),
+		mockHash: vi.fn(),
+		mockVerify: vi.fn(),
+		mockSign: vi.fn(),
+		mockPublishNotification: vi.fn(),
+	};
+});
 
 vi.mock("../../src/prismaClient.ts", () => {
 	return {
@@ -38,6 +45,12 @@ vi.mock("jsonwebtoken", () => {
 		default: {
 			sign: mockSign,
 		},
+	};
+});
+
+vi.mock("../../src/notificationPublisher.ts", () => {
+	return {
+		publishNotification: mockPublishNotification,
 	};
 });
 
@@ -156,6 +169,34 @@ describe("AuthService", () => {
 					role: "USER",
 				},
 			});
+			expect(mockPublishNotification).toHaveBeenCalledWith(
+				"AccountCreated",
+				"new@example.com",
+			);
+		});
+
+		it("should complete registration when notification publishing fails", async () => {
+			const consoleError = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => undefined);
+			mockFindUnique.mockResolvedValueOnce(null);
+			mockHash.mockResolvedValueOnce("hashed-password");
+			mockCreate.mockResolvedValueOnce({});
+			mockPublishNotification.mockRejectedValueOnce(
+				new Error("Service Bus unavailable"),
+			);
+
+			await expect(
+				service.register({
+					email: "new@example.com",
+					password: "password123",
+				}),
+			).resolves.toBeUndefined();
+
+			expect(mockCreate).toHaveBeenCalledOnce();
+			expect(consoleError).toHaveBeenCalledWith(
+				"Failed to publish AccountCreated notification",
+			);
 		});
 
 		it("should throw ConflictError when email is already in use", async () => {
@@ -175,6 +216,7 @@ describe("AuthService", () => {
 
 			expect(mockHash).not.toHaveBeenCalled();
 			expect(mockCreate).not.toHaveBeenCalled();
+			expect(mockPublishNotification).not.toHaveBeenCalled();
 		});
 	});
 });
