@@ -148,7 +148,8 @@ export class JobRoleChatService {
 	) {}
 
 	async answer(message: string): Promise<JobRoleChatResponse> {
-		const roles = (await this.jobRolesService.findAll()).filter(
+		const { items } = await this.jobRolesService.findAll();
+		const roles = items.filter(
 			(role) => role.statusName.toUpperCase() === "OPEN",
 		);
 		if (!this.isJobRoleQuestion(message, roles)) {

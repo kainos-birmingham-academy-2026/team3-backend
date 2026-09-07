@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import type { JobRoleResponse } from "../../src/models/jobRoleResponse.js";
 import type { AzureOpenAIService } from "../../src/services/azureOpenAIService.js";
 import { JobRoleChatService } from "../../src/services/jobRoleChatService.js";
 import type { JobRolesService } from "../../src/services/jobRolesService.js";
@@ -32,6 +33,14 @@ const roleDetail = (
 	postcode: "B1 1AA",
 });
 
+const paginatedRoles = (items: JobRoleResponse[]) => ({
+	items,
+	page: 1,
+	pageSize: 10,
+	totalItems: items.length,
+	totalPages: Math.ceil(items.length / 10),
+});
+
 describe("JobRoleChatService", () => {
 	it("returns no more than three structured role matches", async () => {
 		const roles = [
@@ -46,7 +55,7 @@ describe("JobRoleChatService", () => {
 			return roleDetail(role.jobRoleId, role.roleName, role.locationName);
 		});
 		const jobRolesService = {
-			findAll: vi.fn().mockResolvedValue(roles),
+			findAll: vi.fn().mockResolvedValue(paginatedRoles(roles)),
 			findById,
 		} as unknown as JobRolesService;
 		const aiService = {
@@ -82,7 +91,9 @@ describe("JobRoleChatService", () => {
 			statusName: "CLOSED",
 		};
 		const jobRolesService = {
-			findAll: vi.fn().mockResolvedValue([openRole, closedRole]),
+			findAll: vi
+				.fn()
+				.mockResolvedValue(paginatedRoles([openRole, closedRole])),
 			findById: vi
 				.fn()
 				.mockResolvedValue(
@@ -113,7 +124,7 @@ describe("JobRoleChatService", () => {
 			roleSummary(2, "Delivery Manager", "Birmingham"),
 		];
 		const jobRolesService = {
-			findAll: vi.fn().mockResolvedValue(roles),
+			findAll: vi.fn().mockResolvedValue(paginatedRoles(roles)),
 			findById: vi.fn(async (jobRoleId: number) => {
 				const role =
 					roles.find((item) => item.jobRoleId === jobRoleId) ?? roles[0];
@@ -140,7 +151,9 @@ describe("JobRoleChatService", () => {
 		const jobRolesService = {
 			findAll: vi
 				.fn()
-				.mockResolvedValue([roleSummary(1, "Software Engineer", "Belfast")]),
+				.mockResolvedValue(
+					paginatedRoles([roleSummary(1, "Software Engineer", "Belfast")]),
+				),
 			findById: vi.fn(),
 		} as unknown as JobRolesService;
 		const aiService = { answer: vi.fn() } as unknown as AzureOpenAIService;
@@ -159,7 +172,7 @@ describe("JobRoleChatService", () => {
 	it("allows broad job role questions", async () => {
 		const role = roleSummary(1, "Software Engineer", "Belfast");
 		const jobRolesService = {
-			findAll: vi.fn().mockResolvedValue([role]),
+			findAll: vi.fn().mockResolvedValue(paginatedRoles([role])),
 			findById: vi
 				.fn()
 				.mockResolvedValue(roleDetail(1, "Software Engineer", "Belfast")),
@@ -178,7 +191,7 @@ describe("JobRoleChatService", () => {
 	it("handles a generic singular role prompt without calling Azure", async () => {
 		const role = roleSummary(1, "Software Engineer", "Belfast");
 		const jobRolesService = {
-			findAll: vi.fn().mockResolvedValue([role]),
+			findAll: vi.fn().mockResolvedValue(paginatedRoles([role])),
 			findById: vi
 				.fn()
 				.mockResolvedValue(roleDetail(1, "Software Engineer", "Belfast")),
@@ -220,7 +233,7 @@ describe("JobRoleChatService", () => {
 				},
 			];
 			const jobRolesService = {
-				findAll: vi.fn().mockResolvedValue(roles),
+				findAll: vi.fn().mockResolvedValue(paginatedRoles(roles)),
 				findById: vi.fn(),
 			} as unknown as JobRolesService;
 			const aiService = { answer: vi.fn() } as unknown as AzureOpenAIService;
@@ -246,7 +259,9 @@ describe("JobRoleChatService", () => {
 		const jobRolesService = {
 			findAll: vi
 				.fn()
-				.mockResolvedValue([roleSummary(1, "Software Engineer", "Belfast")]),
+				.mockResolvedValue(
+					paginatedRoles([roleSummary(1, "Software Engineer", "Belfast")]),
+				),
 			findById: vi.fn(),
 		} as unknown as JobRolesService;
 		const aiService = { answer: vi.fn() } as unknown as AzureOpenAIService;
@@ -267,7 +282,7 @@ describe("JobRoleChatService", () => {
 		async (message) => {
 			const role = roleSummary(1, "Software Engineer", "Belfast");
 			const jobRolesService = {
-				findAll: vi.fn().mockResolvedValue([role]),
+				findAll: vi.fn().mockResolvedValue(paginatedRoles([role])),
 				findById: vi
 					.fn()
 					.mockResolvedValue(roleDetail(1, role.roleName, role.locationName)),
@@ -288,7 +303,7 @@ describe("JobRoleChatService", () => {
 		async (message) => {
 			const role = roleSummary(1, "Software Engineer", "Birmingham");
 			const jobRolesService = {
-				findAll: vi.fn().mockResolvedValue([role]),
+				findAll: vi.fn().mockResolvedValue(paginatedRoles([role])),
 				findById: vi
 					.fn()
 					.mockResolvedValue(roleDetail(1, role.roleName, role.locationName)),
@@ -313,11 +328,13 @@ describe("JobRoleChatService", () => {
 			const jobRolesService = {
 				findAll: vi
 					.fn()
-					.mockResolvedValue([
+					.mockResolvedValue(
+						paginatedRoles([
 						roleSummary(1, "Senior Software Engineer", "Glasgow"),
 						roleSummary(2, "Associate Software Engineer", "London"),
 						roleSummary(3, "Trainee Software Engineer", "Belfast"),
-					]),
+						]),
+					),
 				findById: vi.fn(),
 			} as unknown as JobRolesService;
 			const aiService = { answer: vi.fn() } as unknown as AzureOpenAIService;
@@ -345,7 +362,7 @@ describe("JobRoleChatService", () => {
 			roleSummary(2, "Platform Engineer", "London"),
 		];
 		const jobRolesService = {
-			findAll: vi.fn().mockResolvedValue(roles),
+			findAll: vi.fn().mockResolvedValue(paginatedRoles(roles)),
 			findById: vi.fn(async (jobRoleId: number) => {
 				const role = roles.find((item) => item.jobRoleId === jobRoleId);
 				if (!role) throw new Error("Role not found");
@@ -377,7 +394,7 @@ describe("JobRoleChatService", () => {
 			roleSummary(4, "Delivery Manager", "Belfast"),
 		];
 		const jobRolesService = {
-			findAll: vi.fn().mockResolvedValue(roles),
+			findAll: vi.fn().mockResolvedValue(paginatedRoles(roles)),
 			findById: vi.fn(async (jobRoleId: number) => {
 				const role = roles.find((item) => item.jobRoleId === jobRoleId);
 				if (!role) throw new Error("Role not found");
@@ -409,7 +426,9 @@ describe("JobRoleChatService", () => {
 		const jobRolesService = {
 			findAll: vi
 				.fn()
-				.mockResolvedValue([roleSummary(1, "Software Engineer", "Belfast")]),
+				.mockResolvedValue(
+					paginatedRoles([roleSummary(1, "Software Engineer", "Belfast")]),
+				),
 			findById: vi.fn(),
 		} as unknown as JobRolesService;
 		const aiService = { answer: vi.fn() } as unknown as AzureOpenAIService;
@@ -430,7 +449,7 @@ describe("JobRoleChatService", () => {
 	it("uses Azure for detailed questions about a named role", async () => {
 		const role = roleSummary(1, "Software Engineer", "Belfast");
 		const jobRolesService = {
-			findAll: vi.fn().mockResolvedValue([role]),
+			findAll: vi.fn().mockResolvedValue(paginatedRoles([role])),
 			findById: vi
 				.fn()
 				.mockResolvedValue(roleDetail(1, "Software Engineer", "Belfast")),
