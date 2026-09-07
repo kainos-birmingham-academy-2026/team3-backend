@@ -25,21 +25,39 @@ describe("Job role route auth protection", () => {
 	});
 
 	it("should return 200 without bearer token on list endpoint", async () => {
-		vi.spyOn(JobRolesService.prototype, "findAll").mockResolvedValueOnce([]);
+		vi.spyOn(JobRolesService.prototype, "findAll").mockResolvedValueOnce({
+			items: [],
+			page: 1,
+			pageSize: 10,
+			totalItems: 0,
+			totalPages: 0,
+		});
 
 		const response = await request(app).get("/api/job-roles");
 
 		expect(response.status).toBe(200);
-		expect(response.body).toEqual([]);
+		expect(response.body).toEqual({
+			items: [],
+			page: 1,
+			pageSize: 10,
+			totalItems: 0,
+			totalPages: 0,
+		});
 	});
 
 	it("should validate and pass list filters to the service", async () => {
 		const findAll = vi
 			.spyOn(JobRolesService.prototype, "findAll")
-			.mockResolvedValueOnce([]);
+			.mockResolvedValueOnce({
+				items: [],
+				page: 2,
+				pageSize: 5,
+				totalItems: 0,
+				totalPages: 0,
+			});
 
 		const response = await request(app).get(
-			"/api/job-roles?roleName=engineer&locationId=1&locationId=2&capabilityId=3&bandId=4&closingDateFrom=2026-09-01",
+			"/api/job-roles?roleName=engineer&locationId=1&locationId=2&capabilityId=3&bandId=4&closingDateFrom=2026-09-01&page=2&pageSize=5",
 		);
 
 		expect(response.status).toBe(200);
@@ -49,6 +67,8 @@ describe("Job role route auth protection", () => {
 			capabilityId: [3],
 			bandId: [4],
 			closingDateFrom: "2026-09-01",
+			page: 2,
+			pageSize: 5,
 		});
 	});
 
@@ -67,7 +87,9 @@ describe("Job role route auth protection", () => {
 	});
 
 	it("should return 400 for invalid list filters", async () => {
-		const response = await request(app).get("/api/job-roles?locationId=invalid");
+		const response = await request(app).get(
+			"/api/job-roles?locationId=invalid",
+		);
 
 		expect(response.status).toBe(400);
 		expect(response.body.errors[0].field).toBe("locationId.0");
@@ -126,7 +148,7 @@ describe("Job role route auth protection", () => {
 	);
 
 	it("should return 200 with user token on list endpoint", async () => {
-		const serviceResponse: JobRoleResponse[] = [
+		const serviceItems: JobRoleResponse[] = [
 			{
 				jobRoleId: 1,
 				roleName: "Engineer",
@@ -138,7 +160,7 @@ describe("Job role route auth protection", () => {
 			},
 		];
 
-		const expectedResponse = [
+		const expectedItems = [
 			{
 				jobRoleId: 1,
 				roleName: "Engineer",
@@ -150,9 +172,13 @@ describe("Job role route auth protection", () => {
 			},
 		];
 
-		vi.spyOn(JobRolesService.prototype, "findAll").mockResolvedValueOnce(
-			serviceResponse,
-		);
+		vi.spyOn(JobRolesService.prototype, "findAll").mockResolvedValueOnce({
+			items: serviceItems,
+			page: 1,
+			pageSize: 10,
+			totalItems: 1,
+			totalPages: 1,
+		});
 
 		const token = jwt.sign(
 			{ userId: 1, email: "test1@example.com", role: "USER" },
@@ -165,11 +191,23 @@ describe("Job role route auth protection", () => {
 			.set("Authorization", `Bearer ${token}`);
 
 		expect(response.status).toBe(200);
-		expect(response.body).toEqual(expectedResponse);
+		expect(response.body).toEqual({
+			items: expectedItems,
+			page: 1,
+			pageSize: 10,
+			totalItems: 1,
+			totalPages: 1,
+		});
 	});
 
 	it("should return 200 with admin token on list endpoint", async () => {
-		const expected: JobRoleResponse[] = [];
+		const expected = {
+			items: [] as JobRoleResponse[],
+			page: 1,
+			pageSize: 10,
+			totalItems: 0,
+			totalPages: 0,
+		};
 
 		vi.spyOn(JobRolesService.prototype, "findAll").mockResolvedValueOnce(
 			expected,

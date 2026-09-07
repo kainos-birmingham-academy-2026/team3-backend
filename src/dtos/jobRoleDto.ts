@@ -32,6 +32,8 @@ export const JobRoleFiltersSchema = z
 		bandId: optionalIdList,
 		closingDateFrom: optionalFilterDate,
 		closingDateTo: optionalFilterDate,
+		page: z.coerce.number().int().positive().default(1),
+		pageSize: z.coerce.number().int().positive().max(100).default(10),
 	})
 	.refine((filters) => !filters.closingDateFrom || !filters.closingDateTo, {
 		message: "Choose either closing on or after or closing on or before",

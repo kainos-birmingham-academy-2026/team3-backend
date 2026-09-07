@@ -14,6 +14,8 @@ const controller = new JobApplicationAdminController(
 
 const AdminApplicationsQuerySchema = z.strictObject({
 	jobRoleId: z.coerce.number().int().positive().optional(),
+	page: z.coerce.number().int().positive().default(1),
+	pageSize: z.coerce.number().int().positive().max(100).default(10),
 });
 
 const ApplicationIdParamSchema = z.object({
@@ -43,15 +45,41 @@ jobApplicationsAdminRouter.use(allowRoles([USER_ROLES.ADMIN]));
  *           type: integer
  *           minimum: 1
  *         description: Filter applications by job role ID
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - in: query
+ *         name: pageSize
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
  *     responses:
  *       200:
  *         description: List of applications for administrators
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/AdminApplicationListItem'
+ *               type: object
+ *               properties:
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/AdminApplicationListItem'
+ *                 page:
+ *                   type: integer
+ *                 pageSize:
+ *                   type: integer
+ *                 totalItems:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
  *       401:
  *         description: Missing or invalid token
  *       403:

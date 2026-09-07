@@ -90,15 +90,17 @@ describe("JobRolesService", () => {
 				bandId: [4],
 				closingDateFrom: "2026-09-01",
 				closingDateTo: "2026-12-31",
+				page: 2,
+				pageSize: 5,
 			};
-			mockDao.findAll.mockResolvedValue([]);
+			mockDao.findAll.mockResolvedValue({ items: [], totalItems: 0 });
 
 			await service.findAll(filters);
 
 			expect(mockDao.findAll).toHaveBeenCalledWith(filters);
 		});
 
-		it("should return an array", async () => {
+		it("should return mapped items with pagination metadata", async () => {
 			const mockResponse = {
 				jobRoleId: 1,
 				roleName: "Software Engineer",
@@ -109,12 +111,21 @@ describe("JobRolesService", () => {
 				statusName: "OPEN",
 			};
 
-			mockDao.findAll.mockResolvedValue([jobRole1]);
+			mockDao.findAll.mockResolvedValue({
+				items: [jobRole1],
+				totalItems: 11,
+			});
 			mockMapper.jobRoleToResponse.mockReturnValue(mockResponse);
 
-			const jobRoles = await service.findAll();
+			const jobRoles = await service.findAll({ page: 2, pageSize: 10 });
 
-			expect(Array.isArray(jobRoles)).toBe(true);
+			expect(jobRoles).toEqual({
+				items: [mockResponse],
+				page: 2,
+				pageSize: 10,
+				totalItems: 11,
+				totalPages: 2,
+			});
 			expect(mockDao.findAll).toHaveBeenCalledTimes(1);
 		});
 
@@ -131,12 +142,21 @@ describe("JobRolesService", () => {
 				},
 			];
 
-			mockDao.findAll.mockResolvedValue([jobRole1]);
+			mockDao.findAll.mockResolvedValue({
+				items: [jobRole1],
+				totalItems: 1,
+			});
 			mockMapper.jobRoleToResponse.mockReturnValue(mockResponses[0]);
 
 			const jobRoles = await service.findAll();
 
-			expect(jobRoles).toHaveLength(1);
+			expect(jobRoles.items).toHaveLength(1);
+			expect(jobRoles).toMatchObject({
+				page: 1,
+				pageSize: 10,
+				totalItems: 1,
+				totalPages: 1,
+			});
 		});
 	});
 

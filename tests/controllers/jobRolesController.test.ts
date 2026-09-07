@@ -43,33 +43,42 @@ describe("JobRolesController", () => {
 	});
 
 	describe("getAll", () => {
-		it("should return 200 with the job roles array", async () => {
+		it("should return 200 with paginated job roles", async () => {
 			const req = {};
 			const res = createMockResponse();
+			res.locals.validatedQuery = { page: 1, pageSize: 10 };
 
-			vi.mocked(mockService.findAll).mockResolvedValue([
-				{
-					jobRoleId: 1,
-					roleName: "Software Engineer",
-					closingDate: new Date("2026-12-31"),
-					capabilityName: "Software Engineering",
-					bandName: "Engineer",
-					locationName: "Birmingham",
-					statusName: "OPEN",
-				},
-			]);
+			vi.mocked(mockService.findAll).mockResolvedValue({
+				items: [
+					{
+						jobRoleId: 1,
+						roleName: "Software Engineer",
+						closingDate: new Date("2026-12-31"),
+						capabilityName: "Software Engineering",
+						bandName: "Engineer",
+						locationName: "Birmingham",
+						statusName: "OPEN",
+					},
+				],
+				page: 1,
+				pageSize: 10,
+				totalItems: 1,
+				totalPages: 1,
+			});
 
 			await controller.getAll(req as never, res as never);
 
 			expect(res.status).toHaveBeenCalledWith(200);
-			const [payload] = vi.mocked(res.json).mock.calls.at(-1) ?? [];
-			expect(payload).toSatisfy(
-				(value) =>
-					Array.isArray(value) &&
-					value.length === 1 &&
-					value[0].jobRoleId === 1 &&
-					value[0].roleName === "Software Engineer" &&
-					value[0].locationName === "Birmingham",
+			expect(mockService.findAll).toHaveBeenCalledWith({
+				page: 1,
+				pageSize: 10,
+			});
+			expect(res.json).toHaveBeenCalledWith(
+				expect.objectContaining({
+					items: [expect.objectContaining({ jobRoleId: 1 })],
+					totalItems: 1,
+					totalPages: 1,
+				}),
 			);
 		});
 
@@ -82,7 +91,9 @@ describe("JobRolesController", () => {
 			await controller.getAll(req as never, res as never);
 
 			expect(res.status).toHaveBeenCalledWith(500);
-			expect(res.json).toHaveBeenCalledWith({ message: "Internal server error" });
+			expect(res.json).toHaveBeenCalledWith({
+				message: "Internal server error",
+			});
 		});
 	});
 
@@ -184,7 +195,9 @@ describe("JobRolesController", () => {
 			await controller.getById(req as never, res as never);
 
 			expect(res.status).toHaveBeenCalledWith(500);
-			expect(res.json).toHaveBeenCalledWith({ message: "Internal server error" });
+			expect(res.json).toHaveBeenCalledWith({
+				message: "Internal server error",
+			});
 		});
 	});
 
@@ -269,7 +282,9 @@ describe("JobRolesController", () => {
 			await controller.createJobRole(req as never, res as never);
 
 			expect(res.status).toHaveBeenCalledWith(500);
-			expect(res.json).toHaveBeenCalledWith({ message: "Internal server error" });
+			expect(res.json).toHaveBeenCalledWith({
+				message: "Internal server error",
+			});
 		});
 	});
 

@@ -15,6 +15,12 @@ type ApplicationListItem = {
 	};
 };
 
+type AdminApplicationsQuery = {
+	jobRoleId?: number;
+	page: number;
+	pageSize: number;
+};
+
 export class JobApplicationAdminService {
 	private readonly applicationListSelect = {
 		applicationId: true,
@@ -51,14 +57,26 @@ export class JobApplicationAdminService {
 		}));
 	}
 
-	async findAllAdmin(jobRoleId?: number) {
-		const applications = await prisma.application.findMany({
-			...(jobRoleId === undefined ? {} : { where: { jobRoleId } }),
-			orderBy: { createdAt: "desc" },
-			select: this.applicationListSelect,
-		});
+	async findAllAdmin({ jobRoleId, page, pageSize }: AdminApplicationsQuery) {
+		const where = jobRoleId === undefined ? undefined : { jobRoleId };
+		const [applications, totalItems] = await Promise.all([
+			prisma.application.findMany({
+				...(where === undefined ? {} : { where }),
+				orderBy: { createdAt: "desc" },
+				skip: (page - 1) * pageSize,
+				take: pageSize,
+				select: this.applicationListSelect,
+			}),
+			prisma.application.count(where === undefined ? undefined : { where }),
+		]);
 
-		return this.mapApplications(applications);
+		return {
+			items: this.mapApplications(applications),
+			page,
+			pageSize,
+			totalItems,
+			totalPages: Math.ceil(totalItems / pageSize),
+		};
 	}
 
 	async hireApplicant(jobRoleId: number, applicationId: number) {

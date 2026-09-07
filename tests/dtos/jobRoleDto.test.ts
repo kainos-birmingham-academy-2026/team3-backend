@@ -25,7 +25,21 @@ describe("job role DTO schemas", () => {
 					capabilityId: [3],
 					bandId: [4],
 					closingDateFrom: "2026-09-01",
+					page: 1,
+					pageSize: 10,
 				});
+			}
+		});
+
+		it("should coerce pagination values", () => {
+			const result = JobRoleFiltersSchema.safeParse({
+				page: "2",
+				pageSize: "25",
+			});
+
+			expect(result.success).toBe(true);
+			if (result.success) {
+				expect(result.data).toMatchObject({ page: 2, pageSize: 25 });
 			}
 		});
 
@@ -33,6 +47,8 @@ describe("job role DTO schemas", () => {
 			["a non-numeric ID", { locationId: "unknown" }],
 			["a non-positive ID", { bandId: "0" }],
 			["an invalid date", { closingDateFrom: "2026-02-30" }],
+			["a non-positive page", { page: "0" }],
+			["an excessive page size", { pageSize: "101" }],
 			[
 				"both closing date filters",
 				{ closingDateFrom: "2026-09-01", closingDateTo: "2026-12-31" },
@@ -58,9 +74,7 @@ describe("job role DTO schemas", () => {
 			["decimal", "1.5"],
 			["non-numeric", "abc"],
 		])("should reject a %s job role id", (_name, jobRoleId) => {
-			expect(
-				JobRoleIdParamSchema.safeParse({ jobRoleId }).success,
-			).toBe(false);
+			expect(JobRoleIdParamSchema.safeParse({ jobRoleId }).success).toBe(false);
 		});
 	});
 

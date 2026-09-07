@@ -4,6 +4,7 @@ vi.mock("../../src/prismaClient.js", () => ({
 	default: {
 		jobRole: {
 			findMany: vi.fn(),
+			count: vi.fn(),
 			findUnique: vi.fn(),
 			create: vi.fn(),
 			update: vi.fn(),
@@ -108,6 +109,7 @@ describe("JobRoleDao", () => {
 			vi.mocked(
 				prisma.jobRole.findMany as unknown as typeof prisma.jobRole.findMany,
 			).mockResolvedValue([]);
+			vi.mocked(prisma.jobRole.count).mockResolvedValue(0);
 
 			await dao.findAll();
 
@@ -120,6 +122,9 @@ describe("JobRoleDao", () => {
 					bandId: undefined,
 					closingDate: undefined,
 				},
+				orderBy: { jobRoleId: "asc" },
+				skip: 0,
+				take: 10,
 				relationLoadStrategy: "join",
 				include: {
 					status: true,
@@ -134,6 +139,7 @@ describe("JobRoleDao", () => {
 			vi.mocked(
 				prisma.jobRole.findMany as unknown as typeof prisma.jobRole.findMany,
 			).mockResolvedValue([]);
+			vi.mocked(prisma.jobRole.count).mockResolvedValue(0);
 
 			await dao.findAll({
 				roleName: "engineer",
@@ -142,6 +148,8 @@ describe("JobRoleDao", () => {
 				bandId: [4],
 				closingDateFrom: "2026-09-01",
 				closingDateTo: "2026-12-31",
+				page: 2,
+				pageSize: 5,
 			});
 
 			expect(prisma.jobRole.findMany).toHaveBeenCalledWith(
@@ -156,8 +164,22 @@ describe("JobRoleDao", () => {
 							lt: new Date("2027-01-01T00:00:00.000Z"),
 						},
 					},
+					skip: 5,
+					take: 5,
 				}),
 			);
+			expect(prisma.jobRole.count).toHaveBeenCalledWith({
+				where: {
+					roleName: { contains: "engineer", mode: "insensitive" },
+					locationId: { in: [1, 2] },
+					capabilityId: { in: [3] },
+					bandId: { in: [4] },
+					closingDate: {
+						gte: new Date("2026-09-01T00:00:00.000Z"),
+						lt: new Date("2027-01-01T00:00:00.000Z"),
+					},
+				},
+			});
 		});
 
 		it("should return array of JobRole objects", async () => {
@@ -166,22 +188,23 @@ describe("JobRoleDao", () => {
 			vi.mocked(
 				prisma.jobRole.findMany as unknown as typeof prisma.jobRole.findMany,
 			).mockResolvedValue(mockJobRoles);
+			vi.mocked(prisma.jobRole.count).mockResolvedValue(1);
 
 			const result = await dao.findAll();
 
-			expect(Array.isArray(result)).toBe(true);
-			expect(result).toHaveLength(1);
+			expect(result.items).toHaveLength(1);
+			expect(result.totalItems).toBe(1);
 		});
 
 		it("should return empty array when no job roles in database", async () => {
 			vi.mocked(
 				prisma.jobRole.findMany as unknown as typeof prisma.jobRole.findMany,
 			).mockResolvedValue([]);
+			vi.mocked(prisma.jobRole.count).mockResolvedValue(0);
 
 			const result = await dao.findAll();
 
-			expect(Array.isArray(result)).toBe(true);
-			expect(result).toHaveLength(0);
+			expect(result).toEqual({ items: [], totalItems: 0 });
 		});
 
 		it("should throw error when database fails", async () => {

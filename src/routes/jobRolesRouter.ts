@@ -2,8 +2,8 @@ import { type Request as R, type Response as Res, Router } from "express";
 import { JobRolesController } from "../controllers/jobRolesController";
 import {
 	CreateJobRoleSchema,
-	JobRoleIdParamSchema,
 	JobRoleFiltersSchema,
+	JobRoleIdParamSchema,
 	UpdateJobRoleSchema,
 } from "../dtos/jobRoleDto";
 import { allowRoles, USER_ROLES } from "../middleware/authorise";
@@ -194,15 +194,39 @@ jobRolesRouter.get("/locations", (req: R, res: Res) => {
  *           type: string
  *           format: date
  *         description: Include roles closing on or before this date
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - in: query
+ *         name: pageSize
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
  *     responses:
  *       200:
  *         description: List of job role summaries
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/JobRoleSummary'
+ *               type: object
+ *               properties:
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/JobRoleSummary'
+ *                 page:
+ *                   type: integer
+ *                 pageSize:
+ *                   type: integer
+ *                 totalItems:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
  *       400:
  *         description: Invalid filter parameters
  *         content:
