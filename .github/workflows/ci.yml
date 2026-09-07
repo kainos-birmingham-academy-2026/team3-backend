@@ -40,7 +40,7 @@ env:
   TF_VAR_deployment_principal_object_id: 8bdf433d-761a-4cd1-ba09-85754a1e0eef
   TF_VAR_acr_name: acraiacademy26
   TF_VAR_acr_resource_group_name: rg-ai-academy-26
-  TF_VAR_backend_image_tag: ${{ github.sha }}
+  TF_VAR_backend_image_tag: dev-${{ github.sha }}
   TF_VAR_container_revision_suffix: rev-${{ github.run_id }}
   TF_VAR_enable_swagger_docs: "true"
   TF_VAR_log_retention_in_days: "30"
@@ -152,8 +152,9 @@ jobs:
         with:
           context: .
           push: true
+          provenance: false
           tags: |
-            ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ needs.resolve-source.outputs.backend_sha }}
+            ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:dev-${{ needs.resolve-source.outputs.backend_sha }}
             ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:dev-latest
           cache-from: type=gha,scope=team3-backend
           cache-to: type=gha,mode=max,scope=team3-backend
@@ -161,7 +162,7 @@ jobs:
         env:
           SOURCE_SHA: ${{ needs.resolve-source.outputs.backend_sha }}
         run: |
-          az acr repository show --name "$ACR_NAME" --image "${IMAGE_NAME}:${SOURCE_SHA}" --only-show-errors
+          az acr repository show --name "$ACR_NAME" --image "${IMAGE_NAME}:dev-${SOURCE_SHA}" --only-show-errors
           az acr repository show --name "$ACR_NAME" --image "${IMAGE_NAME}:dev-latest" --only-show-errors
 
   push-test-image:
@@ -192,6 +193,7 @@ jobs:
         with:
           context: .
           push: true
+          provenance: false
           tags: ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:test-${{ needs.resolve-source.outputs.backend_sha }}
           cache-from: type=gha,scope=team3-backend
           cache-to: type=gha,mode=max,scope=team3-backend
@@ -271,7 +273,7 @@ jobs:
       id-token: write
     env:
       TF_VAR_postgresql_administrator_password: ${{ secrets.POSTGRESQL_ADMINISTRATOR_PASSWORD }}
-      TF_VAR_backend_image_tag: ${{ needs.resolve-source.outputs.backend_sha }}
+      TF_VAR_backend_image_tag: dev-${{ needs.resolve-source.outputs.backend_sha }}
     defaults:
       run:
         working-directory: infrastructure/environments/dev
