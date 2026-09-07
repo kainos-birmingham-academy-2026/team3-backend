@@ -5,7 +5,7 @@ import {
 import { AzureOpenAI } from "openai";
 
 const AZURE_OPENAI_SCOPE = "https://cognitiveservices.azure.com/.default";
-const MAX_OUTPUT_TOKENS = 250;
+const MAX_OUTPUT_TOKENS = 750;
 
 export class AzureOpenAIService {
 	private client?: AzureOpenAI;
