@@ -21,12 +21,14 @@ vi.mock("@azure/service-bus", () => ({
 beforeEach(() => {
   vi.clearAllMocks();
   process.env.AZURE_SERVICE_BUS_CONNECTION_STRING = "test-connection-string";
+  delete process.env.APP_ENV;
   delete process.env.AZURE_SERVICE_BUS_TOPIC;
   mockCreateSender.mockReturnValue({ sendMessages: mockSendMessages });
 });
 
 afterEach(() => {
   delete process.env.AZURE_SERVICE_BUS_CONNECTION_STRING;
+  delete process.env.APP_ENV;
   delete process.env.AZURE_SERVICE_BUS_TOPIC;
 });
 
@@ -55,6 +57,19 @@ test("skips publishing when Service Bus is not configured", async () => {
   await expect(
     publishNotification("AccountCreated", "user@example.com"),
   ).resolves.toBeUndefined();
+  expect(mockServiceBusConstructor).not.toHaveBeenCalled();
+  expect(mockSendMessages).not.toHaveBeenCalled();
+});
+
+test("throws in Azure when Service Bus is not configured", async () => {
+  delete process.env.AZURE_SERVICE_BUS_CONNECTION_STRING;
+  process.env.APP_ENV = "azure";
+
+  await expect(
+    publishNotification("AccountCreated", "user@example.com"),
+  ).rejects.toThrow(
+    "AZURE_SERVICE_BUS_CONNECTION_STRING is not configured in Azure",
+  );
   expect(mockServiceBusConstructor).not.toHaveBeenCalled();
   expect(mockSendMessages).not.toHaveBeenCalled();
 });

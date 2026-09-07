@@ -9,6 +9,12 @@ export async function publishNotification(
   const connectionString = process.env.AZURE_SERVICE_BUS_CONNECTION_STRING;
 
   if (!connectionString) {
+    if (process.env.APP_ENV === "azure") {
+      throw new Error(
+        "AZURE_SERVICE_BUS_CONNECTION_STRING is not configured in Azure",
+      );
+    }
+
     return;
   }
 

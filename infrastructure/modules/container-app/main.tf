@@ -76,6 +76,11 @@ resource "azurerm_container_app" "this" {
       }
 
       env {
+        name  = "APP_ENV"
+        value = "azure"
+      }
+
+      env {
         name  = "ENABLE_SWAGGER_DOCS"
         value = tostring(var.enable_swagger_docs)
       }
