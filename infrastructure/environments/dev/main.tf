@@ -305,7 +305,7 @@ module "backend_container_app" {
   database_url_secret_id                  = "${module.key_vault.vault_uri}secrets/database-url"
   jwt_secret_id                           = "${module.key_vault.vault_uri}secrets/jwt-secret"
   azure_openai_endpoint                   = data.azurerm_cognitive_account.openai.endpoint
-  azure_openai_deployment.                = "team3-chatbot-gpt5-nano"
+  azure_openai_deployment                 = "team3-chatbot-gpt5-nano"
   service_bus_connection_string_secret_id = "${module.key_vault.vault_uri}secrets/service-bus-connection-string"
   enable_swagger_docs                     = var.enable_swagger_docs
   seed_database                           = true
