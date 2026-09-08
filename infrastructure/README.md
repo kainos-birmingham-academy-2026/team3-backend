@@ -11,17 +11,17 @@ Each root uses a separate remote-state key in the shared `tfstate` container:
 The backend state owns the shared platform resources declared by each root,
 including the resource group, Key Vault, Container Apps Environment, backend
 identity, and backend Container App. Dev and test also own the database and
-monitoring. The frontend has a separate state key because it is deployed from
-another repository and owns only its identity, role assignments, and Container
-App. This prevents either workflow from locking or planning changes against
-resources owned by the other repository.
+monitoring, plus the Service Bus and email notification platform. The frontend
+has a separate state key because it is deployed from another repository and
+owns only its identity, role assignments, and Container App. This prevents
+either workflow from locking or planning changes against resources owned by the
+other repository.
 
 ## Platform architecture
 
 The diagram represents the complete dev and test environments. Production is
 currently a partial root, described separately below. The shared container
-registry is managed outside this Terraform root, while the backend dev state
-owns the team image-cleanup task attached to it.
+registry is managed outside this Terraform root.
 
 ```mermaid
 flowchart LR
@@ -84,8 +84,9 @@ The `dev` root manages:
 - `AcrPull` and `Key Vault Secrets User` role assignments for the managed
 	identity.
 
-The Container App pulls `team3-backend:dev-<commit-sha>` from the shared ACR. It
-reads Terraform-managed `database-url` and `jwt-secret` values from Key Vault.
+The Container App pulls `team3-backend:<commit-sha>` from the shared ACR. It
+reads Terraform-managed `database-url`, `jwt-secret`, and
+`service-bus-connection-string` values from Key Vault.
 The backend is not exposed through public ingress. The backend root also owns
 the frontend's `session-secret`, keeping application secret ownership in one
 state.
@@ -100,26 +101,17 @@ The dev container runs `prisma migrate deploy` and the idempotent Prisma seed
 before starting the API, so a recreated empty database receives its schema and
 development reference data.
 
-### Registry lifecycle
+Dev and test each provision a Standard Service Bus namespace with the
+`notifications` topic and `email-processor` subscription. Separate Send-only
+and Listen-only policies provide credentials for the backend and notification
+Function. Terraform stores those credentials and the Azure Communication
+Services credential in Key Vault and configures both workloads to read them.
 
-The dev state owns the `purge-team3-images` ACR Task for both application image
-repositories. It runs daily at 01:00 UTC independently of application
-deployments and applies these policies:
-
-- Dev SHA tags older than 48 hours are removed, while the newest immutable tag
-	remains available alongside `dev-latest`.
-- Test SHA tags older than 24 hours are removed, while the current immutable tag
-	remains available; frontend also keeps the `test-latest` alias.
-- Production tags are not matched and must use a separate release-retention and
-	locking policy before production deployment is enabled.
-
-The task uses Microsoft's `acr purge` command. Validate filter changes with
-`--dry-run` before applying them because deleted registry content is
-unrecoverable. Image publishing disables Buildx provenance because this
-single-platform registry does not consume attestations and representing each
-build as one directly tagged manifest avoids accumulating untagged OCI child
-manifests. Existing untagged manifests require graph-aware cleanup: manifests
-referenced by a tagged OCI index must not be deleted.
+The notification platform also includes a Flex Consumption Node.js Function
+App, storage, Application Insights, Azure Communication Services, Email
+Communication Services, an Azure-managed email domain, and the domain
+association. CI builds and deploys `functions/notifications` after each
+successful dev or test Terraform apply.
 
 ## Test architecture
 
@@ -154,8 +146,6 @@ Before deploying dev or test:
 - Create the remote-state resource group, storage account, and blob container.
 - Set `POSTGRESQL_ADMINISTRATOR_PASSWORD` for dev. Test generates its own
 	PostgreSQL administrator password.
-- Add `service-bus-connection-string` to the environment's Key Vault through
-	the Azure portal or an approved secret-management process.
 - Configure the GitHub Actions secrets listed below.
 
 ## GitHub configuration
@@ -201,7 +191,7 @@ recovery because those assignments are deleted with the resource group.
 | `application_secret_version` | Rotation counter for generated JWT and session credentials |
 | `acr_name` | Existing shared ACR name |
 | `acr_resource_group_name` | Resource group containing the shared ACR |
-| `backend_image_tag` | `dev-<commit-sha>` in dev, `test-<commit-sha>` in test, or an immutable SHA/release tag in prod |
+| `backend_image_tag` | Immutable commit SHA in dev, `test-<commit-sha>` in test, or an immutable SHA/release tag in prod |
 | `container_revision_suffix` | Optional revision suffix; CI uses the workflow run ID |
 | `enable_swagger_docs` | Exposes `/docs` and `/docs.json` when `true`; defaults to `false` |
 
@@ -213,7 +203,7 @@ Every pull request runs linting, tests, a container build, Terraform format
 checks, validation, and a dev plan. Feature-branch pushes do not run CI until a
 pull request is opened. A push to `main`:
 
-1. Builds and pushes `dev-<commit-sha>` and `dev-latest` images to ACR.
+1. Builds and pushes SHA-tagged and `dev-latest` images to ACR.
 2. Creates the Key Vault and deployment-principal Secrets Officer assignment if
 	they are missing.
 3. Creates and applies a complete Terraform plan for dev using the immutable

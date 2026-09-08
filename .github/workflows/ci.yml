@@ -92,7 +92,9 @@ jobs:
         with:
           node-version: "24"
           cache: npm
-          cache-dependency-path: package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            functions/notifications/package-lock.json
       - name: Install dependencies
         run: npm ci
       - name: Generate Prisma client
@@ -101,6 +103,11 @@ jobs:
         run: npm run lint
       - name: Run tests with coverage
         run: npm run test:coverage
+      - name: Test notification Function
+        working-directory: functions/notifications
+        run: |
+          npm ci
+          npm test
 
   build:
     name: Build container image
@@ -309,6 +316,22 @@ jobs:
         run: terraform plan -out=tfplan
       - name: Apply Terraform plan
         run: terraform apply -auto-approve tfplan
+      - name: Build notification Function
+        working-directory: functions/notifications
+        run: |
+          npm ci
+          npm run build
+          npm prune --omit=dev
+          zip -r "$RUNNER_TEMP/notifications.zip" host.json package.json package-lock.json dist node_modules
+      - name: Deploy notification Function
+        run: >-
+          az functionapp deploy
+          --resource-group rg-team3-dev
+          --name rg-team3-fa
+          --src-path "$RUNNER_TEMP/notifications.zip"
+          --type zip
+          --clean true
+          --restart true
       - name: Trigger frontend dev deployment
         env:
           GH_TOKEN: ${{ secrets.FRONTEND_REPOSITORY_DISPATCH_TOKEN }}
@@ -368,6 +391,28 @@ jobs:
         run: terraform plan -out=tfplan
       - name: Apply test Terraform plan
         run: terraform apply -auto-approve tfplan
+      - name: Check out notification Function source
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.resolve-source.outputs.backend_sha }}
+          path: notification-source
+          sparse-checkout: functions/notifications
+      - name: Build notification Function
+        working-directory: notification-source/functions/notifications
+        run: |
+          npm ci
+          npm run build
+          npm prune --omit=dev
+          zip -r "$RUNNER_TEMP/notifications.zip" host.json package.json package-lock.json dist node_modules
+      - name: Deploy notification Function
+        run: >-
+          az functionapp deploy
+          --resource-group rg-team3-test
+          --name fa-team3-test
+          --src-path "$RUNNER_TEMP/notifications.zip"
+          --type zip
+          --clean true
+          --restart true
       - name: Trigger frontend test deployment
         env:
           FRONTEND_SHA: ${{ needs.resolve-source.outputs.frontend_sha }}
