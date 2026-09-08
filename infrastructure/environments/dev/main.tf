@@ -81,6 +81,32 @@ module "container_app_environment" {
   }
 }
 
+module "notification_service_bus" {
+  source = "../../modules/notification-service-bus"
+
+  name                = "rg-${var.project_name}-svb"
+  location            = var.location
+  resource_group_name = module.resource_group.name
+  tags = {
+    environment = var.environment
+    managed_by  = "terraform"
+    project     = var.project_name
+  }
+}
+
+module "email_communication" {
+  source = "../../modules/email-communication"
+
+  communication_service_name = "rg-${var.project_name}-comms"
+  email_service_name         = "rg-${var.project_name}-email"
+  resource_group_name        = module.resource_group.name
+  tags = {
+    environment = var.environment
+    managed_by  = "terraform"
+    project     = var.project_name
+  }
+}
+
 module "postgresql" {
   source = "../../modules/postgresql"
 
@@ -168,6 +194,33 @@ resource "azurerm_key_vault_secret" "session_secret" {
   depends_on = [time_sleep.secrets_rbac_propagation]
 }
 
+resource "azurerm_key_vault_secret" "service_bus_connection_string" {
+  name             = "service-bus-connection-string"
+  key_vault_id     = module.key_vault.id
+  value_wo         = module.notification_service_bus.backend_send_primary_connection_string
+  value_wo_version = var.application_secret_version
+
+  depends_on = [time_sleep.secrets_rbac_propagation]
+}
+
+resource "azurerm_key_vault_secret" "function_service_bus_connection_string" {
+  name             = "function-service-bus-connection-string"
+  key_vault_id     = module.key_vault.id
+  value_wo         = module.notification_service_bus.function_listen_primary_connection_string
+  value_wo_version = var.application_secret_version
+
+  depends_on = [time_sleep.secrets_rbac_propagation]
+}
+
+resource "azurerm_key_vault_secret" "acs_connection_string" {
+  name             = "acs-connection-string"
+  key_vault_id     = module.key_vault.id
+  value_wo         = module.email_communication.primary_connection_string
+  value_wo_version = var.application_secret_version
+
+  depends_on = [time_sleep.secrets_rbac_propagation]
+}
+
 resource "azurerm_role_assignment" "key_vault_secrets_user" {
   scope                = module.key_vault.id
   role_definition_name = "Key Vault Secrets User"
@@ -184,6 +237,39 @@ resource "azurerm_role_assignment" "acr_pull" {
   principal_type       = "ServicePrincipal"
 
   depends_on = [module.managed_identity]
+}
+
+module "notification_function" {
+  source = "../../modules/notification-function"
+
+  name                              = "rg-${var.project_name}-fa"
+  storage_account_name              = "rg${var.project_name}${var.environment}ac09"
+  deployment_container_name         = "app-package-rg-team3-fa-af43acb"
+  service_plan_name                 = "ASP-rg${var.project_name}${var.environment}-89fa"
+  application_insights_name         = "rg-${var.project_name}-fa"
+  location                          = var.location
+  resource_group_name               = module.resource_group.name
+  log_analytics_workspace_id        = module.log_analytics.id
+  service_bus_connection_secret_uri = "${module.key_vault.vault_uri}secrets/function-service-bus-connection-string"
+  acs_connection_secret_uri         = "${module.key_vault.vault_uri}secrets/acs-connection-string"
+  email_sender_address              = "DoNotReply@${module.email_communication.sender_domain}"
+  tags = {
+    environment = var.environment
+    managed_by  = "terraform"
+    project     = var.project_name
+  }
+
+  depends_on = [
+    azurerm_key_vault_secret.function_service_bus_connection_string,
+    azurerm_key_vault_secret.acs_connection_string,
+  ]
+}
+
+resource "azurerm_role_assignment" "notification_function_key_vault_secrets_user" {
+  scope                = module.key_vault.id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = module.notification_function.principal_id
+  principal_type       = "ServicePrincipal"
 }
 
 module "backend_container_app" {
@@ -212,6 +298,7 @@ module "backend_container_app" {
     azurerm_role_assignment.key_vault_secrets_user,
     azurerm_key_vault_secret.database_url,
     azurerm_key_vault_secret.jwt_secret,
+    azurerm_key_vault_secret.service_bus_connection_string,
   ]
 }
 
