@@ -123,6 +123,11 @@ describe("job role DTO schemas", () => {
 
 		it.each([
 			["an empty role name", { roleName: "" }],
+			["a description over 2000 characters", { description: "a".repeat(2001) }],
+			[
+				"responsibilities over 2000 characters",
+				{ responsibilities: "a".repeat(2001) },
+			],
 			["an invalid URL", { sharepointUrl: "not-a-url" }],
 			["zero open positions", { numberOfOpenPositions: 0 }],
 			["an invalid closing date", { closingDate: "not-a-date" }],

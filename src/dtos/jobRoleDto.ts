@@ -53,8 +53,16 @@ export const CreateJobRoleSchema = z.object({
 		.trim()
 		.min(1, "Role name is required")
 		.max(100, "Role name must be 100 characters or fewer"),
-	description: z.string().trim().min(1, "Description is required"),
-	responsibilities: z.string().trim().min(1, "Responsibilities are required"),
+	description: z
+		.string()
+		.trim()
+		.min(1, "Description is required")
+		.max(2000, "Description must be 2000 characters or fewer"),
+	responsibilities: z
+		.string()
+		.trim()
+		.min(1, "Responsibilities are required")
+		.max(2000, "Responsibilities must be 2000 characters or fewer"),
 	sharepointUrl: z
 		.url("SharePoint URL must be a valid URL")
 		.max(255, "SharePoint URL must be 255 characters or fewer"),
