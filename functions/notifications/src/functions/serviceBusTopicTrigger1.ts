@@ -55,10 +55,7 @@ export async function serviceBusTopicTrigger1(
 
 	switch (notification.type) {
 		case "AccountCreated":
-			await sendWelcomeEmail(
-				notification.email,
-				notification.name ?? "User",
-			);
+			await sendWelcomeEmail(notification.email, notification.name ?? "User");
 			break;
 		case "ApplicationCreated":
 			await sendApplicationCreatedEmail(notification.email);
