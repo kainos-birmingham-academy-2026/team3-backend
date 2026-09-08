@@ -324,14 +324,11 @@ jobs:
           npm prune --omit=dev
           zip -r "$RUNNER_TEMP/notifications.zip" host.json package.json package-lock.json dist node_modules
       - name: Deploy notification Function
-        run: >-
-          az functionapp deploy
-          --resource-group rg-team3-dev
-          --name rg-team3-fa
-          --src-path "$RUNNER_TEMP/notifications.zip"
-          --type zip
-          --clean true
-          --restart true
+        uses: Azure/functions-action@v1
+        with:
+          app-name: rg-team3-fa
+          package: ${{ runner.temp }}/notifications.zip
+          sku: flexconsumption
       - name: Trigger frontend dev deployment
         env:
           GH_TOKEN: ${{ secrets.FRONTEND_REPOSITORY_DISPATCH_TOKEN }}
@@ -405,14 +402,11 @@ jobs:
           npm prune --omit=dev
           zip -r "$RUNNER_TEMP/notifications.zip" host.json package.json package-lock.json dist node_modules
       - name: Deploy notification Function
-        run: >-
-          az functionapp deploy
-          --resource-group rg-team3-test
-          --name fa-team3-test
-          --src-path "$RUNNER_TEMP/notifications.zip"
-          --type zip
-          --clean true
-          --restart true
+        uses: Azure/functions-action@v1
+        with:
+          app-name: fa-team3-test
+          package: ${{ runner.temp }}/notifications.zip
+          sku: flexconsumption
       - name: Trigger frontend test deployment
         env:
           FRONTEND_SHA: ${{ needs.resolve-source.outputs.frontend_sha }}
