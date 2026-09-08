@@ -36,10 +36,7 @@ describe("parseNotification", () => {
 	});
 
 	it("ignores invalid messages", () => {
-		assert.equal(
-			parseNotification({ type: "AccountCreated" }),
-			undefined,
-		);
+		assert.equal(parseNotification({ type: "AccountCreated" }), undefined);
 	});
 });
 

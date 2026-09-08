@@ -152,6 +152,13 @@ data "azurerm_container_registry" "shared" {
   resource_group_name = var.acr_resource_group_name
 }
 
+# The academy-managed Azure OpenAI account and deployment are external prerequisites.
+# Terraform validates the account and manages this application's access to it.
+data "azurerm_cognitive_account" "openai" {
+  name                = "aoai-team3-chatbot-dev"
+  resource_group_name = module.resource_group.name
+}
+
 resource "azurerm_role_assignment" "deployment_secrets_officer" {
   scope                = module.key_vault.id
   role_definition_name = "Key Vault Secrets Officer"
@@ -272,6 +279,13 @@ resource "azurerm_role_assignment" "notification_function_key_vault_secrets_user
   principal_type       = "ServicePrincipal"
 }
 
+resource "azurerm_role_assignment" "openai_user" {
+  scope                = data.azurerm_cognitive_account.openai.id
+  role_definition_name = "Cognitive Services OpenAI User"
+  principal_id         = module.managed_identity.principal_id
+  principal_type       = "ServicePrincipal"
+}
+
 module "backend_container_app" {
   source = "../../modules/container-app"
 
@@ -279,11 +293,14 @@ module "backend_container_app" {
   container_app_environment_id            = module.container_app_environment.id
   resource_group_name                     = module.resource_group.name
   managed_identity_id                     = module.managed_identity.id
+  managed_identity_client_id              = module.managed_identity.client_id
   registry_server                         = data.azurerm_container_registry.shared.login_server
   image                                   = "${data.azurerm_container_registry.shared.login_server}/team3-backend:${var.backend_image_tag}"
   revision_suffix                         = var.container_revision_suffix
   database_url_secret_id                  = "${module.key_vault.vault_uri}secrets/database-url"
   jwt_secret_id                           = "${module.key_vault.vault_uri}secrets/jwt-secret"
+  azure_openai_endpoint                   = data.azurerm_cognitive_account.openai.endpoint
+  azure_openai_deployment                 = "team3-chatbot-gpt5-nano"
   service_bus_connection_string_secret_id = "${module.key_vault.vault_uri}secrets/service-bus-connection-string"
   enable_swagger_docs                     = var.enable_swagger_docs
   seed_database                           = true
@@ -296,6 +313,7 @@ module "backend_container_app" {
   depends_on = [
     azurerm_role_assignment.acr_pull,
     azurerm_role_assignment.key_vault_secrets_user,
+    azurerm_role_assignment.openai_user,
     azurerm_key_vault_secret.database_url,
     azurerm_key_vault_secret.jwt_secret,
     azurerm_key_vault_secret.service_bus_connection_string,
