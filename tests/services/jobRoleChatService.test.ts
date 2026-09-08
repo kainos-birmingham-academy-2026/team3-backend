@@ -330,9 +330,9 @@ describe("JobRoleChatService", () => {
 					.fn()
 					.mockResolvedValue(
 						paginatedRoles([
-						roleSummary(1, "Senior Software Engineer", "Glasgow"),
-						roleSummary(2, "Associate Software Engineer", "London"),
-						roleSummary(3, "Trainee Software Engineer", "Belfast"),
+							roleSummary(1, "Senior Software Engineer", "Glasgow"),
+							roleSummary(2, "Associate Software Engineer", "London"),
+							roleSummary(3, "Trainee Software Engineer", "Belfast"),
 						]),
 					),
 				findById: vi.fn(),

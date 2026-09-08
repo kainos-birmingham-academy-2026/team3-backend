@@ -286,11 +286,6 @@ resource "azurerm_role_assignment" "openai_user" {
   principal_type       = "ServicePrincipal"
 }
 
-import {
-  to = azurerm_role_assignment.openai_user
-  id = "/subscriptions/ca3b1116-a974-4549-88c2-8b56da5130d0/resourceGroups/rg-team3-dev/providers/Microsoft.CognitiveServices/accounts/aoai-team3-chatbot-dev/providers/Microsoft.Authorization/roleAssignments/b93bc3e5-a4bc-458e-a568-b46130d7cf4d"
-}
-
 module "backend_container_app" {
   source = "../../modules/container-app"
 
