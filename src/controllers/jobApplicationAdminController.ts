@@ -11,16 +11,16 @@ export class JobApplicationAdminController {
 
 	async getAllAdmin(_req: Request, res: Response) {
 		try {
-			const { jobRoleId, page, pageSize } = res.locals.validatedQuery as {
+			const query = res.locals.validatedQuery as {
 				jobRoleId?: number;
+				search?: string;
+				status?: "IN_PROGRESS" | "HIRED" | "REJECTED" | "WITHDRAWN";
+				role?: string;
+				location?: string;
 				page: number;
 				pageSize: number;
 			};
-			const jobApplications = await this.service.findAllAdmin({
-				jobRoleId,
-				page,
-				pageSize,
-			});
+			const jobApplications = await this.service.findAllAdmin(query);
 			return res.status(200).json(jobApplications);
 		} catch (error) {
 			return this.handleStatusErrors(error, res);

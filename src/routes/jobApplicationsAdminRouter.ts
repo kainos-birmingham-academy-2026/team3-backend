@@ -18,6 +18,10 @@ const controller = new JobApplicationAdminController(
 
 const AdminApplicationsQuerySchema = z.strictObject({
 	jobRoleId: z.coerce.number().int().positive().optional(),
+	search: z.string().trim().optional(),
+	status: z.enum(["IN_PROGRESS", "HIRED", "REJECTED", "WITHDRAWN"]).optional(),
+	role: z.string().trim().optional(),
+	location: z.string().trim().optional(),
 	page: z.coerce.number().int().positive().default(1),
 	pageSize: z.coerce.number().int().positive().max(100).default(10),
 });

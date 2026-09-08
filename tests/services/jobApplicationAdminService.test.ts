@@ -188,6 +188,36 @@ describe("jobApplicationAdminService", () => {
 		expect(mockCount).toHaveBeenCalledWith(undefined);
 	});
 
+	it("should apply the same filters to applications and the total count", async () => {
+		mockFindMany.mockResolvedValueOnce([]);
+		mockCount.mockResolvedValueOnce(0);
+
+		await service.findAllAdmin({
+			search: "candidate@example.com",
+			status: "HIRED",
+			role: "Software Engineer",
+			location: "Belfast",
+			page: 1,
+			pageSize: 10,
+		});
+
+		const expectedWhere = {
+			jobRoleId: undefined,
+			applicationStatus: "HIRED",
+			user: {
+				email: { contains: "candidate@example.com", mode: "insensitive" },
+			},
+			jobRole: {
+				roleName: "Software Engineer",
+				location: { locationName: "Belfast" },
+			},
+		};
+		expect(mockFindMany).toHaveBeenCalledWith(
+			expect.objectContaining({ where: expectedWhere }),
+		);
+		expect(mockCount).toHaveBeenCalledWith({ where: expectedWhere });
+	});
+
 	it("should map HIRED status to hire flow", async () => {
 		const hireSpy = vi
 			.spyOn(service, "hireApplicantById")
