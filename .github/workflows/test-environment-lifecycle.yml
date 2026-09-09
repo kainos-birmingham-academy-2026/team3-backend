@@ -14,15 +14,20 @@ on:
         options:
           - start
           - stop
+      test_environment:
+        description: Test slot for manual start or stop
+        required: true
+        type: choice
+        default: test1
+        options:
+          - test1
+          - test2
+          - test3
 
 permissions:
   contents: read
   id-token: write
   actions: write
-
-concurrency:
-  group: test-environment-deployment
-  cancel-in-progress: false
 
 jobs:
   resolve-action:
@@ -30,31 +35,53 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       action: ${{ steps.resolve.outputs.action }}
+      slots: ${{ steps.resolve.outputs.slots }}
     steps:
       - name: Resolve action for UK local time
         id: resolve
         env:
           REQUESTED_ACTION: ${{ inputs.action }}
+          REQUESTED_ENVIRONMENT: ${{ inputs.test_environment }}
         run: |
           if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
             action="$REQUESTED_ACTION"
+            case "$REQUESTED_ENVIRONMENT" in
+              test1|test2|test3) ;;
+              *) echo "Unsupported test environment"; exit 1 ;;
+            esac
+            case "$action" in
+              start|stop) ;;
+              *) echo "Unsupported lifecycle action"; exit 1 ;;
+            esac
+            slots=$(jq -cn --arg slot "$REQUESTED_ENVIRONMENT" '[$slot]')
           else
             london_hour=$(TZ=Europe/London date +%H)
+            slots='["test1"]'
 
             case "$london_hour" in
               08) action=start ;;
-              18) action=stop ;;
+              18) action=stop; slots='["test1","test2","test3"]' ;;
               *) action=skip ;;
             esac
           fi
 
           echo "action=$action" >> "$GITHUB_OUTPUT"
+          echo "slots=$slots" >> "$GITHUB_OUTPUT"
 
   stop:
-    name: Delete test resource group
+    name: Delete ${{ matrix.slot }} resource group
     if: needs.resolve-action.outputs.action == 'stop'
     needs: resolve-action
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        slot: ${{ fromJSON(needs.resolve-action.outputs.slots) }}
+    concurrency:
+      group: test-environment-${{ matrix.slot }}-deployment
+      cancel-in-progress: false
+    env:
+      TEST_ENVIRONMENT: ${{ matrix.slot }}
     steps:
       - name: Wait for frontend deployments
         env:
@@ -87,25 +114,31 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Delete test resource group
         run: |
-          if [[ "$(az group exists --name rg-team3-test)" == "true" ]]; then
-            az group delete --name rg-team3-test --yes
+          if [[ "$(az group exists --name "rg-team3-${TEST_ENVIRONMENT}")" == "true" ]]; then
+            az group delete --name "rg-team3-${TEST_ENVIRONMENT}" --yes
           else
-            echo "rg-team3-test is already absent"
+            echo "rg-team3-${TEST_ENVIRONMENT} is already absent"
           fi
 
   start:
-    name: Deploy latest main images
+    name: Deploy latest main images to ${{ matrix.slot }}
     if: needs.resolve-action.outputs.action == 'start'
     needs: resolve-action
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        slot: ${{ fromJSON(needs.resolve-action.outputs.slots) }}
     steps:
       - name: Trigger complete test deployment
         env:
           GH_TOKEN: ${{ github.token }}
+          TEST_ENVIRONMENT: ${{ matrix.slot }}
         run: >-
           gh workflow run ci.yml
           --repo "$GITHUB_REPOSITORY"
           --ref main
           --field deploy_test=true
+          --field "test_environment=${TEST_ENVIRONMENT}"
           --field backend_ref=main
           --field frontend_ref=main
