@@ -76,6 +76,68 @@ jobs:
           sha=$(gh api "repos/kainos-birmingham-academy-2026/team3-frontend/commits/${encoded_ref}" --jq '.sha')
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
 
+  test-environment-status:
+    name: Check test environment
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy_test
+    needs: resolve-source
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      ready: ${{ steps.environment.outputs.ready }}
+    steps:
+      - name: Sign in to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Check frontend prerequisites
+        id: environment
+        run: |
+          ready=true
+
+          if [[ "$(az group exists --name rg-team3-test)" != "true" ]]; then
+            ready=false
+          fi
+
+          while IFS='|' read -r resource_type resource_name; do
+            if ! az resource show \
+              --resource-group rg-team3-test \
+              --resource-type "$resource_type" \
+              --name "$resource_name" \
+              --only-show-errors \
+              --output none; then
+              ready=false
+            fi
+          done <<'RESOURCES'
+          Microsoft.KeyVault/vaults|kv-team3-test
+          Microsoft.App/managedEnvironments|cae-team3-test
+          Microsoft.App/containerApps|ca-team3-backend-test
+          RESOURCES
+
+          echo "ready=$ready" >> "$GITHUB_OUTPUT"
+
+  trigger-frontend-test-warm:
+    name: Start parallel frontend test deployment
+    if: needs.test-environment-status.outputs.ready == 'true'
+    needs: [resolve-source, test, test-environment-status]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Trigger frontend test deployment
+        env:
+          FRONTEND_SHA: ${{ needs.resolve-source.outputs.frontend_sha }}
+          GH_TOKEN: ${{ secrets.FRONTEND_REPOSITORY_DISPATCH_TOKEN }}
+        run: >-
+          gh api
+          --method POST
+          repos/kainos-birmingham-academy-2026/team3-frontend/dispatches
+          --field event_type=backend-test-deployed
+          --raw-field "client_payload[frontend_ref]=${FRONTEND_SHA}"
+
   test:
     name: Lint and test
     needs: resolve-source
@@ -341,7 +403,7 @@ jobs:
   terraform-deploy-test:
     name: Deploy test infrastructure
     if: github.event_name == 'workflow_dispatch' && inputs.deploy_test
-    needs: [resolve-source, push-test-image]
+    needs: [resolve-source, push-test-image, test-environment-status]
     runs-on: ubuntu-latest
     concurrency:
       group: backend-infrastructure-test
@@ -408,6 +470,7 @@ jobs:
           package: ${{ runner.temp }}/notifications.zip
           sku: flexconsumption
       - name: Trigger frontend test deployment
+        if: needs.test-environment-status.outputs.ready != 'true'
         env:
           FRONTEND_SHA: ${{ needs.resolve-source.outputs.frontend_sha }}
           GH_TOKEN: ${{ secrets.FRONTEND_REPOSITORY_DISPATCH_TOKEN }}
