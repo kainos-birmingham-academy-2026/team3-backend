@@ -255,6 +255,9 @@ Choose the application refs according to what you need to verify:
 
 The inputs have these effects:
 
+- **test_environment** selects `test1` (default), `test2`, or `test3`.
+	Selecting an occupied slot updates it; there is no automatic free-slot
+	allocation. Agree slot ownership with the team before deploying.
 - **backend_ref** selects the backend branch, tag, or commit built and deployed
 	as `test-<commit-sha>`.
 - **frontend_ref** selects the frontend branch, tag, or commit passed to the
@@ -264,11 +267,68 @@ Both references are resolved to exact commit SHAs in the first workflow job. An
 unknown branch, tag, or SHA fails the run before tests, image pushes, or
 Terraform changes begin.
 
-The test deployment uses `team3-backend-test.tfstate` and creates resources in
-`rg-team3-test`. The workflow and Terraform configuration always come from
-`main`; only the application images come from the selected refs. The deployment
-does not read or update dev state. A dedicated concurrency group prevents a dev
-deployment from cancelling an in-progress manual test deployment.
+Each slot reuses `infrastructure/environments/test` with `TF_VAR_environment`
+set to the selected name. It uses `team3-backend-<slot>.tfstate` and creates
+resources in `rg-team3-<slot>`. The frontend receives the same slot and resolved
+commit in the dispatch payload and uses `team3-frontend-<slot>.tfstate`.
+Never reuse one slot's state key with another slot's environment value.
+
+Run the workflow from `main` for trusted workflow and Terraform configuration;
+the application refs can select other branches. Dev state is unchanged.
+Concurrency groups are slot-specific, allowing different slots to deploy in
+parallel. Existing slots retain warm frontend dispatch; missing prerequisites
+keep backend-first ordering. Image tags remain `test-<commit-sha>` and can be
+reused by multiple slots without sharing their databases or application secrets.
+
+Merge the frontend slot support before the backend workflow changes. Dispatches
+without a valid numbered slot now fail validation. Avoid Test deployments
+between these merges. The existing `rg-team3-test` and its state are not renamed,
+migrated or deleted by this change; retire them separately when no longer needed.
+Local Terraform defaults to `test1`. Reinitialise with `-reconfigure` and the
+matching `team3-backend-<slot>.tfstate` key before planning if the directory was
+previously initialised against legacy `test`. Do not migrate legacy state into
+a numbered slot.
+All slots still depend on the shared ACR, remote state storage and the OpenAI
+account/model in Dev. Additional slots consume Azure quota and incur costs.
+
+### Scheduled lifecycle
+
+The **Test environment lifecycle** workflow accepts `start` or `stop` and a slot
+dropdown for manual runs. Weekday schedules request `test1` startup at roughly
+08:05 UK time and delete `test1`, `test2` and `test3` at roughly 18:05 UK
+time. GMT/BST is handled by the local-time gate; GitHub schedules can be delayed.
+Only `test1` starts automatically. Other slots are created on demand.
+
+Deletion uses the selected slot's deployment lock and conservatively waits for
+active or queued frontend repository-dispatch runs, including other slots.
+GitHub concurrency groups are repository-scoped; this check is not a distributed
+lock and does not cover every possible manually queued or rerun frontend job.
+Do not trigger independent frontend deployments while teardown is running.
+The dispatch token needs frontend Actions read permission for this check, in
+addition to Contents write permission for repository dispatch.
+
+Deleting a slot removes its database contents and queued notifications. The
+next deployment provisions/seeds the database; it does not restore test data.
+Keep the remote state and Dev OpenAI resources. Purge-protected Key Vaults are
+soft-deleted and recovered by the Test provider. No slot is deleted simply by
+merging the Terraform changes, but the scheduled lifecycle will delete slots
+once the workflow is active on the default branch.
+
+### Adding test slots
+
+Adding `test4` or `test5` needs no new Terraform directories or modules. Update
+these explicit lists together:
+
+1. The backend CI `test_environment` dropdown and shell allowlist.
+2. The lifecycle workflow dropdown, shell allowlist and evening `slots` array.
+3. The frontend CI dispatch shell allowlist.
+4. The `environment` validation list in both Test Terraform roots.
+
+Resource names, state keys, Function targets, dispatch payloads and concurrency
+groups already derive from the selected slot. Keep `test1` as the default and
+morning startup slot unless the scheduling policy changes. Check Azure quotas
+and global resource-name availability before provisioning more slots. Merge
+frontend acceptance first, then expose the new backend dropdown choices.
 
 ## Local Terraform checks
 

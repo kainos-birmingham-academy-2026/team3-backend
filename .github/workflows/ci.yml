@@ -12,6 +12,15 @@ on:
         required: true
         type: boolean
         default: false
+      test_environment:
+        description: Isolated test slot
+        required: true
+        type: choice
+        default: test1
+        options:
+          - test1
+          - test2
+          - test3
       backend_ref:
         description: Backend branch, tag, or commit to deploy to test
         required: true
@@ -34,6 +43,7 @@ env:
   TF_STATE_STORAGE_ACCOUNT: stteam3tfstate26
   TF_IN_AUTOMATION: true
   TF_INPUT: false
+  TEST_ENVIRONMENT: ${{ inputs.test_environment }}
   TF_VAR_environment: dev
   TF_VAR_location: uksouth
   TF_VAR_project_name: team3
@@ -48,7 +58,7 @@ env:
   TF_VAR_grafana_admin_object_ids: ${{ vars.GRAFANA_ADMIN_OBJECT_IDS != '' && vars.GRAFANA_ADMIN_OBJECT_IDS || '[]' }}
 
 concurrency:
-  group: ${{ github.event_name == 'workflow_dispatch' && inputs.deploy_test && 'test-environment-deployment' || format('ci-{0}-{1}', github.workflow, github.event.pull_request.number || github.ref) }}
+  group: ${{ github.event_name == 'workflow_dispatch' && inputs.deploy_test && format('test-environment-{0}-deployment', inputs.test_environment) || format('ci-{0}-{1}', github.workflow, github.event.pull_request.number || github.ref) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -59,6 +69,13 @@ jobs:
       backend_sha: ${{ steps.backend_source.outputs.sha }}
       frontend_sha: ${{ steps.frontend_source.outputs.sha }}
     steps:
+      - name: Validate test slot
+        if: github.event_name == 'workflow_dispatch' && inputs.deploy_test
+        run: |
+          case "$TEST_ENVIRONMENT" in
+            test1|test2|test3) ;;
+            *) echo "Unsupported test environment"; exit 1 ;;
+          esac
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.deploy_test && inputs.backend_ref || github.sha }}
@@ -98,23 +115,23 @@ jobs:
         run: |
           ready=true
 
-          if [[ "$(az group exists --name rg-team3-test)" != "true" ]]; then
+          if [[ "$(az group exists --name "rg-team3-${TEST_ENVIRONMENT}")" != "true" ]]; then
             ready=false
           fi
 
           while IFS='|' read -r resource_type resource_name; do
             if ! az resource show \
-              --resource-group rg-team3-test \
+              --resource-group "rg-team3-${TEST_ENVIRONMENT}" \
               --resource-type "$resource_type" \
               --name "$resource_name" \
               --only-show-errors \
               --output none; then
               ready=false
             fi
-          done <<'RESOURCES'
-          Microsoft.KeyVault/vaults|kv-team3-test
-          Microsoft.App/managedEnvironments|cae-team3-test
-          Microsoft.App/containerApps|ca-team3-backend-test
+          done <<RESOURCES
+          Microsoft.KeyVault/vaults|kv-team3-${TEST_ENVIRONMENT}
+          Microsoft.App/managedEnvironments|cae-team3-${TEST_ENVIRONMENT}
+          Microsoft.App/containerApps|ca-team3-backend-${TEST_ENVIRONMENT}
           RESOURCES
 
           echo "ready=$ready" >> "$GITHUB_OUTPUT"
@@ -137,6 +154,7 @@ jobs:
           repos/kainos-birmingham-academy-2026/team3-frontend/dispatches
           --field event_type=backend-test-deployed
           --raw-field "client_payload[frontend_ref]=${FRONTEND_SHA}"
+          --raw-field "client_payload[test_environment]=${TEST_ENVIRONMENT}"
 
   test:
     name: Lint and test
@@ -406,13 +424,13 @@ jobs:
     needs: [resolve-source, push-test-image, test-environment-status]
     runs-on: ubuntu-latest
     concurrency:
-      group: backend-infrastructure-test
+      group: backend-infrastructure-${{ inputs.test_environment }}
       cancel-in-progress: false
     permissions:
       contents: read
       id-token: write
     env:
-      TF_VAR_environment: test
+      TF_VAR_environment: ${{ inputs.test_environment }}
       TF_VAR_backend_image_tag: test-${{ needs.resolve-source.outputs.backend_sha }}
       TF_VAR_container_revision_suffix: test-${{ github.run_id }}
     defaults:
@@ -437,7 +455,7 @@ jobs:
           -backend-config="resource_group_name=${TF_STATE_RESOURCE_GROUP}"
           -backend-config="storage_account_name=${TF_STATE_STORAGE_ACCOUNT}"
           -backend-config="container_name=${TF_STATE_CONTAINER}"
-          -backend-config="key=team3-backend-test.tfstate"
+          -backend-config="key=team3-backend-${TEST_ENVIRONMENT}.tfstate"
           -backend-config="use_azuread_auth=true"
       - name: Validate Terraform
         run: terraform validate
@@ -466,7 +484,7 @@ jobs:
       - name: Deploy notification Function
         uses: Azure/functions-action@v1
         with:
-          app-name: fa-team3-test
+          app-name: fa-team3-${{ inputs.test_environment }}
           package: ${{ runner.temp }}/notifications.zip
           sku: flexconsumption
       - name: Trigger frontend test deployment
@@ -480,3 +498,4 @@ jobs:
           repos/kainos-birmingham-academy-2026/team3-frontend/dispatches
           --field event_type=backend-test-deployed
           --raw-field "client_payload[frontend_ref]=${FRONTEND_SHA}"
+          --raw-field "client_payload[test_environment]=${TEST_ENVIRONMENT}"
