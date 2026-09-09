@@ -212,7 +212,21 @@ export class JobRoleDao {
 
 	async getBands(): Promise<Array<{ bandId: number; bandName: string }>> {
 		const rows = await prisma.band.findMany();
-		return rows.map((row) => ({ bandId: row.bandId, bandName: row.bandName }));
+		const bandOrder = [
+			"Principal",
+			"Manager",
+			"Consultant",
+			"Senior Associate",
+			"Associate",
+			"Trainee",
+			"Apprentice",
+		];
+		return rows
+			.map((row) => ({ bandId: row.bandId, bandName: row.bandName }))
+			.sort(
+				(first, second) =>
+					bandOrder.indexOf(first.bandName) - bandOrder.indexOf(second.bandName),
+			);
 	}
 
 	async getCapabilities(): Promise<

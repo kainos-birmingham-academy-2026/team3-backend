@@ -197,12 +197,27 @@ async function main() {
 	]);
 
 	// Bands
-	const [trainee, associate, engineer, senior, lead, principal] =
+	const [principal, manager, consultant, seniorAssociate, associate, trainee, _apprentice] =
 		await Promise.all([
 			prisma.band.upsert({
-				where: { bandName: "Trainee" },
+				where: { bandName: "Principal" },
 				update: {},
-				create: { bandName: "Trainee" },
+				create: { bandName: "Principal" },
+			}),
+			prisma.band.upsert({
+				where: { bandName: "Manager" },
+				update: {},
+				create: { bandName: "Manager" },
+			}),
+			prisma.band.upsert({
+				where: { bandName: "Consultant" },
+				update: {},
+				create: { bandName: "Consultant" },
+			}),
+			prisma.band.upsert({
+				where: { bandName: "Senior Associate" },
+				update: {},
+				create: { bandName: "Senior Associate" },
 			}),
 			prisma.band.upsert({
 				where: { bandName: "Associate" },
@@ -210,24 +225,14 @@ async function main() {
 				create: { bandName: "Associate" },
 			}),
 			prisma.band.upsert({
-				where: { bandName: "Engineer" },
+				where: { bandName: "Trainee" },
 				update: {},
-				create: { bandName: "Engineer" },
+				create: { bandName: "Trainee" },
 			}),
 			prisma.band.upsert({
-				where: { bandName: "Senior Engineer" },
+				where: { bandName: "Apprentice" },
 				update: {},
-				create: { bandName: "Senior Engineer" },
-			}),
-			prisma.band.upsert({
-				where: { bandName: "Lead Engineer" },
-				update: {},
-				create: { bandName: "Lead Engineer" },
-			}),
-			prisma.band.upsert({
-				where: { bandName: "Principal Engineer" },
-				update: {},
-				create: { bandName: "Principal Engineer" },
+				create: { bandName: "Apprentice" },
 			}),
 		]);
 
@@ -243,7 +248,7 @@ async function main() {
 			numberOfOpenPositions: 3,
 			locationId: belfast.locationId,
 			capabilityId: engineering.capabilityId,
-			bandId: engineer.bandId,
+			bandId: consultant.bandId,
 			statusId: openStatus.statusId,
 			closingDate: new Date("2026-09-30"),
 		},
@@ -257,7 +262,7 @@ async function main() {
 			numberOfOpenPositions: 2,
 			locationId: glasgow.locationId,
 			capabilityId: engineering.capabilityId,
-			bandId: senior.bandId,
+			bandId: seniorAssociate.bandId,
 			statusId: openStatus.statusId,
 			closingDate: new Date("2026-10-15"),
 		},
@@ -271,7 +276,7 @@ async function main() {
 			numberOfOpenPositions: 1,
 			locationId: birmingham.locationId,
 			capabilityId: engineering.capabilityId,
-			bandId: lead.bandId,
+			bandId: manager.bandId,
 			statusId: openStatus.statusId,
 			closingDate: new Date("2026-09-05"),
 		},
@@ -313,7 +318,7 @@ async function main() {
 			numberOfOpenPositions: 2,
 			locationId: glasgow.locationId,
 			capabilityId: cloud.capabilityId,
-			bandId: senior.bandId,
+			bandId: seniorAssociate.bandId,
 			statusId: openStatus.statusId,
 			closingDate: new Date("2026-10-20"),
 		},
@@ -325,7 +330,7 @@ async function main() {
 			numberOfOpenPositions: 2,
 			locationId: birmingham.locationId,
 			capabilityId: cloud.capabilityId,
-			bandId: engineer.bandId,
+			bandId: consultant.bandId,
 			statusId: openStatus.statusId,
 			closingDate: new Date("2026-08-20"),
 		},
@@ -339,7 +344,7 @@ async function main() {
 			numberOfOpenPositions: 1,
 			locationId: london.locationId,
 			capabilityId: security.capabilityId,
-			bandId: engineer.bandId,
+			bandId: consultant.bandId,
 			statusId: openStatus.statusId,
 			closingDate: new Date("2026-09-25"),
 		},
@@ -353,7 +358,7 @@ async function main() {
 			numberOfOpenPositions: 1,
 			locationId: remote.locationId,
 			capabilityId: security.capabilityId,
-			bandId: senior.bandId,
+			bandId: seniorAssociate.bandId,
 			statusId: openStatus.statusId,
 			closingDate: new Date("2026-10-05"),
 		},
