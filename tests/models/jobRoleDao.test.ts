@@ -467,13 +467,33 @@ describe("JobRoleDao", () => {
 			expect(result).toEqual([{ statusId: 1, statusName: "OPEN" }]);
 		});
 
-		it("should return band lookup values", async () => {
+		it("should return bands in hierarchy order followed by unknown values", async () => {
 			vi.mocked(
 				prisma.band.findMany as unknown as typeof prisma.band.findMany,
 			).mockResolvedValue([
 				{
-					bandId: 2,
-					bandName: "Engineer",
+					bandId: 8,
+					bandName: "Legacy",
+					createdAt: new Date(),
+					updatedAt: new Date(),
+				},
+				...[
+					"Apprentice",
+					"Associate",
+					"Senior Associate",
+					"Consultant",
+					"Manager",
+					"Principal",
+					"Trainee",
+				].map((bandName, index) => ({
+					bandId: index + 1,
+					bandName,
+					createdAt: new Date(),
+					updatedAt: new Date(),
+				})),
+				{
+					bandId: 9,
+					bandName: "Experimental",
 					createdAt: new Date(),
 					updatedAt: new Date(),
 				},
@@ -482,7 +502,17 @@ describe("JobRoleDao", () => {
 			const result = await dao.getBands();
 
 			expect(prisma.band.findMany).toHaveBeenCalledWith();
-			expect(result).toEqual([{ bandId: 2, bandName: "Engineer" }]);
+			expect(result.map(({ bandName }) => bandName)).toEqual([
+				"Principal",
+				"Manager",
+				"Consultant",
+				"Senior Associate",
+				"Associate",
+				"Trainee",
+				"Apprentice",
+				"Experimental",
+				"Legacy",
+			]);
 		});
 
 		it("should return capability lookup values", async () => {
