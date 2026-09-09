@@ -1,3 +1,4 @@
+import type { Prisma } from "../generated/prisma/client";
 import prisma from "../prismaClient";
 
 type ApplicationListItem = {
@@ -17,6 +18,10 @@ type ApplicationListItem = {
 
 type AdminApplicationsQuery = {
 	jobRoleId?: number;
+	search?: string;
+	status?: "IN_PROGRESS" | "HIRED" | "REJECTED" | "WITHDRAWN";
+	role?: string;
+	location?: string;
 	page: number;
 	pageSize: number;
 };
@@ -57,17 +62,42 @@ export class JobApplicationAdminService {
 		}));
 	}
 
-	async findAllAdmin({ jobRoleId, page, pageSize }: AdminApplicationsQuery) {
-		const where = jobRoleId === undefined ? undefined : { jobRoleId };
+	async findAllAdmin({
+		jobRoleId,
+		search,
+		status,
+		role,
+		location,
+		page,
+		pageSize,
+	}: AdminApplicationsQuery) {
+		const where = {
+			jobRoleId,
+			applicationStatus: status,
+			user: search
+				? { email: { contains: search, mode: "insensitive" } }
+				: undefined,
+			jobRole:
+				role || location
+					? {
+							roleName: role,
+							location: location ? { locationName: location } : undefined,
+						}
+					: undefined,
+		} satisfies Prisma.ApplicationWhereInput;
+		const hasFilters = Object.values(where).some((value) => value !== undefined);
+		const queryWhere = hasFilters ? where : undefined;
 		const [applications, totalItems] = await Promise.all([
 			prisma.application.findMany({
-				...(where === undefined ? {} : { where }),
+				...(queryWhere === undefined ? {} : { where: queryWhere }),
 				orderBy: { createdAt: "desc" },
 				skip: (page - 1) * pageSize,
 				take: pageSize,
 				select: this.applicationListSelect,
 			}),
-			prisma.application.count(where === undefined ? undefined : { where }),
+			prisma.application.count(
+				queryWhere === undefined ? undefined : { where: queryWhere },
+			),
 		]);
 
 		return {
