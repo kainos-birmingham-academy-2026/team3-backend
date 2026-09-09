@@ -1,0 +1,111 @@
+name: Test environment lifecycle
+
+on:
+  schedule:
+    # Run both possible UTC hours, then gate on UK local time for GMT/BST.
+    - cron: "5 7,8 * * 1-5"
+    - cron: "5 17,18 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Test environment action
+        required: true
+        type: choice
+        options:
+          - start
+          - stop
+
+permissions:
+  contents: read
+  id-token: write
+  actions: write
+
+concurrency:
+  group: test-environment-deployment
+  cancel-in-progress: false
+
+jobs:
+  resolve-action:
+    name: Resolve lifecycle action
+    runs-on: ubuntu-latest
+    outputs:
+      action: ${{ steps.resolve.outputs.action }}
+    steps:
+      - name: Resolve action for UK local time
+        id: resolve
+        env:
+          REQUESTED_ACTION: ${{ inputs.action }}
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            action="$REQUESTED_ACTION"
+          else
+            london_hour=$(TZ=Europe/London date +%H)
+
+            case "$london_hour" in
+              08) action=start ;;
+              18) action=stop ;;
+              *) action=skip ;;
+            esac
+          fi
+
+          echo "action=$action" >> "$GITHUB_OUTPUT"
+
+  stop:
+    name: Delete test resource group
+    if: needs.resolve-action.outputs.action == 'stop'
+    needs: resolve-action
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for frontend deployments
+        env:
+          GH_TOKEN: ${{ secrets.FRONTEND_REPOSITORY_DISPATCH_TOKEN }}
+        run: |
+          for attempt in {1..30}; do
+            in_progress=$(gh api \
+              "repos/kainos-birmingham-academy-2026/team3-frontend/actions/runs?event=repository_dispatch&status=in_progress&per_page=1" \
+              --jq '.total_count')
+            queued=$(gh api \
+              "repos/kainos-birmingham-academy-2026/team3-frontend/actions/runs?event=repository_dispatch&status=queued&per_page=1" \
+              --jq '.total_count')
+
+            if ((in_progress == 0 && queued == 0)); then
+              exit 0
+            fi
+
+            if ((attempt == 30)); then
+              echo "Frontend deployment is still active; test resource group was not deleted"
+              exit 1
+            fi
+
+            sleep 60
+          done
+      - name: Sign in to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Delete test resource group
+        run: |
+          if [[ "$(az group exists --name rg-team3-test)" == "true" ]]; then
+            az group delete --name rg-team3-test --yes
+          else
+            echo "rg-team3-test is already absent"
+          fi
+
+  start:
+    name: Deploy latest main images
+    if: needs.resolve-action.outputs.action == 'start'
+    needs: resolve-action
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger complete test deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh workflow run ci.yml
+          --repo "$GITHUB_REPOSITORY"
+          --ref main
+          --field deploy_test=true
+          --field backend_ref=main
+          --field frontend_ref=main
