@@ -85,7 +85,9 @@ export class JobApplicationAdminService {
 						}
 					: undefined,
 		} satisfies Prisma.ApplicationWhereInput;
-		const hasFilters = Object.values(where).some((value) => value !== undefined);
+		const hasFilters = Object.values(where).some(
+			(value) => value !== undefined,
+		);
 		const queryWhere = hasFilters ? where : undefined;
 		const [applications, totalItems, statusCounts] = await Promise.all([
 			prisma.application.findMany({
@@ -104,7 +106,13 @@ export class JobApplicationAdminService {
 			}),
 		]);
 
-		const counts = { total: 0, pending: 0, approved: 0, rejected: 0, withdrawn: 0 };
+		const counts = {
+			total: 0,
+			pending: 0,
+			approved: 0,
+			rejected: 0,
+			withdrawn: 0,
+		};
 		for (const group of statusCounts) {
 			counts.total += group._count._all;
 			if (group.applicationStatus === "IN_PROGRESS") {
