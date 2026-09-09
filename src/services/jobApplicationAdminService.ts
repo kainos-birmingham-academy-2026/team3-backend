@@ -87,7 +87,7 @@ export class JobApplicationAdminService {
 		} satisfies Prisma.ApplicationWhereInput;
 		const hasFilters = Object.values(where).some((value) => value !== undefined);
 		const queryWhere = hasFilters ? where : undefined;
-		const [applications, totalItems] = await Promise.all([
+		const [applications, totalItems, statusCounts] = await Promise.all([
 			prisma.application.findMany({
 				...(queryWhere === undefined ? {} : { where: queryWhere }),
 				orderBy: { createdAt: "desc" },
@@ -98,10 +98,29 @@ export class JobApplicationAdminService {
 			prisma.application.count(
 				queryWhere === undefined ? undefined : { where: queryWhere },
 			),
+			prisma.application.groupBy({
+				by: ["applicationStatus"],
+				_count: { _all: true },
+			}),
 		]);
+
+		const counts = { total: 0, pending: 0, approved: 0, rejected: 0, withdrawn: 0 };
+		for (const group of statusCounts) {
+			counts.total += group._count._all;
+			if (group.applicationStatus === "IN_PROGRESS") {
+				counts.pending = group._count._all;
+			} else if (group.applicationStatus === "HIRED") {
+				counts.approved = group._count._all;
+			} else if (group.applicationStatus === "REJECTED") {
+				counts.rejected = group._count._all;
+			} else if (group.applicationStatus === "WITHDRAWN") {
+				counts.withdrawn = group._count._all;
+			}
+		}
 
 		return {
 			items: this.mapApplications(applications),
+			counts,
 			page,
 			pageSize,
 			totalItems,
