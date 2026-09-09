@@ -33,6 +33,7 @@ flowchart LR
 		subgraph rg["Resource Group: rg-team3-&lt;env&gt;"]
 			vault["Key Vault<br/>kv-team3-&lt;env&gt;"]
 			postgres[("Azure PostgreSQL<br/>psql-team3-&lt;env&gt;")]
+			openai["Azure OpenAI<br/>dev-owned, shared with test"]
 
 			subgraph cae["Container Apps Environment: cae-team3-&lt;env&gt;"]
 				frontend["Frontend Container App<br/>ca-team3-frontend-&lt;env&gt;<br/>public :3000"]
@@ -49,6 +50,7 @@ flowchart LR
 	user -->|HTTPS| frontend
 	frontend -->|"API_BASE_URL<br/>internal FQDN"| backend
 	backend -->|DATABASE_URL| postgres
+	backend -->|managed identity| openai
 
 	frontend -->|uses| frontendIdentity
 	backend -->|uses| backendIdentity
@@ -101,6 +103,11 @@ The dev container runs `prisma migrate deploy` and the idempotent Prisma seed
 before starting the API, so a recreated empty database receives its schema and
 development reference data.
 
+Dev owns the Azure OpenAI account `aoai-team3-chatbot-dev` and its
+`team3-chatbot-gpt5-nano` deployment. Test consumes this shared deployment.
+Terraform grants each backend identity `Cognitive Services OpenAI User` and
+configures the containers to authenticate with their managed identities.
+
 Dev and test each provision a Standard Service Bus namespace with the
 `notifications` topic and `email-processor` subscription. Separate Send-only
 and Listen-only policies provide credentials for the backend and notification
@@ -147,6 +154,24 @@ Before deploying dev or test:
 - Set `POSTGRESQL_ADMINISTRATOR_PASSWORD` for dev. Test generates its own
 	PostgreSQL administrator password.
 - Configure the GitHub Actions secrets listed below.
+
+### Adopt the existing Azure OpenAI resources
+
+The Azure OpenAI account and model deployment existed before Terraform began
+managing them. Before the first apply containing these resource declarations,
+import both resources into the dev state:
+
+```bash
+terraform -chdir=infrastructure/environments/dev import \
+	azurerm_cognitive_account.openai \
+	/subscriptions/<subscription-id>/resourceGroups/rg-team3-dev/providers/Microsoft.CognitiveServices/accounts/aoai-team3-chatbot-dev
+terraform -chdir=infrastructure/environments/dev import \
+	azurerm_cognitive_deployment.openai \
+	/subscriptions/<subscription-id>/resourceGroups/rg-team3-dev/providers/Microsoft.CognitiveServices/accounts/aoai-team3-chatbot-dev/deployments/team3-chatbot-gpt5-nano
+```
+
+This is a one-time state migration. After import, Terraform recreates both
+resources if they are deleted while the remote state is retained.
 
 ## GitHub configuration
 
