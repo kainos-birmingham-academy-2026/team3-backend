@@ -86,8 +86,25 @@ jobApplicationsAdminRouter.use(allowRoles([USER_ROLES.ADMIN]));
  *                   type: integer
  *                 totalItems:
  *                   type: integer
+ *                   description: Number of applications matching the current filters
  *                 totalPages:
  *                   type: integer
+ *                 counts:
+ *                   type: object
+ *                   description: Database-wide application totals, independent of filters and pagination
+ *                   required: [total, pending, approved, rejected, withdrawn]
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                     pending:
+ *                       type: integer
+ *                     approved:
+ *                       type: integer
+ *                       description: Applications with HIRED status
+ *                     rejected:
+ *                       type: integer
+ *                     withdrawn:
+ *                       type: integer
  *       401:
  *         description: Missing or invalid token
  *       403:

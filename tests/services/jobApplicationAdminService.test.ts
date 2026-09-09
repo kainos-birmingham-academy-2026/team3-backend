@@ -4,6 +4,7 @@ import { JobApplicationAdminService } from "../../src/services/jobApplicationAdm
 const {
 	mockFindMany,
 	mockCount,
+	mockGroupBy,
 	mockFindFirst,
 	mockFindUnique,
 	mockUpdate,
@@ -13,6 +14,7 @@ const {
 	return {
 		mockFindMany: vi.fn(),
 		mockCount: vi.fn(),
+		mockGroupBy: vi.fn(),
 		mockFindFirst: vi.fn(),
 		mockFindUnique: vi.fn(),
 		mockUpdate: vi.fn(),
@@ -38,6 +40,7 @@ vi.mock("../../src/prismaClient.ts", () => {
 			application: {
 				findMany: mockFindMany,
 				count: mockCount,
+				groupBy: mockGroupBy,
 				findFirst: mockFindFirst,
 				findUnique: mockFindUnique,
 				update: mockUpdate,
@@ -55,6 +58,7 @@ describe("jobApplicationAdminService", () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		mockGroupBy.mockResolvedValue([]);
 
 		mockTransaction.mockImplementation(
 			async (callback: (tx: TransactionTestClient) => Promise<unknown>) => {
@@ -121,6 +125,7 @@ describe("jobApplicationAdminService", () => {
 			pageSize: 10,
 			totalItems: 11,
 			totalPages: 2,
+			counts: { total: 0, pending: 0, approved: 0, rejected: 0, withdrawn: 0 },
 		});
 		expect(mockFindMany).toHaveBeenCalledWith({
 			where: { jobRoleId: 1 },
@@ -216,6 +221,57 @@ describe("jobApplicationAdminService", () => {
 			expect.objectContaining({ where: expectedWhere }),
 		);
 		expect(mockCount).toHaveBeenCalledWith({ where: expectedWhere });
+	});
+
+	it("should return database-wide counts independently of filters and pagination", async () => {
+		mockFindMany.mockResolvedValueOnce([]);
+		mockCount.mockResolvedValueOnce(0);
+		mockGroupBy.mockResolvedValueOnce([
+			{ applicationStatus: "IN_PROGRESS", _count: { _all: 20 } },
+			{ applicationStatus: "HIRED", _count: { _all: 8 } },
+			{ applicationStatus: "REJECTED", _count: { _all: 5 } },
+			{ applicationStatus: "WITHDRAWN", _count: { _all: 3 } },
+		]);
+
+		const result = await service.findAllAdmin({
+			jobRoleId: 1,
+			search: "missing@example.com",
+			status: "HIRED",
+			role: "Software Engineer",
+			location: "Belfast",
+			page: 2,
+			pageSize: 10,
+		});
+
+		expect(mockGroupBy).toHaveBeenCalledWith({
+			by: ["applicationStatus"],
+			_count: { _all: true },
+		});
+		expect(result.items).toEqual([]);
+		expect(result.totalItems).toBe(0);
+		expect(result.totalPages).toBe(0);
+		expect(result.counts).toEqual({
+			total: 36,
+			pending: 20,
+			approved: 8,
+			rejected: 5,
+			withdrawn: 3,
+		});
+	});
+
+	it("should return zero summary counts for an empty database", async () => {
+		mockFindMany.mockResolvedValueOnce([]);
+		mockCount.mockResolvedValueOnce(0);
+
+		const result = await service.findAllAdmin({ page: 1, pageSize: 10 });
+
+		expect(result.counts).toEqual({
+			total: 0,
+			pending: 0,
+			approved: 0,
+			rejected: 0,
+			withdrawn: 0,
+		});
 	});
 
 	it("should map HIRED status to hire flow", async () => {
