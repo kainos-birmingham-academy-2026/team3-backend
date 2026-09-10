@@ -197,7 +197,7 @@ async function main() {
 	]);
 
 	// Bands
-	const [principal, manager, consultant, seniorAssociate, associate, trainee, _apprentice] =
+	const [principal, manager, consultant, seniorAssociate, associate, trainee] =
 		await Promise.all([
 			prisma.band.upsert({
 				where: { bandName: "Principal" },
