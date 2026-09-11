@@ -1,3 +1,18 @@
+output "virtual_network_id" {
+  description = "Resource ID of the environment virtual network."
+  value       = module.network.id
+}
+
+output "virtual_network_address_space" {
+  description = "Reserved address space of the environment virtual network."
+  value       = module.network.address_space
+}
+
+output "container_apps_subnet_id" {
+  description = "Resource ID of the subnet reserved for Container Apps migration."
+  value       = module.network.container_apps_subnet_id
+}
+
 output "resource_group_name" {
   description = "Name of the test resource group."
   value       = module.resource_group.name
