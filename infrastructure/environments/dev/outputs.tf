@@ -62,3 +62,21 @@ output "postgresql_database_name" {
   description = "Name of the dev application database."
   value       = module.postgresql.database_name
 }
+
+output "automation_account_name" {
+  description = "Name of the dev Automation Account."
+  value       = azurerm_automation_account.services.name
+}
+
+output "automation_account_principal_id" {
+  description = "Principal ID of the dev Automation Account managed identity."
+  value       = azurerm_automation_account.services.identity[0].principal_id
+}
+
+output "automation_runbook_names" {
+  description = "Names of the dev service start and stop runbooks."
+  value = {
+    start = azurerm_automation_runbook.start_services.name
+    stop  = azurerm_automation_runbook.stop_services.name
+  }
+}

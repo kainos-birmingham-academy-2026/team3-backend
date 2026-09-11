@@ -87,3 +87,15 @@ variable "grafana_admin_object_ids" {
   type        = list(string)
   default     = []
 }
+
+variable "automation_accounts_module_version" {
+  description = "Az.Accounts module version for the dev Automation Account."
+  type        = string
+  default     = "5.3.0"
+}
+
+variable "automation_app_module_version" {
+  description = "Az.App module version for the dev Automation Account."
+  type        = string
+  default     = "2.0.0"
+}

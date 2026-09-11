@@ -358,3 +358,138 @@ resource "azurerm_postgresql_flexible_server_firewall_rule" "backend_container_a
   start_ip_address = one(module.backend_container_app.outbound_ip_addresses)
   end_ip_address   = one(module.backend_container_app.outbound_ip_addresses)
 }
+
+resource "azurerm_automation_account" "services" {
+  name                = "aa-${var.project_name}-${var.environment}"
+  location            = var.location
+  resource_group_name = module.resource_group.name
+  sku_name            = "Basic"
+
+  identity {
+    type = "SystemAssigned"
+  }
+
+  tags = {
+    environment = var.environment
+    managed_by  = "terraform"
+    project     = var.project_name
+  }
+}
+
+resource "azurerm_role_definition" "service_power_operator" {
+  name        = "${var.project_name}-${var.environment}-service-power-operator"
+  scope       = module.resource_group.id
+  description = "Read, start and stop Container Apps in the dev resource group."
+
+  permissions {
+    actions = [
+      "Microsoft.Resources/subscriptions/resourceGroups/read",
+      "Microsoft.App/containerApps/read",
+      "Microsoft.App/containerApps/start/action",
+      "Microsoft.App/containerApps/stop/action",
+    ]
+  }
+
+  assignable_scopes = [module.resource_group.id]
+}
+
+resource "azurerm_role_assignment" "automation_service_power_operator" {
+  scope              = module.resource_group.id
+  role_definition_id = azurerm_role_definition.service_power_operator.role_definition_resource_id
+  principal_id       = azurerm_automation_account.services.identity[0].principal_id
+  principal_type     = "ServicePrincipal"
+}
+
+resource "azurerm_automation_module" "accounts" {
+  name                    = "Az.Accounts"
+  resource_group_name     = module.resource_group.name
+  automation_account_name = azurerm_automation_account.services.name
+
+  module_link {
+    uri = "https://www.powershellgallery.com/api/v2/package/Az.Accounts/${var.automation_accounts_module_version}"
+  }
+}
+
+resource "azurerm_automation_module" "app" {
+  name                    = "Az.App"
+  resource_group_name     = module.resource_group.name
+  automation_account_name = azurerm_automation_account.services.name
+
+  module_link {
+    uri = "https://www.powershellgallery.com/api/v2/package/Az.App/${var.automation_app_module_version}"
+  }
+
+  depends_on = [azurerm_automation_module.accounts]
+}
+
+resource "azurerm_automation_runbook" "start_services" {
+  name                    = "Start-Team3-Services"
+  location                = var.location
+  resource_group_name     = module.resource_group.name
+  automation_account_name = azurerm_automation_account.services.name
+  runbook_type            = "PowerShell"
+  log_verbose             = false
+  log_progress            = false
+  description             = "Start the dev backend, then the dev frontend."
+  tags                    = azurerm_automation_account.services.tags
+
+  content = <<-POWERSHELL
+    $ErrorActionPreference = "Stop"
+
+    Disable-AzContextAutosave -Scope Process | Out-Null
+    Connect-AzAccount -Identity | Out-Null
+
+    Start-AzContainerApp `
+        -Name "ca-${var.project_name}-backend-${var.environment}" `
+        -ResourceGroupName "${module.resource_group.name}" `
+        -Confirm:$false | Out-Null
+
+    Start-AzContainerApp `
+        -Name "ca-${var.project_name}-frontend-${var.environment}" `
+        -ResourceGroupName "${module.resource_group.name}" `
+        -Confirm:$false | Out-Null
+
+    Write-Output "Started Team 3 backend and frontend"
+  POWERSHELL
+
+  depends_on = [
+    azurerm_automation_module.app,
+    azurerm_role_assignment.automation_service_power_operator,
+  ]
+}
+
+resource "azurerm_automation_runbook" "stop_services" {
+  name                    = "Stop-Team3-Services"
+  location                = var.location
+  resource_group_name     = module.resource_group.name
+  automation_account_name = azurerm_automation_account.services.name
+  runbook_type            = "PowerShell"
+  log_verbose             = false
+  log_progress            = false
+  description             = "Stop the dev frontend, then the dev backend."
+  tags                    = azurerm_automation_account.services.tags
+
+  content = <<-POWERSHELL
+    $ErrorActionPreference = "Stop"
+
+    Disable-AzContextAutosave -Scope Process | Out-Null
+    Connect-AzAccount -Identity | Out-Null
+
+    Stop-AzContainerApp `
+        -Name "ca-${var.project_name}-frontend-${var.environment}" `
+        -ResourceGroupName "${module.resource_group.name}" `
+        -Confirm:$false | Out-Null
+
+    Stop-AzContainerApp `
+        -Name "ca-${var.project_name}-backend-${var.environment}" `
+        -ResourceGroupName "${module.resource_group.name}" `
+        -Confirm:$false | Out-Null
+
+    Write-Output "Stopped Team 3 frontend and backend"
+  POWERSHELL
+
+  depends_on = [
+    azurerm_automation_module.app,
+    azurerm_role_assignment.automation_service_power_operator,
+  ]
+}
