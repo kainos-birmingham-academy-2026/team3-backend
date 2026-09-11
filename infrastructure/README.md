@@ -99,6 +99,16 @@ password nor the constructed database URL is stored in state. Generated JWT and
 session credentials are stored as sensitive values in the encrypted remote
 state so Terraform can recreate them after resource loss.
 
+After recovering Key Vault alongside a recreated PostgreSQL server, the
+`database-url` secret may still contain the old password. Increment
+`postgresql_administrator_password_version` in the dev root and deploy through
+CI to rewrite both the server password and the secret from the same
+`POSTGRESQL_ADMINISTRATOR_PASSWORD` GitHub secret. Terraform cannot compare
+write-only values, so an unchanged version can leave recovered credentials
+stale. Confirm that migrations complete and the frontend job list returns HTTP
+200 after deployment; a successful infrastructure apply alone is not a health
+check.
+
 The dev container runs `prisma migrate deploy` and the idempotent Prisma seed
 before starting the API, so a recreated empty database receives its schema and
 development reference data.
