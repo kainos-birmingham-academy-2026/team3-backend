@@ -10,6 +10,20 @@ module "resource_group" {
   }
 }
 
+module "network" {
+  source = "../../modules/network"
+
+  project_name        = var.project_name
+  environment         = var.environment
+  location            = var.location
+  resource_group_name = module.resource_group.name
+  tags = {
+    environment = var.environment
+    managed_by  = "terraform"
+    project     = var.project_name
+  }
+}
+
 module "key_vault" {
   source = "../../modules/key-vault"
 

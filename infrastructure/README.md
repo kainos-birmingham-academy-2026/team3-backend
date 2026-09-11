@@ -17,6 +17,61 @@ owns only its identity, role assignments, and Container App. This prevents
 either workflow from locking or planning changes against resources owned by the
 other repository.
 
+## Network foundation
+
+The backend dev, test and prod roots each own a VNet through `modules/network`.
+The test root selects a separate network for each numbered slot. No peering,
+public IPs, gateways or private endpoints are created in this phase.
+
+| Environment | VNet address space | Container Apps subnet |
+| --- | --- | --- |
+| dev | `10.60.0.0/16` | `10.60.0.0/23` |
+| test1 | `10.61.0.0/16` | `10.61.0.0/23` |
+| test2 | `10.62.0.0/16` | `10.62.0.0/23` |
+| test3 | `10.63.0.0/16` | `10.63.0.0/23` |
+| uat (reserved only) | `10.64.0.0/16` | `10.64.0.0/23` |
+| prod | `10.65.0.0/16` | `10.65.0.0/23` |
+
+Networks are named `vnet-team3-<environment>` and belong to the matching backend
+resource group and state. Deleting a test slot's resource group also removes its
+network. UAT has a reserved address range but no root or resources yet. Check
+these ranges against existing Azure, corporate and VPN networks before applying;
+the table only guarantees separation within this project's address map.
+
+Each `snet-container-apps` subnet is delegated to `Microsoft.App/environments`
+for a future workload profiles Container Apps Environment. The /23 allocation
+leaves capacity for scaling; the rest of the VNet is unallocated.
+
+**These networks are initially empty.** Existing Container Apps Environments
+are not attached, and frontend/backend ingress, database access and Playwright
+connectivity are unchanged. Network security groups, private DNS and any
+required outbound routing must be designed alongside workload integration.
+Adding a VNet alone does not make existing public services private.
+
+Attaching Container Apps requires a separate replacement or staged migration:
+Azure does not support changing an existing environment's network type in place.
+Coordinate that migration with the frontend repository, which owns apps in the
+same environment. The root outputs `virtual_network_id`,
+`virtual_network_address_space` and `container_apps_subnet_id` expose the new
+network foundation without changing any existing resource addresses.
+
+Use the existing environment deployment workflow to plan and apply these
+resources, starting with a disposable test slot. Against an otherwise up-to-date
+environment, the expected network change is two additions (VNet and subnet),
+with no app or environment replacements. Review the full plan before applying.
+The production root remains incomplete; do not apply it just to create a VNet.
+
+Offline module checks use a mocked Azure provider and do not provision resources:
+
+```bash
+terraform -chdir=infrastructure/modules/network init -backend=false
+terraform -chdir=infrastructure/modules/network test
+terraform fmt -check -recursive infrastructure
+```
+
+Provider locks are owned by the environment roots; the standalone module init
+may generate a local lock file that should not be committed.
+
 ## Platform architecture
 
 The diagram represents the complete dev and test environments. Production is
