@@ -129,9 +129,10 @@ system-assigned managed identity and two published PowerShell 5.1 runbooks:
 - `Stop-Team3-Services`: stops the frontend, then the backend.
 
 Terraform imports `Az.Accounts` 5.3.0 before `Az.App` 2.0.0. The identity has a
-custom role permitting resource-group read and Container App read/start/stop
-only within `rg-team3-dev`. The deployment principal must be allowed to create
-custom role definitions and role assignments in that scope.
+built-in `Container Apps Contributor` role assignment scoped to `rg-team3-dev`.
+This permits Container App management beyond start/stop, but does not grant
+access to test or prod. The deployment principal must be allowed to assign
+this role in that scope; creating custom role definitions is not required.
 
 Deploy through the existing dev Terraform workflow. Subsequent dev applies
 recreate deleted automation resources while the remote state is retained.

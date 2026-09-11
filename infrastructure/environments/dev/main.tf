@@ -376,28 +376,11 @@ resource "azurerm_automation_account" "services" {
   }
 }
 
-resource "azurerm_role_definition" "service_power_operator" {
-  name        = "${var.project_name}-${var.environment}-service-power-operator"
-  scope       = module.resource_group.id
-  description = "Read, start and stop Container Apps in the dev resource group."
-
-  permissions {
-    actions = [
-      "Microsoft.Resources/subscriptions/resourceGroups/read",
-      "Microsoft.App/containerApps/read",
-      "Microsoft.App/containerApps/start/action",
-      "Microsoft.App/containerApps/stop/action",
-    ]
-  }
-
-  assignable_scopes = [module.resource_group.id]
-}
-
 resource "azurerm_role_assignment" "automation_service_power_operator" {
-  scope              = module.resource_group.id
-  role_definition_id = azurerm_role_definition.service_power_operator.role_definition_resource_id
-  principal_id       = azurerm_automation_account.services.identity[0].principal_id
-  principal_type     = "ServicePrincipal"
+  scope                = module.resource_group.id
+  role_definition_name = "Container Apps Contributor"
+  principal_id         = azurerm_automation_account.services.identity[0].principal_id
+  principal_type       = "ServicePrincipal"
 }
 
 resource "azurerm_automation_module" "accounts" {
