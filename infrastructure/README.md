@@ -120,6 +120,31 @@ Communication Services, an Azure-managed email domain, and the domain
 association. CI builds and deploys `functions/notifications` after each
 successful dev or test Terraform apply.
 
+### Dev service automation
+
+Only the dev root provisions Automation Account `aa-team3-dev`, with a
+system-assigned managed identity and two published PowerShell 5.1 runbooks:
+
+- `Start-Team3-Services`: starts the backend, then the frontend.
+- `Stop-Team3-Services`: stops the frontend, then the backend.
+
+Terraform imports `Az.Accounts` 5.3.0 before `Az.App` 2.0.0. The identity has a
+custom role permitting resource-group read and Container App read/start/stop
+only within `rg-team3-dev`. The deployment principal must be allowed to create
+custom role definitions and role assignments in that scope.
+
+Deploy through the existing dev Terraform workflow. Subsequent dev applies
+recreate deleted automation resources while the remote state is retained.
+If resources with these names already exist outside Terraform, import them
+into the dev state before applying instead of deleting them.
+
+Both dev Container Apps must exist before running either runbook; the frontend
+is deployed by its separate repository. After deployment and RBAC propagation,
+run either published runbook from `aa-team3-dev` in the Azure portal and inspect
+its job output. No schedules or automatic job execution are configured. These
+runbooks do not start or stop PostgreSQL or other platform services. Test and
+prod do not provision this automation.
+
 ## Test architecture
 
 The `test` root creates the same isolated platform shape as dev in
