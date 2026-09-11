@@ -39,7 +39,7 @@ variable "postgresql_administrator_password" {
 variable "postgresql_administrator_password_version" {
   description = "Version incremented whenever the dev PostgreSQL administrator password is rotated."
   type        = number
-  default     = 1
+  default     = 2
 }
 
 variable "application_secret_version" {
