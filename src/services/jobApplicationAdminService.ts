@@ -6,7 +6,7 @@ type ApplicationListItem = {
 	jobRoleId: number;
 	cvText: string;
 	createdAt: Date;
-	applicationStatus: "IN_PROGRESS" | "HIRED" | "REJECTED" | "WITHDRAWN";
+	applicationStatus: "IN_PROGRESS" | "HIRED" | "REJECTED";
 	jobRole: {
 		roleName: string;
 	};
@@ -19,7 +19,7 @@ type ApplicationListItem = {
 type AdminApplicationsQuery = {
 	jobRoleId?: number;
 	search?: string;
-	status?: "IN_PROGRESS" | "HIRED" | "REJECTED" | "WITHDRAWN";
+	status?: "IN_PROGRESS" | "HIRED" | "REJECTED";
 	role?: string;
 	location?: string;
 	page: number;
@@ -111,7 +111,6 @@ export class JobApplicationAdminService {
 			pending: 0,
 			approved: 0,
 			rejected: 0,
-			withdrawn: 0,
 		};
 		for (const group of statusCounts) {
 			counts.total += group._count._all;
@@ -121,8 +120,6 @@ export class JobApplicationAdminService {
 				counts.approved = group._count._all;
 			} else if (group.applicationStatus === "REJECTED") {
 				counts.rejected = group._count._all;
-			} else if (group.applicationStatus === "WITHDRAWN") {
-				counts.withdrawn = group._count._all;
 			}
 		}
 

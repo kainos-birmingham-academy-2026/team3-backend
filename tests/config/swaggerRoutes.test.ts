@@ -61,12 +61,6 @@ describe("registerSwaggerRoutes", () => {
 			"jobRoleId",
 			"cvText",
 		]);
-		const withdrawalRequestSchema =
-			specificationResponse.body.components.schemas.WithdrawApplicationRequest;
-		expect(withdrawalRequestSchema.required).toEqual(["status"]);
-		expect(withdrawalRequestSchema.properties.status.enum).toEqual([
-			"WITHDRAWN",
-		]);
 		const applicationProperties =
 			specificationResponse.body.components.schemas.AdminApplicationListItem
 				.properties;

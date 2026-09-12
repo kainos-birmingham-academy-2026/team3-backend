@@ -229,7 +229,7 @@ const options: swaggerJsdoc.Options = {
 						cvText: { type: "string", example: "My relevant experience..." },
 						status: {
 							type: "string",
-							enum: ["IN_PROGRESS", "HIRED", "REJECTED", "WITHDRAWN"],
+							enum: ["IN_PROGRESS", "HIRED", "REJECTED"],
 						},
 					},
 				},
@@ -262,7 +262,7 @@ const options: swaggerJsdoc.Options = {
 						cvText: { type: "string", example: "My relevant experience..." },
 						status: {
 							type: "string",
-							enum: ["IN_PROGRESS", "HIRED", "REJECTED", "WITHDRAWN"],
+							enum: ["IN_PROGRESS", "HIRED", "REJECTED"],
 						},
 						actions: {
 							type: "object",
@@ -308,18 +308,6 @@ const options: swaggerJsdoc.Options = {
 									enum: ["HIRED", "REJECTED"],
 								},
 							},
-						},
-					},
-				},
-				WithdrawApplicationRequest: {
-					type: "object",
-					additionalProperties: false,
-					required: ["status"],
-					properties: {
-						status: {
-							type: "string",
-							enum: ["WITHDRAWN"],
-							example: "WITHDRAWN",
 						},
 					},
 				},
