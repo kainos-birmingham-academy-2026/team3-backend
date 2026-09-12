@@ -19,7 +19,7 @@ const controller = new JobApplicationAdminController(
 const AdminApplicationsQuerySchema = z.strictObject({
 	jobRoleId: z.coerce.number().int().positive().optional(),
 	search: z.string().trim().optional(),
-	status: z.enum(["IN_PROGRESS", "HIRED", "REJECTED", "WITHDRAWN"]).optional(),
+	status: z.enum(["IN_PROGRESS", "HIRED", "REJECTED"]).optional(),
 	role: z.string().trim().optional(),
 	location: z.string().trim().optional(),
 	page: z.coerce.number().int().positive().default(1),
@@ -92,7 +92,7 @@ jobApplicationsAdminRouter.use(allowRoles([USER_ROLES.ADMIN]));
  *                 counts:
  *                   type: object
  *                   description: Database-wide application totals, independent of filters and pagination
- *                   required: [total, pending, approved, rejected, withdrawn]
+ *                   required: [total, pending, approved, rejected]
  *                   properties:
  *                     total:
  *                       type: integer
@@ -103,8 +103,7 @@ jobApplicationsAdminRouter.use(allowRoles([USER_ROLES.ADMIN]));
  *                       description: Applications with HIRED status
  *                     rejected:
  *                       type: integer
- *                     withdrawn:
- *                       type: integer
+
  *       401:
  *         description: Missing or invalid token
  *       403:
