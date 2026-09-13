@@ -5,6 +5,7 @@ import type {
 	JobRoleFiltersDto,
 	UpdateJobRoleRequestDto,
 } from "../dtos/jobRoleDto.js";
+import { ConflictError } from "../errors/conflictError.js";
 import { INTERNAL_SERVER_ERROR } from "../errors/serverError.js";
 import { USER_ROLES } from "../middleware/authorise.js";
 import type { JobRolesService } from "../services/jobRolesService";
@@ -75,6 +76,9 @@ export class JobRolesController {
 		} catch (error) {
 			if (error instanceof NotFoundError) {
 				return res.status(404).json({ message: error.message });
+			}
+			if (error instanceof ConflictError) {
+				return res.status(error.statusCode).json({ message: error.message });
 			}
 			return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
 		}

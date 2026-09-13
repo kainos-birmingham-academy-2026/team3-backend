@@ -254,6 +254,37 @@ describe("JobRolesService", () => {
 			expect(result).toBe(mappedResponse);
 		});
 
+		it("should update the opening date while the role is scheduled", async () => {
+			const scheduledJobRole = {
+				...jobRole1,
+				openingDate: new Date("2099-01-01T00:00:00.000Z"),
+			};
+			const scheduledUpdate = {
+				...updateData,
+				openingDate: new Date("2099-02-01T00:00:00.000Z"),
+			};
+			mockDao.findById.mockResolvedValue(scheduledJobRole);
+			mockDao.updateJobRole.mockResolvedValue(scheduledJobRole);
+
+			await service.updateJobRole(1, scheduledUpdate);
+
+			expect(mockDao.updateJobRole).toHaveBeenCalledWith(1, scheduledUpdate);
+		});
+
+		it("should reject changing the opening date after the role has opened", async () => {
+			mockDao.findById.mockResolvedValue(jobRole1);
+
+			await expect(
+				service.updateJobRole(1, {
+					...updateData,
+					openingDate: new Date("2099-02-01T00:00:00.000Z"),
+				}),
+			).rejects.toThrow(
+				"Opening date cannot be changed after the role has opened",
+			);
+			expect(mockDao.updateJobRole).not.toHaveBeenCalled();
+		});
+
 		it("should throw NotFoundError without updating a missing role", async () => {
 			mockDao.findById.mockResolvedValue(null);
 

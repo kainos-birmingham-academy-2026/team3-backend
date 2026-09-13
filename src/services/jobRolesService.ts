@@ -78,6 +78,12 @@ export class JobRolesService {
 		if (!existingJobRole) {
 			throw new NotFoundError(`JobRole with id ${jobRoleId} not found`);
 		}
+		if (data.openingDate && existingJobRole.openingDate <= new Date()) {
+			throw new ConflictError(
+				409,
+				"Opening date cannot be changed after the role has opened",
+			);
+		}
 
 		const jobRole = await this.jobRoleDao.updateJobRole(jobRoleId, data);
 		return this.jobRoleMapper.jobRoleToDetailedResponse(jobRole, true);

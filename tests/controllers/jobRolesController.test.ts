@@ -1,4 +1,5 @@
 import { NotFoundError } from "error-lib";
+import { ConflictError } from "../../src/errors/conflictError.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { JobRolesController } from "../../src/controllers/jobRolesController.js";
 import type { JobRolesService } from "../../src/services/jobRolesService.js";
@@ -143,6 +144,27 @@ describe("JobRolesController", () => {
 			expect(res.status).toHaveBeenCalledWith(404);
 			expect(res.json).toHaveBeenCalledWith({
 				message: "JobRole with id 999 not found",
+			});
+		});
+
+		it("should return 409 when an opened role's opening date is changed", async () => {
+			const req = {
+				params: { jobRoleId: "1" },
+				body: { openingDate: new Date("2099-01-01") },
+			};
+			const res = createMockResponse();
+			vi.mocked(mockService.updateJobRole).mockRejectedValue(
+				new ConflictError(
+					409,
+					"Opening date cannot be changed after the role has opened",
+				),
+			);
+
+			await controller.updateJobRole(req as never, res as never);
+
+			expect(res.status).toHaveBeenCalledWith(409);
+			expect(res.json).toHaveBeenCalledWith({
+				message: "Opening date cannot be changed after the role has opened",
 			});
 		});
 	});
