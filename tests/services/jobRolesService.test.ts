@@ -50,6 +50,7 @@ vi.mock("../../src/mappers/jobRoleMapper.js", () => ({
 }));
 
 import { NotFoundError } from "error-lib";
+import { UpdateJobRoleSchema } from "../../src/dtos/jobRoleDto.js";
 import { ConflictError } from "../../src/errors/conflictError.js";
 import { JobRole } from "../../src/models/jobRole.js";
 import { JobRolesService } from "../../src/services/jobRolesService.js";
@@ -258,6 +259,7 @@ describe("JobRolesService", () => {
 			const scheduledJobRole = {
 				...jobRole1,
 				openingDate: new Date("2099-01-01T00:00:00.000Z"),
+				closingDate: new Date("2099-12-31T00:00:00.000Z"),
 			};
 			const scheduledUpdate = {
 				...updateData,
@@ -269,6 +271,72 @@ describe("JobRolesService", () => {
 			await service.updateJobRole(1, scheduledUpdate);
 
 			expect(mockDao.updateJobRole).toHaveBeenCalledWith(1, scheduledUpdate);
+		});
+
+		it.each([
+			["opening date", { closingDate: "2098-12-31" }],
+			["closing date", { openingDate: "2100-01-01" }],
+		])(
+			"should reject reversed dates when the %s is omitted",
+			async (_name, dates) => {
+				mockDao.findById.mockResolvedValue({
+					...jobRole1,
+					openingDate: new Date("2099-01-01"),
+					closingDate: new Date("2099-12-31"),
+				});
+				const data = UpdateJobRoleSchema.parse({ ...updateData, ...dates });
+
+				await expect(service.updateJobRole(1, data)).rejects.toMatchObject({
+					statusCode: 409,
+					message: "Opening date cannot be after closing date",
+				});
+				expect(mockDao.updateJobRole).not.toHaveBeenCalled();
+			},
+		);
+
+		it.each([
+			["only closing date changes", { closingDate: "2099-06-01" }],
+			["only opening date changes", { openingDate: "2099-06-01" }],
+			[
+				"closing date equals stored opening date",
+				{ closingDate: "2099-01-01" },
+			],
+			[
+				"opening date equals stored closing date",
+				{ openingDate: "2099-12-31" },
+			],
+			["neither date changes", {}],
+		])("should preserve valid date ordering when %s", async (_name, dates) => {
+			const role = {
+				...jobRole1,
+				openingDate: new Date("2099-01-01"),
+				closingDate: new Date("2099-12-31"),
+			};
+			mockDao.findById.mockResolvedValue(role);
+			mockDao.updateJobRole.mockResolvedValue(role);
+			const data = UpdateJobRoleSchema.parse({ ...updateData, ...dates });
+
+			await service.updateJobRole(1, data);
+
+			expect(mockDao.updateJobRole).toHaveBeenCalledWith(1, data);
+		});
+
+		it("should allow updating an opening date without a stored closing date", async () => {
+			const role = {
+				...jobRole1,
+				openingDate: new Date("2099-01-01"),
+				closingDate: null,
+			};
+			mockDao.findById.mockResolvedValue(role);
+			mockDao.updateJobRole.mockResolvedValue(role);
+			const data = UpdateJobRoleSchema.parse({
+				...updateData,
+				openingDate: "2099-06-01",
+			});
+
+			await service.updateJobRole(1, data);
+
+			expect(mockDao.updateJobRole).toHaveBeenCalledWith(1, data);
 		});
 
 		it("should reject changing the opening date after the role has opened", async () => {
@@ -298,7 +366,11 @@ describe("JobRolesService", () => {
 				vi.useFakeTimers();
 				try {
 					vi.setSystemTime(new Date(now));
-					const role = { ...jobRole1, openingDate: new Date(openingDate) };
+					const role = {
+						...jobRole1,
+						openingDate: new Date(openingDate),
+						closingDate: new Date("2099-12-31"),
+					};
 					mockDao.findById.mockResolvedValue(role);
 					mockDao.updateJobRole.mockResolvedValue(role);
 					const data = { ...updateData, openingDate: new Date("2099-02-01") };

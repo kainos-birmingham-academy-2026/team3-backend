@@ -89,6 +89,12 @@ export class JobRolesService {
 			);
 		}
 
+		const openingDate = data.openingDate ?? existingJobRole.openingDate;
+		const closingDate = data.closingDate ?? existingJobRole.closingDate;
+		if (closingDate && openingDate > closingDate) {
+			throw new ConflictError(409, "Opening date cannot be after closing date");
+		}
+
 		const jobRole = await this.jobRoleDao.updateJobRole(jobRoleId, data);
 		return this.jobRoleMapper.jobRoleToDetailedResponse(jobRole, true);
 	}
