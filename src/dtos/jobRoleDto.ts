@@ -47,6 +47,12 @@ export const JobRoleIdParamSchema = z.object({
 		.positive("ID must be a positive number"),
 });
 
+const isTodayOrFuture = (date: Date): boolean => {
+	const today = new Date();
+	today.setUTCHours(0, 0, 0, 0);
+	return date >= today;
+};
+
 export const CreateJobRoleSchema = z
 	.object({
 		roleName: z
@@ -79,7 +85,7 @@ export const CreateJobRoleSchema = z
 					message: "Opening date must be a valid date (e.g. ISO 8601 format)",
 				})
 				.transform((val) => new Date(val))
-				.refine((date) => date >= new Date(), {
+				.refine(isTodayOrFuture, {
 					message: "Opening date cannot be in the past",
 				})
 				.optional(),

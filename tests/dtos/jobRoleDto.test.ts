@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
 	CreateApplicationSchema,
 	CreateJobRoleSchema,
@@ -126,6 +126,19 @@ describe("job role DTO schemas", () => {
 				expect(result.data.openingDate).toBeUndefined();
 				expect(result.data.closingDate).toBeUndefined();
 			}
+		});
+
+		it("should allow today as the opening date after midnight", () => {
+			vi.useFakeTimers();
+			vi.setSystemTime(new Date("2026-09-13T23:59:59.000Z"));
+
+			const result = CreateJobRoleSchema.safeParse({
+				...validPayload,
+				openingDate: "2026-09-13",
+			});
+
+			expect(result.success).toBe(true);
+			vi.useRealTimers();
 		});
 
 		it.each([
