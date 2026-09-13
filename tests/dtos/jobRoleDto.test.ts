@@ -129,37 +129,50 @@ describe("job role DTO schemas", () => {
 		});
 
 		it.each([
-			["before UK midnight in BST", "2026-09-13T22:59:59.999Z", "2026-09-13"],
-			["at UK midnight in BST", "2026-09-13T23:00:00.000Z", "2026-09-14"],
-			["after clocks go forward", "2026-03-29T23:00:00.000Z", "2026-03-30"],
-			["before clocks go back", "2026-10-24T23:00:00.000Z", "2026-10-25"],
-			["after clocks go back", "2026-10-25T23:30:00.000Z", "2026-10-25"],
-			["at UK midnight in GMT", "2026-10-26T00:00:00.000Z", "2026-10-26"],
+			["2026-09-13T12:00:00.000Z", "2026-09-13", "2026-09-12"],
+			["2026-09-13T22:59:59.999Z", "2026-09-13", "2026-09-12"],
+			["2026-09-13T23:00:00.000Z", "2026-09-14", "2026-09-13"],
+			["2026-03-28T23:30:00.000Z", "2026-03-28", "2026-03-27"],
+			["2026-03-29T00:59:59.000Z", "2026-03-29", "2026-03-28"],
+			["2026-03-29T01:00:00.000Z", "2026-03-29", "2026-03-28"],
+			["2026-03-29T23:00:00.000Z", "2026-03-30", "2026-03-29"],
+			["2026-03-29T23:30:00.000Z", "2026-03-30", "2026-03-29"],
+			["2026-10-24T23:00:00.000Z", "2026-10-25", "2026-10-24"],
+			["2026-10-24T23:30:00.000Z", "2026-10-25", "2026-10-24"],
+			["2026-10-25T00:59:59.000Z", "2026-10-25", "2026-10-24"],
+			["2026-10-25T01:00:00.000Z", "2026-10-25", "2026-10-24"],
+			["2026-10-25T23:30:00.000Z", "2026-10-25", "2026-10-24"],
+			["2026-10-26T00:00:00.000Z", "2026-10-26", "2026-10-25"],
 		])(
-			"should allow today as the opening date %s",
-			(_label, now, openingDate) => {
+			"should allow today's dates and reject yesterday in the UK at %s",
+			(now, today, yesterday) => {
 				vi.useFakeTimers();
 				try {
 					vi.setSystemTime(new Date(now));
-					const result = CreateJobRoleSchema.safeParse({
-						...validPayload,
-						openingDate,
-					});
-					expect(result.success).toBe(true);
-					const yesterday = new Date(openingDate);
-					yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-					const pastResult = CreateJobRoleSchema.safeParse({
-						...validPayload,
-						openingDate: yesterday.toISOString().slice(0, 10),
-					});
-					expect(pastResult.success).toBe(false);
-					if (!pastResult.success) {
-						expect(pastResult.error.issues).toContainEqual(
-							expect.objectContaining({
-								path: ["openingDate"],
-								message: "Opening date cannot be in the past",
-							}),
-						);
+					expect(
+						CreateJobRoleSchema.safeParse({
+							...validPayload,
+							openingDate: today,
+							closingDate: today,
+						}).success,
+					).toBe(true);
+					for (const field of ["openingDate", "closingDate"]) {
+						const result = CreateJobRoleSchema.safeParse({
+							...validPayload,
+							openingDate: undefined,
+							[field]: yesterday,
+						});
+						expect(result.success).toBe(false);
+						if (!result.success) {
+							expect(result.error.issues).toEqual(
+								expect.arrayContaining([
+									expect.objectContaining({
+										path: [field],
+										message: expect.stringContaining("cannot be in the past"),
+									}),
+								]),
+							);
+						}
 					}
 				} finally {
 					vi.useRealTimers();
