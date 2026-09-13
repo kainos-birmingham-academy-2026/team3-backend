@@ -285,6 +285,39 @@ describe("JobRolesService", () => {
 			expect(mockDao.updateJobRole).not.toHaveBeenCalled();
 		});
 
+		it.each([
+			["2026-09-13T22:59:59.999Z", "2026-09-14", true],
+			["2026-09-13T23:00:00.000Z", "2026-09-14", false],
+			["2026-03-29T23:00:00.000Z", "2026-03-30", false],
+			["2026-10-24T23:00:00.000Z", "2026-10-25", false],
+			["2026-10-25T23:30:00.000Z", "2026-10-26", true],
+			["2026-10-26T00:00:00.000Z", "2026-10-26", false],
+		])(
+			"should lock opening-date edits at UK midnight at %s",
+			async (now, openingDate, editable) => {
+				vi.useFakeTimers();
+				try {
+					vi.setSystemTime(new Date(now));
+					const role = { ...jobRole1, openingDate: new Date(openingDate) };
+					mockDao.findById.mockResolvedValue(role);
+					mockDao.updateJobRole.mockResolvedValue(role);
+					const data = { ...updateData, openingDate: new Date("2099-02-01") };
+					const result = service.updateJobRole(1, data);
+					if (editable) {
+						await result;
+						expect(mockDao.updateJobRole).toHaveBeenCalledWith(1, data);
+					} else {
+						await expect(result).rejects.toThrow(
+							"Opening date cannot be changed after the role has opened",
+						);
+						expect(mockDao.updateJobRole).not.toHaveBeenCalled();
+					}
+				} finally {
+					vi.useRealTimers();
+				}
+			},
+		);
+
 		it("should throw NotFoundError without updating a missing role", async () => {
 			mockDao.findById.mockResolvedValue(null);
 

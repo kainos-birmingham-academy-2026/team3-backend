@@ -15,6 +15,7 @@ import type { JobRoleDetailedResponse } from "../models/jobRoleDetailedResponse.
 import type { JobRoleResponse } from "../models/jobRoleResponse.js";
 import type { LocationResponse } from "../models/locationResponse.js";
 import type { StatusResponse } from "../models/statusResponse.js";
+import { getUkDateOnlyBoundary } from "../utils/jobRoleDates.js";
 
 export class JobRolesService {
 	private jobRoleDao: JobRoleDao;
@@ -78,7 +79,10 @@ export class JobRolesService {
 		if (!existingJobRole) {
 			throw new NotFoundError(`JobRole with id ${jobRoleId} not found`);
 		}
-		if (data.openingDate && existingJobRole.openingDate <= new Date()) {
+		if (
+			data.openingDate &&
+			existingJobRole.openingDate < getUkDateOnlyBoundary(1)
+		) {
 			throw new ConflictError(
 				409,
 				"Opening date cannot be changed after the role has opened",

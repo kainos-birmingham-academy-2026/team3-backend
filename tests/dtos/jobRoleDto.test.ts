@@ -129,21 +129,41 @@ describe("job role DTO schemas", () => {
 		});
 
 		it.each([
-			["immediately before midnight", "2026-09-13T23:59:59.999Z", "2026-09-13"],
-			["immediately after midnight", "2026-09-14T00:00:00.001Z", "2026-09-14"],
+			["before UK midnight in BST", "2026-09-13T22:59:59.999Z", "2026-09-13"],
+			["at UK midnight in BST", "2026-09-13T23:00:00.000Z", "2026-09-14"],
+			["after clocks go forward", "2026-03-29T23:00:00.000Z", "2026-03-30"],
+			["before clocks go back", "2026-10-24T23:00:00.000Z", "2026-10-25"],
+			["after clocks go back", "2026-10-25T23:30:00.000Z", "2026-10-25"],
+			["at UK midnight in GMT", "2026-10-26T00:00:00.000Z", "2026-10-26"],
 		])(
 			"should allow today as the opening date %s",
 			(_label, now, openingDate) => {
 				vi.useFakeTimers();
-				vi.setSystemTime(new Date(now));
-
-				const result = CreateJobRoleSchema.safeParse({
-					...validPayload,
-					openingDate,
-				});
-
-				expect(result.success).toBe(true);
-				vi.useRealTimers();
+				try {
+					vi.setSystemTime(new Date(now));
+					const result = CreateJobRoleSchema.safeParse({
+						...validPayload,
+						openingDate,
+					});
+					expect(result.success).toBe(true);
+					const yesterday = new Date(openingDate);
+					yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+					const pastResult = CreateJobRoleSchema.safeParse({
+						...validPayload,
+						openingDate: yesterday.toISOString().slice(0, 10),
+					});
+					expect(pastResult.success).toBe(false);
+					if (!pastResult.success) {
+						expect(pastResult.error.issues).toContainEqual(
+							expect.objectContaining({
+								path: ["openingDate"],
+								message: "Opening date cannot be in the past",
+							}),
+						);
+					}
+				} finally {
+					vi.useRealTimers();
+				}
 			},
 		);
 

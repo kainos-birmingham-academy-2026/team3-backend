@@ -7,6 +7,7 @@ import type {
 import type { Prisma } from "../generated/prisma/client.js";
 import { StatusEnum } from "../generated/prisma/enums.js";
 import prisma from "../prismaClient.js";
+import { getUkDateOnlyBoundary } from "../utils/jobRoleDates.js";
 import { JobRole } from "./jobRole.js";
 import { JobRoleApplication } from "./jobRoleApplication.js";
 
@@ -65,7 +66,9 @@ export class JobRoleDao {
 			? new Date(closingDateTo.getTime() + 24 * 60 * 60 * 1000)
 			: undefined;
 		const where = {
-			openingDate: includeScheduled ? undefined : { lte: new Date() },
+			openingDate: includeScheduled
+				? undefined
+				: { lt: getUkDateOnlyBoundary(1) },
 			roleName: filters.roleName
 				? { contains: filters.roleName, mode: "insensitive" }
 				: undefined,
@@ -106,7 +109,9 @@ export class JobRoleDao {
 		const row = await prisma.jobRole.findUnique({
 			where: {
 				jobRoleId,
-				openingDate: includeScheduled ? undefined : { lte: new Date() },
+				openingDate: includeScheduled
+					? undefined
+					: { lt: getUkDateOnlyBoundary(1) },
 			},
 			relationLoadStrategy: "join",
 			include: {

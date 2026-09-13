@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { getUkDateOnlyBoundary } from "../utils/jobRoleDates.js";
 
 const optionalIdList = z.preprocess(
 	(value) =>
@@ -48,9 +49,7 @@ export const JobRoleIdParamSchema = z.object({
 });
 
 const isTodayOrFuture = (date: Date): boolean => {
-	const today = new Date();
-	today.setUTCHours(0, 0, 0, 0);
-	return date >= today;
+	return date >= getUkDateOnlyBoundary();
 };
 
 export const CreateJobRoleSchema = z
