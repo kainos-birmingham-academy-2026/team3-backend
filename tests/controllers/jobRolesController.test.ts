@@ -1,7 +1,7 @@
 import { NotFoundError } from "error-lib";
-import { ConflictError } from "../../src/errors/conflictError.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { JobRolesController } from "../../src/controllers/jobRolesController.js";
+import { ConflictError } from "../../src/errors/conflictError.js";
 import type { JobRolesService } from "../../src/services/jobRolesService.js";
 
 const _CREATED_AT = new Date("2026-01-01T10:00:00.000Z");
