@@ -7,7 +7,10 @@ import { LocationResponse } from "../models/locationResponse.js";
 import { StatusResponse } from "../models/statusResponse.js";
 
 export class JobRoleMapper {
-	jobRoleToResponse(jobRole: JobRole): JobRoleResponse {
+	jobRoleToResponse(
+		jobRole: JobRole,
+		includeOpeningDate = false,
+	): JobRoleResponse {
 		return {
 			jobRoleId: jobRole.jobRoleId,
 			roleName: jobRole.roleName,
@@ -16,10 +19,14 @@ export class JobRoleMapper {
 			bandName: jobRole.bandName,
 			locationName: jobRole.locationName,
 			statusName: jobRole.statusName,
+			...(includeOpeningDate ? { openingDate: jobRole.openingDate } : {}),
 		};
 	}
 
-	jobRoleToDetailedResponse(jobRole: JobRole): JobRoleDetailedResponse {
+	jobRoleToDetailedResponse(
+		jobRole: JobRole,
+		includeOpeningDate = false,
+	): JobRoleDetailedResponse {
 		return {
 			jobRoleId: jobRole.jobRoleId,
 			roleName: jobRole.roleName,
@@ -35,6 +42,7 @@ export class JobRoleMapper {
 			addressLine1: jobRole.addressLine1,
 			addressLine2: jobRole.addressLine2,
 			postcode: jobRole.postcode,
+			...(includeOpeningDate ? { openingDate: jobRole.openingDate } : {}),
 		};
 	}
 

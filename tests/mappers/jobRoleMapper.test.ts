@@ -69,8 +69,47 @@ describe("JobRoleMapper", () => {
 			expect(response).not.toHaveProperty("responsibilities");
 			expect(response).not.toHaveProperty("sharepointUrl");
 			expect(response).not.toHaveProperty("numberOfOpenPositions");
+			expect(response).not.toHaveProperty("openingDate");
 			expect(response).toHaveProperty("jobRoleId");
 			expect(response).toHaveProperty("roleName");
+		});
+
+		it("should include opening date only in an admin response", () => {
+			const openingDate = new Date("2099-01-01");
+			const jobRole = new JobRole(
+				1,
+				"Role",
+				"Description",
+				"Responsibilities",
+				"URL",
+				1,
+				new Date("2099-12-31"),
+				"Capability",
+				"Band",
+				"Location",
+				"Address",
+				null,
+				"Postcode",
+				"OPEN",
+				new Date(),
+				new Date(),
+				openingDate,
+			);
+
+			expect(mapper.jobRoleToResponse(jobRole)).not.toHaveProperty(
+				"openingDate",
+			);
+			expect(mapper.jobRoleToResponse(jobRole, true)).toHaveProperty(
+				"openingDate",
+				openingDate,
+			);
+			expect(mapper.jobRoleToDetailedResponse(jobRole)).not.toHaveProperty(
+				"openingDate",
+			);
+			expect(mapper.jobRoleToDetailedResponse(jobRole, true)).toHaveProperty(
+				"openingDate",
+				openingDate,
+			);
 		});
 	});
 

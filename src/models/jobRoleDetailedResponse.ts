@@ -13,6 +13,7 @@ export class JobRoleDetailedResponse {
 	public readonly addressLine1: string;
 	public readonly addressLine2: string | null;
 	public readonly postcode: string;
+	public readonly openingDate?: Date | null;
 
 	constructor(
 		jobRoleId: number,
@@ -29,6 +30,7 @@ export class JobRoleDetailedResponse {
 		addressLine1: string,
 		addressLine2: string | null,
 		postcode: string,
+		openingDate?: Date | null,
 	) {
 		this.jobRoleId = jobRoleId;
 		this.roleName = roleName;
@@ -44,5 +46,6 @@ export class JobRoleDetailedResponse {
 		this.addressLine1 = addressLine1;
 		this.addressLine2 = addressLine2;
 		this.postcode = postcode;
+		this.openingDate = openingDate;
 	}
 }

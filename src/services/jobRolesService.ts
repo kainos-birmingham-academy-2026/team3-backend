@@ -42,7 +42,7 @@ export class JobRolesService {
 
 		return {
 			items: items.map((jobRole) =>
-				this.jobRoleMapper.jobRoleToResponse(jobRole),
+				this.jobRoleMapper.jobRoleToResponse(jobRole, includeScheduled),
 			),
 			page: filters.page,
 			pageSize: filters.pageSize,
@@ -59,12 +59,15 @@ export class JobRolesService {
 		if (!jobRole) {
 			throw new NotFoundError(`JobRole with id ${jobRoleId} not found`);
 		}
-		return this.jobRoleMapper.jobRoleToDetailedResponse(jobRole);
+		return this.jobRoleMapper.jobRoleToDetailedResponse(
+			jobRole,
+			includeScheduled,
+		);
 	}
 
 	async createJobRole(data: CreateJobRoleRequestDto): Promise<JobRoleResponse> {
 		const jobRole = await this.jobRoleDao.createJobRole(data);
-		return this.jobRoleMapper.jobRoleToResponse(jobRole);
+		return this.jobRoleMapper.jobRoleToResponse(jobRole, true);
 	}
 
 	async updateJobRole(
@@ -77,7 +80,7 @@ export class JobRolesService {
 		}
 
 		const jobRole = await this.jobRoleDao.updateJobRole(jobRoleId, data);
-		return this.jobRoleMapper.jobRoleToDetailedResponse(jobRole);
+		return this.jobRoleMapper.jobRoleToDetailedResponse(jobRole, true);
 	}
 
 	async deleteJobRole(jobRoleId: number): Promise<void> {

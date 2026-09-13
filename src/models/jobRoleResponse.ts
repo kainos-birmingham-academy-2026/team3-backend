@@ -7,6 +7,7 @@ export class JobRoleResponse {
 	public readonly bandName: string;
 	public readonly locationName: string;
 	public readonly statusName: string;
+	public readonly openingDate?: Date | null;
 
 	constructor(
 		jobRoleId: number,
@@ -16,6 +17,7 @@ export class JobRoleResponse {
 		bandName: string,
 		locationName: string,
 		statusName: string,
+		openingDate?: Date | null,
 	) {
 		this.jobRoleId = jobRoleId;
 		this.roleName = roleName;
@@ -24,5 +26,6 @@ export class JobRoleResponse {
 		this.bandName = bandName;
 		this.locationName = locationName;
 		this.statusName = statusName;
+		this.openingDate = openingDate;
 	}
 }

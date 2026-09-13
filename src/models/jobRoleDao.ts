@@ -32,6 +32,7 @@ function toJobRoleDomain(row: JobRoleRow): JobRole {
 		row.status.statusName,
 		row.createdAt,
 		row.updatedAt,
+		row.openingDate,
 	);
 }
 
