@@ -128,13 +128,16 @@ describe("job role DTO schemas", () => {
 			}
 		});
 
-		it("should allow today as the opening date after midnight", () => {
+		it.each([
+			["immediately before midnight", "2026-09-13T23:59:59.999Z", "2026-09-13"],
+			["immediately after midnight", "2026-09-14T00:00:00.001Z", "2026-09-14"],
+		])("should allow today as the opening date %s", (_label, now, openingDate) => {
 			vi.useFakeTimers();
-			vi.setSystemTime(new Date("2026-09-13T23:59:59.000Z"));
+			vi.setSystemTime(new Date(now));
 
 			const result = CreateJobRoleSchema.safeParse({
 				...validPayload,
-				openingDate: "2026-09-13",
+				openingDate,
 			});
 
 			expect(result.success).toBe(true);
