@@ -85,6 +85,7 @@ describe("job role DTO schemas", () => {
 			responsibilities: "  Code development, testing, deployment  ",
 			sharepointUrl: "https://sharepoint.example.com/roles/1",
 			numberOfOpenPositions: 2,
+			openingDate: "2099-01-01T00:00:00.000Z",
 			closingDate: "2099-12-31T00:00:00.000Z",
 			capabilityId: 1,
 			bandId: 2,
@@ -102,6 +103,7 @@ describe("job role DTO schemas", () => {
 					responsibilities: "Code development, testing, deployment",
 					sharepointUrl: validPayload.sharepointUrl,
 					numberOfOpenPositions: 2,
+					openingDate: new Date(validPayload.openingDate),
 					closingDate: new Date(validPayload.closingDate),
 					capabilityId: 1,
 					bandId: 2,
@@ -110,13 +112,18 @@ describe("job role DTO schemas", () => {
 			}
 		});
 
-		it("should allow an omitted closing date", () => {
-			const { closingDate: _closingDate, ...payloadWithoutDate } = validPayload;
+		it("should allow omitted opening and closing dates", () => {
+			const {
+				openingDate: _openingDate,
+				closingDate: _closingDate,
+				...payloadWithoutDates
+			} = validPayload;
 
-			const result = CreateJobRoleSchema.safeParse(payloadWithoutDate);
+			const result = CreateJobRoleSchema.safeParse(payloadWithoutDates);
 
 			expect(result.success).toBe(true);
 			if (result.success) {
+				expect(result.data.openingDate).toBeUndefined();
 				expect(result.data.closingDate).toBeUndefined();
 			}
 		});
@@ -130,6 +137,12 @@ describe("job role DTO schemas", () => {
 			],
 			["an invalid URL", { sharepointUrl: "not-a-url" }],
 			["zero open positions", { numberOfOpenPositions: 0 }],
+			["an invalid opening date", { openingDate: "not-a-date" }],
+			["a past opening date", { openingDate: "2020-01-01T00:00:00.000Z" }],
+			[
+				"an opening date after the closing date",
+				{ openingDate: "2100-01-01T00:00:00.000Z" },
+			],
 			["an invalid closing date", { closingDate: "not-a-date" }],
 			["a past closing date", { closingDate: "2020-01-01T00:00:00.000Z" }],
 		])("should reject %s", (_name, override) => {
