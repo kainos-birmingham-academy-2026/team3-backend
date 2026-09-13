@@ -116,10 +116,7 @@ describe("JobRoleDao", () => {
 			expect(prisma.jobRole.findMany).toHaveBeenCalledTimes(1);
 			expect(prisma.jobRole.findMany).toHaveBeenCalledWith({
 				where: {
-					OR: [
-						{ openingDate: null },
-						{ openingDate: { lte: expect.any(Date) } },
-					],
+					openingDate: { lte: expect.any(Date) },
 					roleName: undefined,
 					locationId: undefined,
 					capabilityId: undefined,
@@ -159,10 +156,7 @@ describe("JobRoleDao", () => {
 			expect(prisma.jobRole.findMany).toHaveBeenCalledWith(
 				expect.objectContaining({
 					where: {
-						OR: [
-							{ openingDate: null },
-							{ openingDate: { lte: expect.any(Date) } },
-						],
+						openingDate: { lte: expect.any(Date) },
 						roleName: { contains: "engineer", mode: "insensitive" },
 						locationId: { in: [1, 2] },
 						capabilityId: { in: [3] },
@@ -178,10 +172,7 @@ describe("JobRoleDao", () => {
 			);
 			expect(prisma.jobRole.count).toHaveBeenCalledWith({
 				where: {
-					OR: [
-						{ openingDate: null },
-						{ openingDate: { lte: expect.any(Date) } },
-					],
+					openingDate: { lte: expect.any(Date) },
 					roleName: { contains: "engineer", mode: "insensitive" },
 					locationId: { in: [1, 2] },
 					capabilityId: { in: [3] },
@@ -204,7 +195,7 @@ describe("JobRoleDao", () => {
 
 			expect(prisma.jobRole.findMany).toHaveBeenCalledWith(
 				expect.objectContaining({
-					where: expect.objectContaining({ OR: undefined }),
+					where: expect.objectContaining({ openingDate: undefined }),
 				}),
 			);
 		});
@@ -258,10 +249,7 @@ describe("JobRoleDao", () => {
 			expect(prisma.jobRole.findUnique).toHaveBeenCalledWith({
 				where: {
 					jobRoleId: 1,
-					OR: [
-						{ openingDate: null },
-						{ openingDate: { lte: expect.any(Date) } },
-					],
+					openingDate: { lte: expect.any(Date) },
 				},
 				relationLoadStrategy: "join",
 				include: {
@@ -283,7 +271,7 @@ describe("JobRoleDao", () => {
 
 			expect(prisma.jobRole.findUnique).toHaveBeenCalledWith(
 				expect.objectContaining({
-					where: { jobRoleId: 1, OR: undefined },
+					where: { jobRoleId: 1, openingDate: undefined },
 				}),
 			);
 		});

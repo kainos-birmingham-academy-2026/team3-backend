@@ -65,9 +65,7 @@ export class JobRoleDao {
 			? new Date(closingDateTo.getTime() + 24 * 60 * 60 * 1000)
 			: undefined;
 		const where = {
-			OR: includeScheduled
-				? undefined
-				: [{ openingDate: null }, { openingDate: { lte: new Date() } }],
+			openingDate: includeScheduled ? undefined : { lte: new Date() },
 			roleName: filters.roleName
 				? { contains: filters.roleName, mode: "insensitive" }
 				: undefined,
@@ -108,9 +106,7 @@ export class JobRoleDao {
 		const row = await prisma.jobRole.findUnique({
 			where: {
 				jobRoleId,
-				OR: includeScheduled
-					? undefined
-					: [{ openingDate: null }, { openingDate: { lte: new Date() } }],
+				openingDate: includeScheduled ? undefined : { lte: new Date() },
 			},
 			relationLoadStrategy: "join",
 			include: {
