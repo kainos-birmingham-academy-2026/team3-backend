@@ -27,6 +27,7 @@ export class JobRolesService {
 
 	async findAll(
 		filters: JobRoleFiltersDto = { page: 1, pageSize: 10 },
+		includeScheduled = false,
 	): Promise<{
 		items: JobRoleResponse[];
 		page: number;
@@ -34,7 +35,10 @@ export class JobRolesService {
 		totalItems: number;
 		totalPages: number;
 	}> {
-		const { items, totalItems } = await this.jobRoleDao.findAll(filters);
+		const { items, totalItems } = await this.jobRoleDao.findAll(
+			filters,
+			includeScheduled,
+		);
 
 		return {
 			items: items.map((jobRole) =>
@@ -47,8 +51,11 @@ export class JobRolesService {
 		};
 	}
 
-	async findById(jobRoleId: number): Promise<JobRoleDetailedResponse> {
-		const jobRole = await this.jobRoleDao.findById(jobRoleId);
+	async findById(
+		jobRoleId: number,
+		includeScheduled = false,
+	): Promise<JobRoleDetailedResponse> {
+		const jobRole = await this.jobRoleDao.findById(jobRoleId, includeScheduled);
 		if (!jobRole) {
 			throw new NotFoundError(`JobRole with id ${jobRoleId} not found`);
 		}
@@ -64,7 +71,7 @@ export class JobRolesService {
 		jobRoleId: number,
 		data: UpdateJobRoleRequestDto,
 	): Promise<JobRoleDetailedResponse> {
-		const existingJobRole = await this.jobRoleDao.findById(jobRoleId);
+		const existingJobRole = await this.jobRoleDao.findById(jobRoleId, true);
 		if (!existingJobRole) {
 			throw new NotFoundError(`JobRole with id ${jobRoleId} not found`);
 		}
@@ -74,7 +81,7 @@ export class JobRolesService {
 	}
 
 	async deleteJobRole(jobRoleId: number): Promise<void> {
-		const existingJobRole = await this.jobRoleDao.findById(jobRoleId);
+		const existingJobRole = await this.jobRoleDao.findById(jobRoleId, true);
 		if (!existingJobRole) {
 			throw new NotFoundError(`JobRole with id ${jobRoleId} not found`);
 		}
@@ -87,7 +94,7 @@ export class JobRolesService {
 		userId: number,
 		data: Pick<CreateApplicationRequestDto, "cvText">,
 	): Promise<JobRoleApplication> {
-		const jobRole = await this.jobRoleDao.findById(jobRoleId);
+		const jobRole = await this.jobRoleDao.findById(jobRoleId, false);
 		if (!jobRole) {
 			throw new NotFoundError(`JobRole with id ${jobRoleId} not found`);
 		}

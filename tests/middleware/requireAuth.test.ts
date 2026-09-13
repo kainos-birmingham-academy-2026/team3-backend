@@ -1,7 +1,10 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { requireAuth } from "../../src/middleware/requireAuth.ts";
+import {
+	optionalAuth,
+	requireAuth,
+} from "../../src/middleware/requireAuth.ts";
 
 type Req = Partial<Request> & {
 	header: Request["header"];
@@ -151,5 +154,39 @@ describe("requireAuth middleware", () => {
 		});
 		expect(next).toHaveBeenCalledTimes(1);
 		expect(res.status).not.toHaveBeenCalled();
+	});
+});
+
+describe("optionalAuth middleware", () => {
+	it("should continue without authentication when the header is absent", () => {
+		const req = createReq();
+		const res = createRes();
+		const next = vi.fn();
+
+		optionalAuth(req as Request, res as Response, next);
+
+		expect(next).toHaveBeenCalledTimes(1);
+		expect(res.locals.authUser).toBeUndefined();
+	});
+
+	it("should populate the authenticated user when a token is supplied", () => {
+		process.env.JWT_SECRET = "test-secret";
+		vi.spyOn(jwt, "verify").mockReturnValueOnce({
+			userId: 2,
+			email: "admin@example.com",
+			role: "ADMIN",
+		} as never);
+		const req = createReq("Bearer valid-token");
+		const res = createRes();
+		const next = vi.fn();
+
+		optionalAuth(req as Request, res as Response, next);
+
+		expect(res.locals.authUser).toEqual({
+			userId: 2,
+			email: "admin@example.com",
+			role: "ADMIN",
+		});
+		expect(next).toHaveBeenCalledTimes(1);
 	});
 });

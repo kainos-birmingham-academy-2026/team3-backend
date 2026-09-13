@@ -49,6 +49,7 @@ function toApplicationDomain(
 export class JobRoleDao {
 	async findAll(
 		filters: JobRoleFiltersDto = { page: 1, pageSize: 10 },
+		includeScheduled = false,
 	): Promise<{
 		items: JobRole[];
 		totalItems: number;
@@ -63,6 +64,9 @@ export class JobRoleDao {
 			? new Date(closingDateTo.getTime() + 24 * 60 * 60 * 1000)
 			: undefined;
 		const where = {
+			OR: includeScheduled
+				? undefined
+				: [{ openingDate: null }, { openingDate: { lte: new Date() } }],
 			roleName: filters.roleName
 				? { contains: filters.roleName, mode: "insensitive" }
 				: undefined,
@@ -96,9 +100,17 @@ export class JobRoleDao {
 		return { items: rows.map(toJobRoleDomain), totalItems };
 	}
 
-	async findById(jobRoleId: number): Promise<JobRole | null> {
+	async findById(
+		jobRoleId: number,
+		includeScheduled = false,
+	): Promise<JobRole | null> {
 		const row = await prisma.jobRole.findUnique({
-			where: { jobRoleId },
+			where: {
+				jobRoleId,
+				OR: includeScheduled
+					? undefined
+					: [{ openingDate: null }, { openingDate: { lte: new Date() } }],
+			},
 			relationLoadStrategy: "join",
 			include: {
 				status: true,

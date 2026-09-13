@@ -69,16 +69,37 @@ describe("JobRolesController", () => {
 			await controller.getAll(req as never, res as never);
 
 			expect(res.status).toHaveBeenCalledWith(200);
-			expect(mockService.findAll).toHaveBeenCalledWith({
-				page: 1,
-				pageSize: 10,
-			});
+			expect(mockService.findAll).toHaveBeenCalledWith(
+				{ page: 1, pageSize: 10 },
+				false,
+			);
 			expect(res.json).toHaveBeenCalledWith(
 				expect.objectContaining({
 					items: [expect.objectContaining({ jobRoleId: 1 })],
 					totalItems: 1,
 					totalPages: 1,
 				}),
+			);
+		});
+
+		it("should include scheduled roles for an admin", async () => {
+			const req = {};
+			const res = createMockResponse();
+			res.locals.validatedQuery = { page: 1, pageSize: 10 };
+			res.locals.authUser = { role: "ADMIN" };
+			vi.mocked(mockService.findAll).mockResolvedValue({
+				items: [],
+				page: 1,
+				pageSize: 10,
+				totalItems: 0,
+				totalPages: 0,
+			});
+
+			await controller.getAll(req as never, res as never);
+
+			expect(mockService.findAll).toHaveBeenCalledWith(
+				{ page: 1, pageSize: 10 },
+				true,
 			);
 		});
 

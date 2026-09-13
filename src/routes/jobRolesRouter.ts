@@ -7,7 +7,7 @@ import {
 	UpdateJobRoleSchema,
 } from "../dtos/jobRoleDto";
 import { allowRoles, USER_ROLES } from "../middleware/authorise";
-import { requireAuth } from "../middleware/requireAuth";
+import { optionalAuth, requireAuth } from "../middleware/requireAuth";
 import {
 	validateBody,
 	validateParams,
@@ -242,6 +242,7 @@ jobRolesRouter.get("/locations", (req: R, res: Res) => {
  */
 jobRolesRouter.get(
 	"",
+	optionalAuth,
 	validateQuery(JobRoleFiltersSchema),
 	(req: R, res: Res) => {
 		controller.getAll(req, res);
@@ -290,6 +291,7 @@ jobRolesRouter.get(
  */
 jobRolesRouter.get(
 	"/:jobRoleId",
+	optionalAuth,
 	validateParams(JobRoleIdParamSchema),
 	(req: R<{ jobRoleId: string }>, res: Res) => {
 		controller.getById(req, res);

@@ -116,6 +116,10 @@ describe("JobRoleDao", () => {
 			expect(prisma.jobRole.findMany).toHaveBeenCalledTimes(1);
 			expect(prisma.jobRole.findMany).toHaveBeenCalledWith({
 				where: {
+					OR: [
+						{ openingDate: null },
+						{ openingDate: { lte: expect.any(Date) } },
+					],
 					roleName: undefined,
 					locationId: undefined,
 					capabilityId: undefined,
@@ -155,6 +159,10 @@ describe("JobRoleDao", () => {
 			expect(prisma.jobRole.findMany).toHaveBeenCalledWith(
 				expect.objectContaining({
 					where: {
+						OR: [
+							{ openingDate: null },
+							{ openingDate: { lte: expect.any(Date) } },
+						],
 						roleName: { contains: "engineer", mode: "insensitive" },
 						locationId: { in: [1, 2] },
 						capabilityId: { in: [3] },
@@ -170,6 +178,10 @@ describe("JobRoleDao", () => {
 			);
 			expect(prisma.jobRole.count).toHaveBeenCalledWith({
 				where: {
+					OR: [
+						{ openingDate: null },
+						{ openingDate: { lte: expect.any(Date) } },
+					],
 					roleName: { contains: "engineer", mode: "insensitive" },
 					locationId: { in: [1, 2] },
 					capabilityId: { in: [3] },
@@ -180,6 +192,21 @@ describe("JobRoleDao", () => {
 					},
 				},
 			});
+		});
+
+		it("should include scheduled roles for admins", async () => {
+			vi.mocked(
+				prisma.jobRole.findMany as unknown as typeof prisma.jobRole.findMany,
+			).mockResolvedValue([]);
+			vi.mocked(prisma.jobRole.count).mockResolvedValue(0);
+
+			await dao.findAll({ page: 1, pageSize: 10 }, true);
+
+			expect(prisma.jobRole.findMany).toHaveBeenCalledWith(
+				expect.objectContaining({
+					where: expect.objectContaining({ OR: undefined }),
+				}),
+			);
 		});
 
 		it("should return array of JobRole objects", async () => {
@@ -229,7 +256,13 @@ describe("JobRoleDao", () => {
 
 			expect(prisma.jobRole.findUnique).toHaveBeenCalledTimes(1);
 			expect(prisma.jobRole.findUnique).toHaveBeenCalledWith({
-				where: { jobRoleId: 1 },
+				where: {
+					jobRoleId: 1,
+					OR: [
+						{ openingDate: null },
+						{ openingDate: { lte: expect.any(Date) } },
+					],
+				},
 				relationLoadStrategy: "join",
 				include: {
 					status: true,
@@ -238,6 +271,21 @@ describe("JobRoleDao", () => {
 					band: true,
 				},
 			});
+		});
+
+		it("should include a scheduled role for an admin", async () => {
+			vi.mocked(
+				prisma.jobRole
+					.findUnique as unknown as typeof prisma.jobRole.findUnique,
+			).mockResolvedValue(mockJobRoleRow());
+
+			await dao.findById(1, true);
+
+			expect(prisma.jobRole.findUnique).toHaveBeenCalledWith(
+				expect.objectContaining({
+					where: { jobRoleId: 1, OR: undefined },
+				}),
+			);
 		});
 
 		it("should return JobRole when found", async () => {

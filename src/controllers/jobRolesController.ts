@@ -6,6 +6,7 @@ import type {
 	UpdateJobRoleRequestDto,
 } from "../dtos/jobRoleDto.js";
 import { INTERNAL_SERVER_ERROR } from "../errors/serverError.js";
+import { USER_ROLES } from "../middleware/authorise.js";
 import type { JobRolesService } from "../services/jobRolesService";
 
 export class JobRolesController {
@@ -18,7 +19,9 @@ export class JobRolesController {
 	async getAll(_req: Request, res: Response) {
 		try {
 			const filters = res.locals.validatedQuery as JobRoleFiltersDto;
-			const jobRoles = await this.service.findAll(filters);
+			const includeScheduled =
+				res.locals.authUser?.role === USER_ROLES.ADMIN;
+			const jobRoles = await this.service.findAll(filters, includeScheduled);
 			return res.status(200).json(jobRoles);
 		} catch {
 			return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
@@ -34,7 +37,9 @@ export class JobRolesController {
 		}
 
 		try {
-			const jobRole = await this.service.findById(jobRoleId);
+			const includeScheduled =
+				res.locals.authUser?.role === USER_ROLES.ADMIN;
+			const jobRole = await this.service.findById(jobRoleId, includeScheduled);
 			return res.status(200).json(jobRole);
 		} catch (error) {
 			if (error instanceof NotFoundError) {

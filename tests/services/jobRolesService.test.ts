@@ -97,7 +97,16 @@ describe("JobRolesService", () => {
 
 			await service.findAll(filters);
 
-			expect(mockDao.findAll).toHaveBeenCalledWith(filters);
+			expect(mockDao.findAll).toHaveBeenCalledWith(filters, false);
+		});
+
+		it("should include scheduled roles for admins", async () => {
+			const filters = { page: 1, pageSize: 10 };
+			mockDao.findAll.mockResolvedValue({ items: [], totalItems: 0 });
+
+			await service.findAll(filters, true);
+
+			expect(mockDao.findAll).toHaveBeenCalledWith(filters, true);
 		});
 
 		it("should return mapped items with pagination metadata", async () => {
@@ -188,7 +197,7 @@ describe("JobRolesService", () => {
 				jobRoleId: 1,
 				roleName: "Software Engineer",
 			});
-			expect(mockDao.findById).toHaveBeenCalledWith(1);
+			expect(mockDao.findById).toHaveBeenCalledWith(1, false);
 		});
 
 		it("should throw NotFoundError when the id does not exist", async () => {
@@ -205,7 +214,7 @@ describe("JobRolesService", () => {
 
 			await service.deleteJobRole(1);
 
-			expect(mockDao.findById).toHaveBeenCalledWith(1);
+			expect(mockDao.findById).toHaveBeenCalledWith(1, true);
 			expect(mockDao.deleteJobRole).toHaveBeenCalledWith(1);
 		});
 
@@ -240,6 +249,7 @@ describe("JobRolesService", () => {
 
 			const result = await service.updateJobRole(1, updateData);
 
+			expect(mockDao.findById).toHaveBeenCalledWith(1, true);
 			expect(mockDao.updateJobRole).toHaveBeenCalledWith(1, updateData);
 			expect(result).toBe(mappedResponse);
 		});
@@ -284,7 +294,7 @@ describe("JobRolesService", () => {
 					value.userId === 1 &&
 					value.cvText === "CV-2026-001",
 			);
-			expect(mockDao.findById).toHaveBeenCalledWith(1);
+			expect(mockDao.findById).toHaveBeenCalledWith(1, false);
 			expect(mockDao.findApplicationByUserIdAndJobRoleId).toHaveBeenCalledWith(
 				1,
 				1,
@@ -296,7 +306,7 @@ describe("JobRolesService", () => {
 			);
 		});
 
-		it("should throw NotFoundError when job role does not exist", async () => {
+		it("should throw NotFoundError when job role is missing or not yet open", async () => {
 			const jobRoleId = 999;
 			const userId = 1;
 			const applicationData = {
