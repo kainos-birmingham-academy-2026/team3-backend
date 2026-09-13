@@ -19,8 +19,7 @@ export class JobRolesController {
 	async getAll(_req: Request, res: Response) {
 		try {
 			const filters = res.locals.validatedQuery as JobRoleFiltersDto;
-			const includeScheduled =
-				res.locals.authUser?.role === USER_ROLES.ADMIN;
+			const includeScheduled = res.locals.authUser?.role === USER_ROLES.ADMIN;
 			const jobRoles = await this.service.findAll(filters, includeScheduled);
 			return res.status(200).json(jobRoles);
 		} catch {
@@ -37,8 +36,7 @@ export class JobRolesController {
 		}
 
 		try {
-			const includeScheduled =
-				res.locals.authUser?.role === USER_ROLES.ADMIN;
+			const includeScheduled = res.locals.authUser?.role === USER_ROLES.ADMIN;
 			const jobRole = await this.service.findById(jobRoleId, includeScheduled);
 			return res.status(200).json(jobRole);
 		} catch (error) {

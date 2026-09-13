@@ -1,10 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import {
-	optionalAuth,
-	requireAuth,
-} from "../../src/middleware/requireAuth.ts";
+import { optionalAuth, requireAuth } from "../../src/middleware/requireAuth.ts";
 
 type Req = Partial<Request> & {
 	header: Request["header"];

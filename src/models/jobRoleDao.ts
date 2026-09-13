@@ -241,7 +241,8 @@ export class JobRoleDao {
 				const secondOrder = secondIndex === -1 ? bandOrder.length : secondIndex;
 
 				return (
-					firstOrder - secondOrder || first.bandName.localeCompare(second.bandName)
+					firstOrder - secondOrder ||
+					first.bandName.localeCompare(second.bandName)
 				);
 			});
 	}

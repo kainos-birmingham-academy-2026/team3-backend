@@ -228,10 +228,7 @@ describe("Job role route auth protection", () => {
 
 		expect(response.status).toBe(200);
 		expect(response.body).toEqual(expected);
-		expect(findAll).toHaveBeenCalledWith(
-			{ page: 1, pageSize: 10 },
-			true,
-		);
+		expect(findAll).toHaveBeenCalledWith({ page: 1, pageSize: 10 }, true);
 	});
 
 	it("should return 403 for user token on create endpoint", async () => {
