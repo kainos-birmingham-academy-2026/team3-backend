@@ -25,6 +25,7 @@ vi.mock("../../src/prismaClient.js", () => ({
 }));
 
 import type { CreateJobRoleRequestDto } from "../../src/dtos/jobRoleDto.js";
+import { CreateJobRoleSchema } from "../../src/dtos/jobRoleDto.js";
 import {
 	ApplicationStatus,
 	StatusEnum,
@@ -105,6 +106,83 @@ describe("JobRoleDao", () => {
 	});
 
 	describe("findAll", () => {
+		it.each([
+			[
+				"2026-09-13T22:59:59.999Z",
+				"2026-09-14",
+				"2026-09-14T00:00:00.000Z",
+				false,
+			],
+			[
+				"2026-09-13T23:00:00.000Z",
+				"2026-09-14",
+				"2026-09-15T00:00:00.000Z",
+				true,
+			],
+			[
+				"2026-03-29T23:00:00.000Z",
+				"2026-03-30",
+				"2026-03-31T00:00:00.000Z",
+				true,
+			],
+			[
+				"2026-10-24T23:00:00.000Z",
+				"2026-10-25",
+				"2026-10-26T00:00:00.000Z",
+				true,
+			],
+			[
+				"2026-10-25T23:30:00.000Z",
+				"2026-10-26",
+				"2026-10-26T00:00:00.000Z",
+				false,
+			],
+			[
+				"2026-10-26T00:00:00.000Z",
+				"2026-10-26",
+				"2026-10-27T00:00:00.000Z",
+				true,
+			],
+		])(
+			"should use the UK opening day for list and detail queries at %s",
+			async (now, openingDate, cutoff, visible) => {
+				vi.useFakeTimers();
+				try {
+					vi.setSystemTime(new Date(now));
+					const payload = CreateJobRoleSchema.parse({
+						...mockJobRoleRow(),
+						openingDate,
+						closingDate: "2099-12-31",
+					});
+					vi.mocked(prisma.jobRole.findMany).mockResolvedValue([]);
+					vi.mocked(prisma.jobRole.count).mockResolvedValue(0);
+					vi.mocked(prisma.jobRole.findUnique).mockResolvedValue(null);
+
+					await dao.findAll();
+					await dao.findById(1);
+
+					const expectedWhere = expect.objectContaining({
+						openingDate: { lt: new Date(cutoff) },
+					});
+					expect(prisma.jobRole.findMany).toHaveBeenCalledWith(
+						expect.objectContaining({ where: expectedWhere }),
+					);
+					expect(prisma.jobRole.count).toHaveBeenCalledWith({
+						where: expectedWhere,
+					});
+					expect(prisma.jobRole.findUnique).toHaveBeenCalledWith(
+						expect.objectContaining({ where: expectedWhere }),
+					);
+					if (!payload.openingDate) {
+						throw new Error("Expected a parsed opening date");
+					}
+					expect(payload.openingDate < new Date(cutoff)).toBe(visible);
+				} finally {
+					vi.useRealTimers();
+				}
+			},
+		);
+
 		it("should query database using Prisma client", async () => {
 			vi.mocked(
 				prisma.jobRole.findMany as unknown as typeof prisma.jobRole.findMany,
@@ -116,6 +194,7 @@ describe("JobRoleDao", () => {
 			expect(prisma.jobRole.findMany).toHaveBeenCalledTimes(1);
 			expect(prisma.jobRole.findMany).toHaveBeenCalledWith({
 				where: {
+					openingDate: { lt: expect.any(Date) },
 					roleName: undefined,
 					locationId: undefined,
 					capabilityId: undefined,
@@ -155,6 +234,7 @@ describe("JobRoleDao", () => {
 			expect(prisma.jobRole.findMany).toHaveBeenCalledWith(
 				expect.objectContaining({
 					where: {
+						openingDate: { lt: expect.any(Date) },
 						roleName: { contains: "engineer", mode: "insensitive" },
 						locationId: { in: [1, 2] },
 						capabilityId: { in: [3] },
@@ -170,6 +250,7 @@ describe("JobRoleDao", () => {
 			);
 			expect(prisma.jobRole.count).toHaveBeenCalledWith({
 				where: {
+					openingDate: { lt: expect.any(Date) },
 					roleName: { contains: "engineer", mode: "insensitive" },
 					locationId: { in: [1, 2] },
 					capabilityId: { in: [3] },
@@ -180,6 +261,21 @@ describe("JobRoleDao", () => {
 					},
 				},
 			});
+		});
+
+		it("should include scheduled roles for admins", async () => {
+			vi.mocked(
+				prisma.jobRole.findMany as unknown as typeof prisma.jobRole.findMany,
+			).mockResolvedValue([]);
+			vi.mocked(prisma.jobRole.count).mockResolvedValue(0);
+
+			await dao.findAll({ page: 1, pageSize: 10 }, true);
+
+			expect(prisma.jobRole.findMany).toHaveBeenCalledWith(
+				expect.objectContaining({
+					where: expect.objectContaining({ openingDate: undefined }),
+				}),
+			);
 		});
 
 		it("should return array of JobRole objects", async () => {
@@ -229,7 +325,10 @@ describe("JobRoleDao", () => {
 
 			expect(prisma.jobRole.findUnique).toHaveBeenCalledTimes(1);
 			expect(prisma.jobRole.findUnique).toHaveBeenCalledWith({
-				where: { jobRoleId: 1 },
+				where: {
+					jobRoleId: 1,
+					openingDate: { lt: expect.any(Date) },
+				},
 				relationLoadStrategy: "join",
 				include: {
 					status: true,
@@ -238,6 +337,21 @@ describe("JobRoleDao", () => {
 					band: true,
 				},
 			});
+		});
+
+		it("should include a scheduled role for an admin", async () => {
+			vi.mocked(
+				prisma.jobRole
+					.findUnique as unknown as typeof prisma.jobRole.findUnique,
+			).mockResolvedValue(mockJobRoleRow());
+
+			await dao.findById(1, true);
+
+			expect(prisma.jobRole.findUnique).toHaveBeenCalledWith(
+				expect.objectContaining({
+					where: { jobRoleId: 1, openingDate: undefined },
+				}),
+			);
 		});
 
 		it("should return JobRole when found", async () => {
@@ -274,6 +388,7 @@ describe("JobRoleDao", () => {
 				responsibilities: "Code development, testing, deployment",
 				sharepointUrl: "https://sharepoint.example.com/roles/1",
 				numberOfOpenPositions: 2,
+				openingDate: new Date("2026-10-01"),
 				closingDate: new Date("2026-12-31"),
 				capabilityId: 1,
 				bandId: 1,
@@ -336,6 +451,7 @@ describe("JobRoleDao", () => {
 				responsibilities: "Coach engineers",
 				sharepointUrl: "https://example.com/lead-role",
 				numberOfOpenPositions: 3,
+				openingDate: new Date("2099-01-01"),
 				closingDate: new Date("2099-12-31"),
 				capabilityId: 2,
 				bandId: 3,

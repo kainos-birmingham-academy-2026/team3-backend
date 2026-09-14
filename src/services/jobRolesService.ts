@@ -15,6 +15,7 @@ import type { JobRoleDetailedResponse } from "../models/jobRoleDetailedResponse.
 import type { JobRoleResponse } from "../models/jobRoleResponse.js";
 import type { LocationResponse } from "../models/locationResponse.js";
 import type { StatusResponse } from "../models/statusResponse.js";
+import { getUkDateOnlyBoundary } from "../utils/jobRoleDates.js";
 
 export class JobRolesService {
 	private jobRoleDao: JobRoleDao;
@@ -27,6 +28,7 @@ export class JobRolesService {
 
 	async findAll(
 		filters: JobRoleFiltersDto = { page: 1, pageSize: 10 },
+		includeScheduled = false,
 	): Promise<{
 		items: JobRoleResponse[];
 		page: number;
@@ -34,11 +36,14 @@ export class JobRolesService {
 		totalItems: number;
 		totalPages: number;
 	}> {
-		const { items, totalItems } = await this.jobRoleDao.findAll(filters);
+		const { items, totalItems } = await this.jobRoleDao.findAll(
+			filters,
+			includeScheduled,
+		);
 
 		return {
 			items: items.map((jobRole) =>
-				this.jobRoleMapper.jobRoleToResponse(jobRole),
+				this.jobRoleMapper.jobRoleToResponse(jobRole, includeScheduled),
 			),
 			page: filters.page,
 			pageSize: filters.pageSize,
@@ -47,34 +52,55 @@ export class JobRolesService {
 		};
 	}
 
-	async findById(jobRoleId: number): Promise<JobRoleDetailedResponse> {
-		const jobRole = await this.jobRoleDao.findById(jobRoleId);
+	async findById(
+		jobRoleId: number,
+		includeScheduled = false,
+	): Promise<JobRoleDetailedResponse> {
+		const jobRole = await this.jobRoleDao.findById(jobRoleId, includeScheduled);
 		if (!jobRole) {
 			throw new NotFoundError(`JobRole with id ${jobRoleId} not found`);
 		}
-		return this.jobRoleMapper.jobRoleToDetailedResponse(jobRole);
+		return this.jobRoleMapper.jobRoleToDetailedResponse(
+			jobRole,
+			includeScheduled,
+		);
 	}
 
 	async createJobRole(data: CreateJobRoleRequestDto): Promise<JobRoleResponse> {
 		const jobRole = await this.jobRoleDao.createJobRole(data);
-		return this.jobRoleMapper.jobRoleToResponse(jobRole);
+		return this.jobRoleMapper.jobRoleToResponse(jobRole, true);
 	}
 
 	async updateJobRole(
 		jobRoleId: number,
 		data: UpdateJobRoleRequestDto,
 	): Promise<JobRoleDetailedResponse> {
-		const existingJobRole = await this.jobRoleDao.findById(jobRoleId);
+		const existingJobRole = await this.jobRoleDao.findById(jobRoleId, true);
 		if (!existingJobRole) {
 			throw new NotFoundError(`JobRole with id ${jobRoleId} not found`);
 		}
+		if (
+			data.openingDate &&
+			existingJobRole.openingDate < getUkDateOnlyBoundary(1)
+		) {
+			throw new ConflictError(
+				409,
+				"Opening date cannot be changed after the role has opened",
+			);
+		}
+
+		const openingDate = data.openingDate ?? existingJobRole.openingDate;
+		const closingDate = data.closingDate ?? existingJobRole.closingDate;
+		if (closingDate && openingDate > closingDate) {
+			throw new ConflictError(409, "Opening date cannot be after closing date");
+		}
 
 		const jobRole = await this.jobRoleDao.updateJobRole(jobRoleId, data);
-		return this.jobRoleMapper.jobRoleToDetailedResponse(jobRole);
+		return this.jobRoleMapper.jobRoleToDetailedResponse(jobRole, true);
 	}
 
 	async deleteJobRole(jobRoleId: number): Promise<void> {
-		const existingJobRole = await this.jobRoleDao.findById(jobRoleId);
+		const existingJobRole = await this.jobRoleDao.findById(jobRoleId, true);
 		if (!existingJobRole) {
 			throw new NotFoundError(`JobRole with id ${jobRoleId} not found`);
 		}
@@ -87,7 +113,7 @@ export class JobRolesService {
 		userId: number,
 		data: Pick<CreateApplicationRequestDto, "cvText">,
 	): Promise<JobRoleApplication> {
-		const jobRole = await this.jobRoleDao.findById(jobRoleId);
+		const jobRole = await this.jobRoleDao.findById(jobRoleId, false);
 		if (!jobRole) {
 			throw new NotFoundError(`JobRole with id ${jobRoleId} not found`);
 		}

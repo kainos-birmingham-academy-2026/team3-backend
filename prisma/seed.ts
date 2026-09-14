@@ -237,6 +237,7 @@ async function main() {
 		]);
 
 	// Job Roles
+	const seededJobRoleOpeningDate = new Date("2026-07-01");
 	const jobRoleSeedData = [
 		{
 			roleName: "Software Engineer",
@@ -250,6 +251,7 @@ async function main() {
 			capabilityId: engineering.capabilityId,
 			bandId: consultant.bandId,
 			statusId: openStatus.statusId,
+			openingDate: seededJobRoleOpeningDate,
 			closingDate: new Date("2026-09-30"),
 		},
 		{
@@ -264,6 +266,7 @@ async function main() {
 			capabilityId: engineering.capabilityId,
 			bandId: seniorAssociate.bandId,
 			statusId: openStatus.statusId,
+			openingDate: seededJobRoleOpeningDate,
 			closingDate: new Date("2026-10-15"),
 		},
 		{
@@ -278,6 +281,7 @@ async function main() {
 			capabilityId: engineering.capabilityId,
 			bandId: manager.bandId,
 			statusId: openStatus.statusId,
+			openingDate: seededJobRoleOpeningDate,
 			closingDate: new Date("2026-09-05"),
 		},
 		{
@@ -292,6 +296,7 @@ async function main() {
 			capabilityId: engineering.capabilityId,
 			bandId: trainee.bandId,
 			statusId: openStatus.statusId,
+			openingDate: seededJobRoleOpeningDate,
 			closingDate: new Date("2026-08-31"),
 		},
 		{
@@ -306,6 +311,7 @@ async function main() {
 			capabilityId: engineering.capabilityId,
 			bandId: associate.bandId,
 			statusId: openStatus.statusId,
+			openingDate: seededJobRoleOpeningDate,
 			closingDate: new Date("2026-11-01"),
 		},
 		{
@@ -320,6 +326,7 @@ async function main() {
 			capabilityId: cloud.capabilityId,
 			bandId: seniorAssociate.bandId,
 			statusId: openStatus.statusId,
+			openingDate: seededJobRoleOpeningDate,
 			closingDate: new Date("2026-10-20"),
 		},
 		{
@@ -332,6 +339,7 @@ async function main() {
 			capabilityId: cloud.capabilityId,
 			bandId: consultant.bandId,
 			statusId: openStatus.statusId,
+			openingDate: seededJobRoleOpeningDate,
 			closingDate: new Date("2026-08-20"),
 		},
 		{
@@ -346,6 +354,7 @@ async function main() {
 			capabilityId: security.capabilityId,
 			bandId: consultant.bandId,
 			statusId: openStatus.statusId,
+			openingDate: seededJobRoleOpeningDate,
 			closingDate: new Date("2026-09-25"),
 		},
 		{
@@ -360,6 +369,7 @@ async function main() {
 			capabilityId: security.capabilityId,
 			bandId: seniorAssociate.bandId,
 			statusId: openStatus.statusId,
+			openingDate: seededJobRoleOpeningDate,
 			closingDate: new Date("2026-10-05"),
 		},
 		{
@@ -373,6 +383,7 @@ async function main() {
 			capabilityId: delivery.capabilityId,
 			bandId: principal.bandId,
 			statusId: closedStatus.statusId,
+			openingDate: seededJobRoleOpeningDate,
 			closingDate: new Date("2026-07-31"),
 		},
 	];

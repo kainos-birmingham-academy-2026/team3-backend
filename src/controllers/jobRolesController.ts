@@ -5,7 +5,10 @@ import type {
 	JobRoleFiltersDto,
 	UpdateJobRoleRequestDto,
 } from "../dtos/jobRoleDto.js";
+import { isTodayOrFuture } from "../dtos/jobRoleDto.js";
+import { ConflictError } from "../errors/conflictError.js";
 import { INTERNAL_SERVER_ERROR } from "../errors/serverError.js";
+import { USER_ROLES } from "../middleware/authorise.js";
 import type { JobRolesService } from "../services/jobRolesService";
 
 export class JobRolesController {
@@ -18,7 +21,8 @@ export class JobRolesController {
 	async getAll(_req: Request, res: Response) {
 		try {
 			const filters = res.locals.validatedQuery as JobRoleFiltersDto;
-			const jobRoles = await this.service.findAll(filters);
+			const includeScheduled = res.locals.authUser?.role === USER_ROLES.ADMIN;
+			const jobRoles = await this.service.findAll(filters, includeScheduled);
 			return res.status(200).json(jobRoles);
 		} catch {
 			return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
@@ -34,7 +38,8 @@ export class JobRolesController {
 		}
 
 		try {
-			const jobRole = await this.service.findById(jobRoleId);
+			const includeScheduled = res.locals.authUser?.role === USER_ROLES.ADMIN;
+			const jobRole = await this.service.findById(jobRoleId, includeScheduled);
 			return res.status(200).json(jobRole);
 		} catch (error) {
 			if (error instanceof NotFoundError) {
@@ -47,7 +52,7 @@ export class JobRolesController {
 	async createJobRole(req: Request, res: Response) {
 		const payload = req.body as CreateJobRoleRequestDto;
 		//nothing to attach to payload so can define type as dto
-		if (payload.closingDate && payload.closingDate < new Date()) {
+		if (payload.closingDate && !isTodayOrFuture(payload.closingDate)) {
 			return res
 				.status(400)
 				.json({ message: "Closing date cannot be in the past" });
@@ -72,6 +77,9 @@ export class JobRolesController {
 		} catch (error) {
 			if (error instanceof NotFoundError) {
 				return res.status(404).json({ message: error.message });
+			}
+			if (error instanceof ConflictError) {
+				return res.status(error.statusCode).json({ message: error.message });
 			}
 			return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
 		}

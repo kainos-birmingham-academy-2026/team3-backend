@@ -1,10 +1,9 @@
 import jwt from "jsonwebtoken";
 import request from "supertest";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import app from "../../src/index.ts";
-import { UserApplicationsService } from "../../src/services/userApplicationsService.ts";
 
-describe("User application status API", () => {
+describe("removed user application APIs", () => {
 	let originalJwtSecret: string | undefined;
 
 	const userToken = () =>
@@ -20,7 +19,6 @@ describe("User application status API", () => {
 	});
 
 	afterEach(() => {
-		vi.restoreAllMocks();
 		if (originalJwtSecret === undefined) {
 			delete process.env.JWT_SECRET;
 		} else {
@@ -28,41 +26,20 @@ describe("User application status API", () => {
 		}
 	});
 
-	it("returns 401 without a bearer token", async () => {
+	it("does not expose application viewing", async () => {
 		const response = await request(app)
-			.patch("/api/job-applications/7/status")
-			.send({ status: "WITHDRAWN" });
+			.get("/api/job-applications")
+			.set("Authorization", `Bearer ${userToken()}`);
 
-		expect(response.status).toBe(401);
+		expect(response.status).toBe(404);
 	});
 
-	it("withdraws an application with the canonical status request", async () => {
-		const withdrawApplication = vi
-			.spyOn(UserApplicationsService.prototype, "withdrawApplication")
-			.mockResolvedValueOnce({ message: "Application withdrawn" });
-
+	it("does not expose application withdrawal", async () => {
 		const response = await request(app)
 			.patch("/api/job-applications/7/status")
 			.set("Authorization", `Bearer ${userToken()}`)
 			.send({ status: "WITHDRAWN" });
 
-		expect(response.status).toBe(200);
-		expect(response.body).toEqual({ message: "Application withdrawn" });
-		expect(withdrawApplication).toHaveBeenCalledWith(7, 42);
-	});
-
-	it("rejects unsupported user status transitions", async () => {
-		const withdrawApplication = vi.spyOn(
-			UserApplicationsService.prototype,
-			"withdrawApplication",
-		);
-
-		const response = await request(app)
-			.patch("/api/job-applications/7/status")
-			.set("Authorization", `Bearer ${userToken()}`)
-			.send({ status: "HIRED" });
-
-		expect(response.status).toBe(400);
-		expect(withdrawApplication).not.toHaveBeenCalled();
+		expect(response.status).toBe(404);
 	});
 });

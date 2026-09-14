@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
 	CreateApplicationSchema,
 	CreateJobRoleSchema,
@@ -85,6 +85,7 @@ describe("job role DTO schemas", () => {
 			responsibilities: "  Code development, testing, deployment  ",
 			sharepointUrl: "https://sharepoint.example.com/roles/1",
 			numberOfOpenPositions: 2,
+			openingDate: "2099-01-01T00:00:00.000Z",
 			closingDate: "2099-12-31T00:00:00.000Z",
 			capabilityId: 1,
 			bandId: 2,
@@ -102,6 +103,7 @@ describe("job role DTO schemas", () => {
 					responsibilities: "Code development, testing, deployment",
 					sharepointUrl: validPayload.sharepointUrl,
 					numberOfOpenPositions: 2,
+					openingDate: new Date(validPayload.openingDate),
 					closingDate: new Date(validPayload.closingDate),
 					capabilityId: 1,
 					bandId: 2,
@@ -110,16 +112,73 @@ describe("job role DTO schemas", () => {
 			}
 		});
 
-		it("should allow an omitted closing date", () => {
-			const { closingDate: _closingDate, ...payloadWithoutDate } = validPayload;
+		it("should allow omitted opening and closing dates", () => {
+			const {
+				openingDate: _openingDate,
+				closingDate: _closingDate,
+				...payloadWithoutDates
+			} = validPayload;
 
-			const result = CreateJobRoleSchema.safeParse(payloadWithoutDate);
+			const result = CreateJobRoleSchema.safeParse(payloadWithoutDates);
 
 			expect(result.success).toBe(true);
 			if (result.success) {
+				expect(result.data.openingDate).toBeUndefined();
 				expect(result.data.closingDate).toBeUndefined();
 			}
 		});
+
+		it.each([
+			["2026-09-13T12:00:00.000Z", "2026-09-13", "2026-09-12"],
+			["2026-09-13T22:59:59.999Z", "2026-09-13", "2026-09-12"],
+			["2026-09-13T23:00:00.000Z", "2026-09-14", "2026-09-13"],
+			["2026-03-28T23:30:00.000Z", "2026-03-28", "2026-03-27"],
+			["2026-03-29T00:59:59.000Z", "2026-03-29", "2026-03-28"],
+			["2026-03-29T01:00:00.000Z", "2026-03-29", "2026-03-28"],
+			["2026-03-29T23:00:00.000Z", "2026-03-30", "2026-03-29"],
+			["2026-03-29T23:30:00.000Z", "2026-03-30", "2026-03-29"],
+			["2026-10-24T23:00:00.000Z", "2026-10-25", "2026-10-24"],
+			["2026-10-24T23:30:00.000Z", "2026-10-25", "2026-10-24"],
+			["2026-10-25T00:59:59.000Z", "2026-10-25", "2026-10-24"],
+			["2026-10-25T01:00:00.000Z", "2026-10-25", "2026-10-24"],
+			["2026-10-25T23:30:00.000Z", "2026-10-25", "2026-10-24"],
+			["2026-10-26T00:00:00.000Z", "2026-10-26", "2026-10-25"],
+		])(
+			"should allow today's dates and reject yesterday in the UK at %s",
+			(now, today, yesterday) => {
+				vi.useFakeTimers();
+				try {
+					vi.setSystemTime(new Date(now));
+					expect(
+						CreateJobRoleSchema.safeParse({
+							...validPayload,
+							openingDate: today,
+							closingDate: today,
+						}).success,
+					).toBe(true);
+					for (const field of ["openingDate", "closingDate"]) {
+						const result = CreateJobRoleSchema.safeParse({
+							...validPayload,
+							openingDate: undefined,
+							[field]: yesterday,
+						});
+						expect(result.success).toBe(false);
+						if (!result.success) {
+							expect(result.error.issues).toEqual(
+								expect.arrayContaining([
+									expect.objectContaining({
+										path: [field],
+										message: expect.stringContaining("cannot be in the past"),
+									}),
+								]),
+							);
+						}
+					}
+				} finally {
+					vi.useRealTimers();
+				}
+			},
+		);
 
 		it.each([
 			["an empty role name", { roleName: "" }],
@@ -130,6 +189,12 @@ describe("job role DTO schemas", () => {
 			],
 			["an invalid URL", { sharepointUrl: "not-a-url" }],
 			["zero open positions", { numberOfOpenPositions: 0 }],
+			["an invalid opening date", { openingDate: "not-a-date" }],
+			["a past opening date", { openingDate: "2020-01-01T00:00:00.000Z" }],
+			[
+				"an opening date after the closing date",
+				{ openingDate: "2100-01-01T00:00:00.000Z" },
+			],
 			["an invalid closing date", { closingDate: "not-a-date" }],
 			["a past closing date", { closingDate: "2020-01-01T00:00:00.000Z" }],
 		])("should reject %s", (_name, override) => {

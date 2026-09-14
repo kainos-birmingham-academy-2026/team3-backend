@@ -206,33 +206,6 @@ const options: swaggerJsdoc.Options = {
 						},
 					},
 				},
-				UserApplicationListItem: {
-					type: "object",
-					additionalProperties: false,
-					required: [
-						"applicationId",
-						"jobRoleId",
-						"roleName",
-						"applicationDate",
-						"cvText",
-						"status",
-					],
-					properties: {
-						applicationId: { type: "integer", minimum: 1, example: 5 },
-						jobRoleId: { type: "integer", minimum: 1, example: 12 },
-						roleName: { type: "string", example: "Software Engineer" },
-						applicationDate: {
-							type: "string",
-							format: "date-time",
-							example: "2026-08-12T10:00:00.000Z",
-						},
-						cvText: { type: "string", example: "My relevant experience..." },
-						status: {
-							type: "string",
-							enum: ["IN_PROGRESS", "HIRED", "REJECTED"],
-						},
-					},
-				},
 				AdminApplicationListItem: {
 					type: "object",
 					additionalProperties: false,

@@ -37,6 +37,7 @@ model JobRole {
   responsibilities      String
   sharepointUrl         String        @db.VarChar(255)
   numberOfOpenPositions Int
+  openingDate           DateTime      @default(now())
   closingDate           DateTime?
   capabilityId          Int
   bandId                Int

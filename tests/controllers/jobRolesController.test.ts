@@ -1,6 +1,7 @@
 import { NotFoundError } from "error-lib";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { JobRolesController } from "../../src/controllers/jobRolesController.js";
+import { ConflictError } from "../../src/errors/conflictError.js";
 import type { JobRolesService } from "../../src/services/jobRolesService.js";
 
 const _CREATED_AT = new Date("2026-01-01T10:00:00.000Z");
@@ -69,16 +70,37 @@ describe("JobRolesController", () => {
 			await controller.getAll(req as never, res as never);
 
 			expect(res.status).toHaveBeenCalledWith(200);
-			expect(mockService.findAll).toHaveBeenCalledWith({
-				page: 1,
-				pageSize: 10,
-			});
+			expect(mockService.findAll).toHaveBeenCalledWith(
+				{ page: 1, pageSize: 10 },
+				false,
+			);
 			expect(res.json).toHaveBeenCalledWith(
 				expect.objectContaining({
 					items: [expect.objectContaining({ jobRoleId: 1 })],
 					totalItems: 1,
 					totalPages: 1,
 				}),
+			);
+		});
+
+		it("should include scheduled roles for an admin", async () => {
+			const req = {};
+			const res = createMockResponse();
+			res.locals.validatedQuery = { page: 1, pageSize: 10 };
+			res.locals.authUser = { role: "ADMIN" };
+			vi.mocked(mockService.findAll).mockResolvedValue({
+				items: [],
+				page: 1,
+				pageSize: 10,
+				totalItems: 0,
+				totalPages: 0,
+			});
+
+			await controller.getAll(req as never, res as never);
+
+			expect(mockService.findAll).toHaveBeenCalledWith(
+				{ page: 1, pageSize: 10 },
+				true,
 			);
 		});
 
@@ -122,6 +144,27 @@ describe("JobRolesController", () => {
 			expect(res.status).toHaveBeenCalledWith(404);
 			expect(res.json).toHaveBeenCalledWith({
 				message: "JobRole with id 999 not found",
+			});
+		});
+
+		it("should return 409 when an opened role's opening date is changed", async () => {
+			const req = {
+				params: { jobRoleId: "1" },
+				body: { openingDate: new Date("2099-01-01") },
+			};
+			const res = createMockResponse();
+			vi.mocked(mockService.updateJobRole).mockRejectedValue(
+				new ConflictError(
+					409,
+					"Opening date cannot be changed after the role has opened",
+				),
+			);
+
+			await controller.updateJobRole(req as never, res as never);
+
+			expect(res.status).toHaveBeenCalledWith(409);
+			expect(res.json).toHaveBeenCalledWith({
+				message: "Opening date cannot be changed after the role has opened",
 			});
 		});
 	});
@@ -202,6 +245,38 @@ describe("JobRolesController", () => {
 	});
 
 	describe("createJobRole", () => {
+		it.each([
+			["2026-09-13T12:00:00.000Z", "2026-09-13", 201],
+			["2026-09-13T23:30:00.000Z", "2026-09-14", 201],
+			["2026-09-13T23:30:00.000Z", "2026-09-13", 400],
+			["2026-03-29T23:30:00.000Z", "2026-03-30", 201],
+			["2026-10-25T23:30:00.000Z", "2026-10-25", 201],
+		])(
+			"should check closing date against the UK calendar at %s with %s returning %s",
+			async (now, closingDate, expectedStatus) => {
+				vi.useFakeTimers();
+				try {
+					vi.setSystemTime(new Date(now));
+					const req = { body: { closingDate: new Date(closingDate) } };
+					const res = createMockResponse();
+
+					await controller.createJobRole(req as never, res as never);
+
+					expect(res.status).toHaveBeenCalledWith(expectedStatus);
+					if (expectedStatus === 201) {
+						expect(mockService.createJobRole).toHaveBeenCalledWith(req.body);
+					} else {
+						expect(mockService.createJobRole).not.toHaveBeenCalled();
+						expect(res.json).toHaveBeenCalledWith({
+							message: "Closing date cannot be in the past",
+						});
+					}
+				} finally {
+					vi.useRealTimers();
+				}
+			},
+		);
+
 		it("should return 201 with the created job role", async () => {
 			const req = {
 				body: {

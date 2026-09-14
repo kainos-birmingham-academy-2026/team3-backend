@@ -67,3 +67,12 @@ export const requireAuth: RequestHandler = (req, res, next) => {
 		return res.status(401).json({ message: TOKEN_ERROR });
 	}
 };
+
+export const optionalAuth: RequestHandler = (req, res, next) => {
+	if (!req.header("authorization")) {
+		next();
+		return;
+	}
+
+	requireAuth(req, res, next);
+};
