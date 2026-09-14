@@ -125,7 +125,7 @@ describe("jobApplicationAdminService", () => {
 			pageSize: 10,
 			totalItems: 11,
 			totalPages: 2,
-			counts: { total: 0, pending: 0, approved: 0, rejected: 0, withdrawn: 0 },
+			counts: { total: 0, pending: 0, approved: 0, rejected: 0 },
 		});
 		expect(mockFindMany).toHaveBeenCalledWith({
 			where: { jobRoleId: 1 },
@@ -230,7 +230,6 @@ describe("jobApplicationAdminService", () => {
 			{ applicationStatus: "IN_PROGRESS", _count: { _all: 20 } },
 			{ applicationStatus: "HIRED", _count: { _all: 8 } },
 			{ applicationStatus: "REJECTED", _count: { _all: 5 } },
-			{ applicationStatus: "WITHDRAWN", _count: { _all: 3 } },
 		]);
 
 		const result = await service.findAllAdmin({
@@ -251,11 +250,10 @@ describe("jobApplicationAdminService", () => {
 		expect(result.totalItems).toBe(0);
 		expect(result.totalPages).toBe(0);
 		expect(result.counts).toEqual({
-			total: 36,
+			total: 33,
 			pending: 20,
 			approved: 8,
 			rejected: 5,
-			withdrawn: 3,
 		});
 	});
 
@@ -270,7 +268,6 @@ describe("jobApplicationAdminService", () => {
 			pending: 0,
 			approved: 0,
 			rejected: 0,
-			withdrawn: 0,
 		});
 	});
 

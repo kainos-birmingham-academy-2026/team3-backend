@@ -14,7 +14,7 @@ export class JobApplicationAdminController {
 			const query = res.locals.validatedQuery as {
 				jobRoleId?: number;
 				search?: string;
-				status?: "IN_PROGRESS" | "HIRED" | "REJECTED" | "WITHDRAWN";
+				status?: "IN_PROGRESS" | "HIRED" | "REJECTED";
 				role?: string;
 				location?: string;
 				page: number;

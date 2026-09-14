@@ -235,7 +235,7 @@ const options: swaggerJsdoc.Options = {
 						cvText: { type: "string", example: "My relevant experience..." },
 						status: {
 							type: "string",
-							enum: ["IN_PROGRESS", "HIRED", "REJECTED", "WITHDRAWN"],
+							enum: ["IN_PROGRESS", "HIRED", "REJECTED"],
 						},
 						actions: {
 							type: "object",
