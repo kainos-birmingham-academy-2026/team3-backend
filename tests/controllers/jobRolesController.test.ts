@@ -245,6 +245,38 @@ describe("JobRolesController", () => {
 	});
 
 	describe("createJobRole", () => {
+		it.each([
+			["2026-09-13T12:00:00.000Z", "2026-09-13", 201],
+			["2026-09-13T23:30:00.000Z", "2026-09-14", 201],
+			["2026-09-13T23:30:00.000Z", "2026-09-13", 400],
+			["2026-03-29T23:30:00.000Z", "2026-03-30", 201],
+			["2026-10-25T23:30:00.000Z", "2026-10-25", 201],
+		])(
+			"should check closing date against the UK calendar at %s with %s returning %s",
+			async (now, closingDate, expectedStatus) => {
+				vi.useFakeTimers();
+				try {
+					vi.setSystemTime(new Date(now));
+					const req = { body: { closingDate: new Date(closingDate) } };
+					const res = createMockResponse();
+
+					await controller.createJobRole(req as never, res as never);
+
+					expect(res.status).toHaveBeenCalledWith(expectedStatus);
+					if (expectedStatus === 201) {
+						expect(mockService.createJobRole).toHaveBeenCalledWith(req.body);
+					} else {
+						expect(mockService.createJobRole).not.toHaveBeenCalled();
+						expect(res.json).toHaveBeenCalledWith({
+							message: "Closing date cannot be in the past",
+						});
+					}
+				} finally {
+					vi.useRealTimers();
+				}
+			},
+		);
+
 		it("should return 201 with the created job role", async () => {
 			const req = {
 				body: {

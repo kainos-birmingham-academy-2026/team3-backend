@@ -5,6 +5,7 @@ import type {
 	JobRoleFiltersDto,
 	UpdateJobRoleRequestDto,
 } from "../dtos/jobRoleDto.js";
+import { isTodayOrFuture } from "../dtos/jobRoleDto.js";
 import { ConflictError } from "../errors/conflictError.js";
 import { INTERNAL_SERVER_ERROR } from "../errors/serverError.js";
 import { USER_ROLES } from "../middleware/authorise.js";
@@ -51,7 +52,7 @@ export class JobRolesController {
 	async createJobRole(req: Request, res: Response) {
 		const payload = req.body as CreateJobRoleRequestDto;
 		//nothing to attach to payload so can define type as dto
-		if (payload.closingDate && payload.closingDate < new Date()) {
+		if (payload.closingDate && !isTodayOrFuture(payload.closingDate)) {
 			return res
 				.status(400)
 				.json({ message: "Closing date cannot be in the past" });
