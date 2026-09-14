@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
 	CreateApplicationSchema,
 	CreateJobRoleSchema,
@@ -85,6 +85,7 @@ describe("job role DTO schemas", () => {
 			responsibilities: "  Code development, testing, deployment  ",
 			sharepointUrl: "https://sharepoint.example.com/roles/1",
 			numberOfOpenPositions: 2,
+			openingDate: "2099-01-01T00:00:00.000Z",
 			closingDate: "2099-12-31T00:00:00.000Z",
 			capabilityId: 1,
 			bandId: 2,
@@ -102,6 +103,7 @@ describe("job role DTO schemas", () => {
 					responsibilities: "Code development, testing, deployment",
 					sharepointUrl: validPayload.sharepointUrl,
 					numberOfOpenPositions: 2,
+					openingDate: new Date(validPayload.openingDate),
 					closingDate: new Date(validPayload.closingDate),
 					capabilityId: 1,
 					bandId: 2,
@@ -110,16 +112,60 @@ describe("job role DTO schemas", () => {
 			}
 		});
 
-		it("should allow an omitted closing date", () => {
-			const { closingDate: _closingDate, ...payloadWithoutDate } = validPayload;
+		it("should allow omitted opening and closing dates", () => {
+			const {
+				openingDate: _openingDate,
+				closingDate: _closingDate,
+				...payloadWithoutDates
+			} = validPayload;
 
-			const result = CreateJobRoleSchema.safeParse(payloadWithoutDate);
+			const result = CreateJobRoleSchema.safeParse(payloadWithoutDates);
 
 			expect(result.success).toBe(true);
 			if (result.success) {
+				expect(result.data.openingDate).toBeUndefined();
 				expect(result.data.closingDate).toBeUndefined();
 			}
 		});
+
+		it.each([
+			["before UK midnight in BST", "2026-09-13T22:59:59.999Z", "2026-09-13"],
+			["at UK midnight in BST", "2026-09-13T23:00:00.000Z", "2026-09-14"],
+			["after clocks go forward", "2026-03-29T23:00:00.000Z", "2026-03-30"],
+			["before clocks go back", "2026-10-24T23:00:00.000Z", "2026-10-25"],
+			["after clocks go back", "2026-10-25T23:30:00.000Z", "2026-10-25"],
+			["at UK midnight in GMT", "2026-10-26T00:00:00.000Z", "2026-10-26"],
+		])(
+			"should allow today as the opening date %s",
+			(_label, now, openingDate) => {
+				vi.useFakeTimers();
+				try {
+					vi.setSystemTime(new Date(now));
+					const result = CreateJobRoleSchema.safeParse({
+						...validPayload,
+						openingDate,
+					});
+					expect(result.success).toBe(true);
+					const yesterday = new Date(openingDate);
+					yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+					const pastResult = CreateJobRoleSchema.safeParse({
+						...validPayload,
+						openingDate: yesterday.toISOString().slice(0, 10),
+					});
+					expect(pastResult.success).toBe(false);
+					if (!pastResult.success) {
+						expect(pastResult.error.issues).toContainEqual(
+							expect.objectContaining({
+								path: ["openingDate"],
+								message: "Opening date cannot be in the past",
+							}),
+						);
+					}
+				} finally {
+					vi.useRealTimers();
+				}
+			},
+		);
 
 		it.each([
 			["an empty role name", { roleName: "" }],
@@ -130,6 +176,12 @@ describe("job role DTO schemas", () => {
 			],
 			["an invalid URL", { sharepointUrl: "not-a-url" }],
 			["zero open positions", { numberOfOpenPositions: 0 }],
+			["an invalid opening date", { openingDate: "not-a-date" }],
+			["a past opening date", { openingDate: "2020-01-01T00:00:00.000Z" }],
+			[
+				"an opening date after the closing date",
+				{ openingDate: "2100-01-01T00:00:00.000Z" },
+			],
 			["an invalid closing date", { closingDate: "not-a-date" }],
 			["a past closing date", { closingDate: "2020-01-01T00:00:00.000Z" }],
 		])("should reject %s", (_name, override) => {

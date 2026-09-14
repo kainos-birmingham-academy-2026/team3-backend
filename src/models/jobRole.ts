@@ -15,6 +15,7 @@ export class JobRole {
 	public readonly statusName: string;
 	public readonly createdAt: Date;
 	public readonly updatedAt: Date;
+	public readonly openingDate: Date;
 
 	constructor(
 		jobRoleId: number,
@@ -33,6 +34,7 @@ export class JobRole {
 		statusName: string,
 		createdAt: Date,
 		updatedAt: Date,
+		openingDate: Date = createdAt,
 	) {
 		this.jobRoleId = jobRoleId;
 		this.roleName = roleName;
@@ -50,5 +52,6 @@ export class JobRole {
 		this.statusName = statusName;
 		this.createdAt = createdAt;
 		this.updatedAt = updatedAt;
+		this.openingDate = openingDate;
 	}
 }

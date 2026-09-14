@@ -61,15 +61,18 @@ describe("Job role route auth protection", () => {
 		);
 
 		expect(response.status).toBe(200);
-		expect(findAll).toHaveBeenCalledWith({
-			roleName: "engineer",
-			locationId: [1, 2],
-			capabilityId: [3],
-			bandId: [4],
-			closingDateFrom: "2026-09-01",
-			page: 2,
-			pageSize: 5,
-		});
+		expect(findAll).toHaveBeenCalledWith(
+			{
+				roleName: "engineer",
+				locationId: [1, 2],
+				capabilityId: [3],
+				bandId: [4],
+				closingDateFrom: "2026-09-01",
+				page: 2,
+				pageSize: 5,
+			},
+			false,
+		);
 	});
 
 	it("should return 400 when both closing date filters are supplied", async () => {
@@ -209,9 +212,9 @@ describe("Job role route auth protection", () => {
 			totalPages: 0,
 		};
 
-		vi.spyOn(JobRolesService.prototype, "findAll").mockResolvedValueOnce(
-			expected,
-		);
+		const findAll = vi
+			.spyOn(JobRolesService.prototype, "findAll")
+			.mockResolvedValueOnce(expected);
 
 		const token = jwt.sign(
 			{ userId: 2, email: "admin@example.com", role: "ADMIN" },
@@ -225,6 +228,7 @@ describe("Job role route auth protection", () => {
 
 		expect(response.status).toBe(200);
 		expect(response.body).toEqual(expected);
+		expect(findAll).toHaveBeenCalledWith({ page: 1, pageSize: 10 }, true);
 	});
 
 	it("should return 403 for user token on create endpoint", async () => {

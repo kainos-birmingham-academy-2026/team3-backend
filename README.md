@@ -8,6 +8,19 @@ An API framework built in Express + TypeScript.
 - TypeScript
 - Express
 
+## Opening Date Semantics
+
+Opening dates are calendar dates, not time-of-day appointments. Clients should
+submit `YYYY-MM-DD`; the UTC date portion remains the stored and returned date.
+Visibility and opening-date edit eligibility use today's date in `Europe/London`,
+including GMT/BST changes, independently of the server or user's timezone.
+An opening date becomes visible to non-admins and stops being editable at the
+start of its UK calendar day. Omitting it on creation opens the role immediately.
+
+The UTC boundaries produced by `getUkDateOnlyBoundary` are comparison values for
+this date-only storage format, not the actual UTC instants of London midnight.
+Existing stored dates do not require a data migration.
+
 ## Infrastructure
 
 Azure architecture, Terraform setup, and separate dev and production

@@ -7,6 +7,7 @@ import type {
 import type { Prisma } from "../generated/prisma/client.js";
 import { StatusEnum } from "../generated/prisma/enums.js";
 import prisma from "../prismaClient.js";
+import { getUkDateOnlyBoundary } from "../utils/jobRoleDates.js";
 import { JobRole } from "./jobRole.js";
 import { JobRoleApplication } from "./jobRoleApplication.js";
 
@@ -32,6 +33,7 @@ function toJobRoleDomain(row: JobRoleRow): JobRole {
 		row.status.statusName,
 		row.createdAt,
 		row.updatedAt,
+		row.openingDate,
 	);
 }
 
@@ -49,6 +51,7 @@ function toApplicationDomain(
 export class JobRoleDao {
 	async findAll(
 		filters: JobRoleFiltersDto = { page: 1, pageSize: 10 },
+		includeScheduled = false,
 	): Promise<{
 		items: JobRole[];
 		totalItems: number;
@@ -63,6 +66,9 @@ export class JobRoleDao {
 			? new Date(closingDateTo.getTime() + 24 * 60 * 60 * 1000)
 			: undefined;
 		const where = {
+			openingDate: includeScheduled
+				? undefined
+				: { lt: getUkDateOnlyBoundary(1) },
 			roleName: filters.roleName
 				? { contains: filters.roleName, mode: "insensitive" }
 				: undefined,
@@ -96,9 +102,17 @@ export class JobRoleDao {
 		return { items: rows.map(toJobRoleDomain), totalItems };
 	}
 
-	async findById(jobRoleId: number): Promise<JobRole | null> {
+	async findById(
+		jobRoleId: number,
+		includeScheduled = false,
+	): Promise<JobRole | null> {
 		const row = await prisma.jobRole.findUnique({
-			where: { jobRoleId },
+			where: {
+				jobRoleId,
+				openingDate: includeScheduled
+					? undefined
+					: { lt: getUkDateOnlyBoundary(1) },
+			},
 			relationLoadStrategy: "join",
 			include: {
 				status: true,
@@ -122,6 +136,7 @@ export class JobRoleDao {
 				responsibilities: data.responsibilities,
 				sharepointUrl: data.sharepointUrl,
 				numberOfOpenPositions: data.numberOfOpenPositions,
+				openingDate: data.openingDate,
 				closingDate: data.closingDate,
 				capabilityId: data.capabilityId,
 				bandId: data.bandId,
@@ -151,6 +166,7 @@ export class JobRoleDao {
 				responsibilities: data.responsibilities,
 				sharepointUrl: data.sharepointUrl,
 				numberOfOpenPositions: data.numberOfOpenPositions,
+				openingDate: data.openingDate,
 				closingDate: data.closingDate,
 				capabilityId: data.capabilityId,
 				bandId: data.bandId,
@@ -230,7 +246,8 @@ export class JobRoleDao {
 				const secondOrder = secondIndex === -1 ? bandOrder.length : secondIndex;
 
 				return (
-					firstOrder - secondOrder || first.bandName.localeCompare(second.bandName)
+					firstOrder - secondOrder ||
+					first.bandName.localeCompare(second.bandName)
 				);
 			});
 	}

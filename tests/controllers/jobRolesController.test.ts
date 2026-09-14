@@ -1,6 +1,7 @@
 import { NotFoundError } from "error-lib";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { JobRolesController } from "../../src/controllers/jobRolesController.js";
+import { ConflictError } from "../../src/errors/conflictError.js";
 import type { JobRolesService } from "../../src/services/jobRolesService.js";
 
 const _CREATED_AT = new Date("2026-01-01T10:00:00.000Z");
@@ -69,16 +70,37 @@ describe("JobRolesController", () => {
 			await controller.getAll(req as never, res as never);
 
 			expect(res.status).toHaveBeenCalledWith(200);
-			expect(mockService.findAll).toHaveBeenCalledWith({
-				page: 1,
-				pageSize: 10,
-			});
+			expect(mockService.findAll).toHaveBeenCalledWith(
+				{ page: 1, pageSize: 10 },
+				false,
+			);
 			expect(res.json).toHaveBeenCalledWith(
 				expect.objectContaining({
 					items: [expect.objectContaining({ jobRoleId: 1 })],
 					totalItems: 1,
 					totalPages: 1,
 				}),
+			);
+		});
+
+		it("should include scheduled roles for an admin", async () => {
+			const req = {};
+			const res = createMockResponse();
+			res.locals.validatedQuery = { page: 1, pageSize: 10 };
+			res.locals.authUser = { role: "ADMIN" };
+			vi.mocked(mockService.findAll).mockResolvedValue({
+				items: [],
+				page: 1,
+				pageSize: 10,
+				totalItems: 0,
+				totalPages: 0,
+			});
+
+			await controller.getAll(req as never, res as never);
+
+			expect(mockService.findAll).toHaveBeenCalledWith(
+				{ page: 1, pageSize: 10 },
+				true,
 			);
 		});
 
@@ -122,6 +144,27 @@ describe("JobRolesController", () => {
 			expect(res.status).toHaveBeenCalledWith(404);
 			expect(res.json).toHaveBeenCalledWith({
 				message: "JobRole with id 999 not found",
+			});
+		});
+
+		it("should return 409 when an opened role's opening date is changed", async () => {
+			const req = {
+				params: { jobRoleId: "1" },
+				body: { openingDate: new Date("2099-01-01") },
+			};
+			const res = createMockResponse();
+			vi.mocked(mockService.updateJobRole).mockRejectedValue(
+				new ConflictError(
+					409,
+					"Opening date cannot be changed after the role has opened",
+				),
+			);
+
+			await controller.updateJobRole(req as never, res as never);
+
+			expect(res.status).toHaveBeenCalledWith(409);
+			expect(res.json).toHaveBeenCalledWith({
+				message: "Opening date cannot be changed after the role has opened",
 			});
 		});
 	});
