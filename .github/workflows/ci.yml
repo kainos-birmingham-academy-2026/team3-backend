@@ -181,6 +181,8 @@ jobs:
         run: npx prisma generate
       - name: Lint
         run: npm run lint
+      - name: Test OpenAI recovery helper
+        run: node --test .github/scripts/recover-openai.test.mjs
       - name: Run tests with coverage
         run: npm run test:coverage
       - name: Test notification Function
@@ -375,6 +377,12 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+      - name: Set up Node.js for recovery
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
       - name: Check Terraform formatting
         run: terraform fmt -check -recursive ../..
       - name: Initialize Terraform
@@ -392,6 +400,8 @@ jobs:
           terraform apply
           -auto-approve
           -target=time_sleep.secrets_rbac_propagation
+      - name: Recover dev OpenAI account and reconcile state
+        run: node ../../../.github/scripts/recover-openai.mjs
       - name: Create Terraform plan
         run: terraform plan -out=tfplan
       - name: Apply Terraform plan

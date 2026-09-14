@@ -206,8 +206,40 @@ terraform -chdir=infrastructure/environments/dev import \
 	/subscriptions/<subscription-id>/resourceGroups/rg-team3-dev/providers/Microsoft.CognitiveServices/accounts/aoai-team3-chatbot-dev/deployments/team3-chatbot-gpt5-nano
 ```
 
-This is a one-time state migration. After import, Terraform recreates both
-resources if they are deleted while the remote state is retained.
+Dev CI now performs this adoption automatically for these exact account and
+deployment names when they exist in Azure but are missing from dev state.
+
+### Recover OpenAI after deleting dev
+
+Keep the remote state and shared ACR intact. On the next main push deployment,
+CI recreates the resource group during the Key Vault permissions bootstrap,
+then runs `.github/scripts/recover-openai.mjs` before the full Terraform plan.
+The helper restores the matching soft-deleted account with `restore: true`,
+waits up to ten minutes for provisioning, and imports the account and any
+recovered `team3-chatbot-gpt5-nano` deployment only if missing from state.
+Already tracked resources are left to the normal Terraform refresh. If neither
+an active nor a soft-deleted account exists, Terraform creates it normally.
+
+The recovery helper never purges resources or removes state. Azure/API errors,
+unexpected responses, restore timeouts and import failures stop deployment.
+Rerun the deployment after addressing the error; a partial successful import
+does not need repeating. Recovery requires Azure to still retain the deleted
+account; this does not restore other dev data or refresh stale application
+credentials. Reapply affected test slots afterwards to restore their OpenAI
+role assignments.
+
+The CI identity needs subscription-level access to list deleted Cognitive
+Services accounts, permission to read/write the dev account and read its model
+deployments, plus existing remote-state access. The subscription Contributor
+role documented below covers these Azure resource operations; permissions
+scoped only to the deleted resource group do not. Do not add purge permissions
+solely for this helper.
+
+Run the isolated tests without Azure credentials:
+
+```bash
+node --test .github/scripts/recover-openai.test.mjs
+```
 
 ## GitHub configuration
 
