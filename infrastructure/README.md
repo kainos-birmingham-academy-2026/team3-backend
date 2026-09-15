@@ -419,7 +419,10 @@ account/model in Dev. Additional slots consume Azure quota and incur costs.
 The **Test environment lifecycle** workflow accepts `start` or `stop` and a slot
 dropdown for manual runs. Weekday schedules request `test1` startup at roughly
 08:05 UK time and delete `test1`, `test2` and `test3` at roughly 18:05 UK
-time. GMT/BST is handled by the local-time gate; GitHub schedules can be delayed.
+time. Each schedule uses `timezone: Europe/London` to handle GMT/BST automatically.
+The triggering cron selects start or stop; there is no execution-time gate.
+GitHub schedules can be delayed, and delayed runs still perform their scheduled
+action, including deletion. These are requested start times, not timing guarantees.
 Only `test1` starts automatically. Other slots are created on demand.
 
 Deletion uses the selected slot's deployment lock and conservatively waits for
