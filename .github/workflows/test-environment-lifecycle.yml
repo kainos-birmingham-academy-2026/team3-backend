@@ -2,9 +2,10 @@ name: Test environment lifecycle
 
 on:
   schedule:
-    # Run both possible UTC hours, then gate on UK local time for GMT/BST.
-    - cron: "5 7,8 * * 1-5"
-    - cron: "5 17,18 * * 1-5"
+    - cron: "5 8 * * 1-5"
+      timezone: Europe/London
+    - cron: "5 18 * * 1-5"
+      timezone: Europe/London
   workflow_dispatch:
     inputs:
       action:
@@ -37,11 +38,12 @@ jobs:
       action: ${{ steps.resolve.outputs.action }}
       slots: ${{ steps.resolve.outputs.slots }}
     steps:
-      - name: Resolve action for UK local time
+      - name: Resolve lifecycle action
         id: resolve
         env:
           REQUESTED_ACTION: ${{ inputs.action }}
           REQUESTED_ENVIRONMENT: ${{ inputs.test_environment }}
+          TRIGGERING_SCHEDULE: ${{ github.event.schedule }}
         run: |
           if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
             action="$REQUESTED_ACTION"
@@ -55,13 +57,10 @@ jobs:
             esac
             slots=$(jq -cn --arg slot "$REQUESTED_ENVIRONMENT" '[$slot]')
           else
-            london_hour=$(TZ=Europe/London date +%H)
-            slots='["test1"]'
-
-            case "$london_hour" in
-              08) action=start ;;
-              18) action=stop; slots='["test1","test2","test3"]' ;;
-              *) action=skip ;;
+            case "$TRIGGERING_SCHEDULE" in
+              "5 8 * * 1-5") action=start; slots='["test1"]' ;;
+              "5 18 * * 1-5") action=stop; slots='["test1","test2","test3"]' ;;
+              *) echo "Unsupported lifecycle schedule"; exit 1 ;;
             esac
           fi
 
