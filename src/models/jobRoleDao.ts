@@ -20,6 +20,7 @@ type JobRoleRow = Prisma.JobRoleGetPayload<{
 
 export interface JobApplicationReportRow {
 	roleName: string;
+	band: string;
 	closingDate: Date | null;
 	vacancies: number;
 	applicationCount: number;
@@ -27,7 +28,6 @@ export interface JobApplicationReportRow {
 	rejected: number;
 	hired: number;
 	location: string;
-	addressLine1: string;
 }
 
 function toJobRoleDomain(row: JobRoleRow): JobRole {
@@ -76,15 +76,24 @@ export class JobRoleDao {
 				location: {
 					select: {
 						locationName: true,
-						addressLine1: true,
+					},
+				},
+				band: {
+					select: {
+						bandName: true,
 					},
 				},
 			},
-			orderBy: [{ roleName: "asc" }, { location: { locationName: "asc" } }],
+			orderBy: [
+				{ band: { bandName: "asc" } },
+				{ roleName: "asc" },
+				{ location: { locationName: "asc" } },
+			],
 		});
 
 		return roles.map((role) => ({
 			roleName: role.roleName,
+			band: role.band.bandName,
 			closingDate: role.closingDate,
 			vacancies: role.numberOfOpenPositions,
 			applicationCount: role.applications.length,
@@ -101,7 +110,6 @@ export class JobRoleDao {
 					application.applicationStatus === ApplicationStatus.HIRED,
 			).length,
 			location: role.location.locationName,
-			addressLine1: role.location.addressLine1,
 		}));
 	}
 
