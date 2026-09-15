@@ -249,6 +249,15 @@ jobRolesRouter.get(
 	},
 );
 
+jobRolesRouter.get(
+	"/application-report",
+	requireAuth,
+	allowRoles([USER_ROLES.ADMIN]),
+	(req: R, res: Res) => {
+		controller.getApplicationReport(req, res);
+	},
+);
+
 /**
  * @openapi
  * /api/job-roles/{jobRoleId}:

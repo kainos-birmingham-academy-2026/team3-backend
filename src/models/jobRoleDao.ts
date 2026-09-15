@@ -5,7 +5,10 @@ import type {
 	UpdateJobRoleRequestDto,
 } from "../dtos/jobRoleDto.js";
 import type { Prisma } from "../generated/prisma/client.js";
-import { StatusEnum } from "../generated/prisma/enums.js";
+import {
+	ApplicationStatus,
+	StatusEnum,
+} from "../generated/prisma/enums.js";
 import prisma from "../prismaClient.js";
 import { getUkDateOnlyBoundary } from "../utils/jobRoleDates.js";
 import { JobRole } from "./jobRole.js";
@@ -14,6 +17,18 @@ import { JobRoleApplication } from "./jobRoleApplication.js";
 type JobRoleRow = Prisma.JobRoleGetPayload<{
 	include: { status: true; capability: true; band: true; location: true };
 }>;
+
+export interface JobApplicationReportRow {
+	roleName: string;
+	closingDate: Date | null;
+	vacancies: number;
+	applicationCount: number;
+	approved: number;
+	rejected: number;
+	hired: number;
+	location: string;
+	addressLine1: string;
+}
 
 function toJobRoleDomain(row: JobRoleRow): JobRole {
 	return new JobRole(
@@ -49,6 +64,47 @@ function toApplicationDomain(
 }
 
 export class JobRoleDao {
+	async getApplicationReport(): Promise<JobApplicationReportRow[]> {
+		const roles = await prisma.jobRole.findMany({
+			select: {
+				roleName: true,
+				closingDate: true,
+				numberOfOpenPositions: true,
+				applications: {
+					select: { applicationStatus: true },
+				},
+				location: {
+					select: {
+						locationName: true,
+						addressLine1: true,
+					},
+				},
+			},
+			orderBy: [{ roleName: "asc" }, { location: { locationName: "asc" } }],
+		});
+
+		return roles.map((role) => ({
+			roleName: role.roleName,
+			closingDate: role.closingDate,
+			vacancies: role.numberOfOpenPositions,
+			applicationCount: role.applications.length,
+			approved: role.applications.filter(
+				(application) =>
+					application.applicationStatus === ApplicationStatus.IN_PROGRESS,
+			).length,
+			rejected: role.applications.filter(
+				(application) =>
+					application.applicationStatus === ApplicationStatus.REJECTED,
+			).length,
+			hired: role.applications.filter(
+				(application) =>
+					application.applicationStatus === ApplicationStatus.HIRED,
+			).length,
+			location: role.location.locationName,
+			addressLine1: role.location.addressLine1,
+		}));
+	}
+
 	async findAll(
 		filters: JobRoleFiltersDto = { page: 1, pageSize: 10 },
 		includeScheduled = false,

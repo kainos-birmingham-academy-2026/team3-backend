@@ -10,7 +10,7 @@ import { JobRoleMapper } from "../mappers/jobRoleMapper.js";
 import type { BandResponse } from "../models/bandResponse.js";
 import type { CapabilityResponse } from "../models/capabilityResponse.js";
 import type { JobRoleApplication } from "../models/jobRoleApplication.js";
-import { JobRoleDao } from "../models/jobRoleDao.js";
+import { JobRoleDao, type JobApplicationReportRow, } from "../models/jobRoleDao.js";
 import type { JobRoleDetailedResponse } from "../models/jobRoleDetailedResponse.js";
 import type { JobRoleResponse } from "../models/jobRoleResponse.js";
 import type { LocationResponse } from "../models/locationResponse.js";
@@ -24,6 +24,10 @@ export class JobRolesService {
 	constructor() {
 		this.jobRoleDao = new JobRoleDao();
 		this.jobRoleMapper = new JobRoleMapper();
+	}
+
+	async getApplicationReport(): Promise<JobApplicationReportRow[]> {
+		return this.jobRoleDao.getApplicationReport();
 	}
 
 	async findAll(

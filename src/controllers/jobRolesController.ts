@@ -18,6 +18,15 @@ export class JobRolesController {
 		this.service = service;
 	}
 
+	async getApplicationReport(_req: Request, res: Response) {
+		try {
+			const report = await this.service.getApplicationReport();
+			return res.status(200).json(report);
+		} catch {
+			return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
+		}
+	}
+
 	async getAll(_req: Request, res: Response) {
 		try {
 			const filters = res.locals.validatedQuery as JobRoleFiltersDto;
