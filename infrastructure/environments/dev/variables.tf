@@ -48,6 +48,12 @@ variable "application_secret_version" {
   default     = 1
 }
 
+variable "notification_secret_version" {
+  description = "Version incremented to refresh Service Bus and ACS credentials in Key Vault."
+  type        = number
+  default     = 2
+}
+
 variable "acr_name" {
   description = "Name of the existing shared Azure Container Registry."
   type        = string
