@@ -48,6 +48,12 @@ variable "application_secret_version" {
   default     = 1
 }
 
+variable "connection_secret_version" {
+  description = "Version incremented when Azure service connection strings are regenerated."
+  type        = number
+  default     = 1
+}
+
 variable "acr_name" {
   description = "Name of the existing shared Azure Container Registry."
   type        = string
