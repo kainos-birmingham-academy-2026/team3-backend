@@ -6,9 +6,7 @@ import { INTERNAL_SERVER_ERROR } from "../errors/serverError.js";
 import type { JobRolesService } from "../services/jobRolesService.js";
 
 export class UserApplicationsController {
-	public constructor(
-		private readonly jobRolesService: JobRolesService,
-	) {}
+	public constructor(private readonly jobRolesService: JobRolesService) {}
 
 	public async create(req: Request, res: Response): Promise<Response> {
 		const { jobRoleId, cvText } = req.body as CreateApplicationRequestDto;
@@ -31,5 +29,4 @@ export class UserApplicationsController {
 			return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
 		}
 	}
-
 }

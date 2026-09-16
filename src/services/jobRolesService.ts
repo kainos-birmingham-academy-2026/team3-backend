@@ -6,6 +6,7 @@ import type {
 	UpdateJobRoleRequestDto,
 } from "../dtos/jobRoleDto.js";
 import { ConflictError } from "../errors/conflictError.js";
+import type { StatusEnum } from "../generated/prisma/enums.js";
 import { JobRoleMapper } from "../mappers/jobRoleMapper.js";
 import type { BandResponse } from "../models/bandResponse.js";
 import type { CapabilityResponse } from "../models/capabilityResponse.js";
@@ -16,7 +17,6 @@ import type { JobRoleResponse } from "../models/jobRoleResponse.js";
 import type { LocationResponse } from "../models/locationResponse.js";
 import type { StatusResponse } from "../models/statusResponse.js";
 import { getUkDateOnlyBoundary } from "../utils/jobRoleDates.js";
-import type { StatusEnum } from "../generated/prisma/enums.js";
 
 export class JobRolesService {
 	private jobRoleDao: JobRoleDao;
@@ -109,7 +109,10 @@ export class JobRolesService {
 			throw new NotFoundError(`JobRole with id ${jobRoleId} not found`);
 		}
 
-		const jobRole = await this.jobRoleDao.updateJobRoleStatus(jobRoleId, status);
+		const jobRole = await this.jobRoleDao.updateJobRoleStatus(
+			jobRoleId,
+			status,
+		);
 		return this.jobRoleMapper.jobRoleToDetailedResponse(jobRole, true);
 	}
 

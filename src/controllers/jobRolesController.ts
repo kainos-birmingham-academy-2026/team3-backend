@@ -86,7 +86,10 @@ export class JobRolesController {
 		}
 	}
 
-	async updateJobRoleStatus(req: Request<{ jobRoleId: string }>, res: Response) {
+	async updateJobRoleStatus(
+		req: Request<{ jobRoleId: string }>,
+		res: Response,
+	) {
 		const jobRoleId = parseInt(req.params.jobRoleId, 10);
 		const { status } = req.body as UpdateJobRoleStatusRequestDto;
 
