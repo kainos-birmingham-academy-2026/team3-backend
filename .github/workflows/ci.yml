@@ -442,8 +442,7 @@ jobs:
           terraform apply
           -auto-approve
           -target=time_sleep.secrets_rbac_propagation
-          -target=azurerm_postgresql_flexible_server_firewall_rule.backend_container_app
-          -refresh=true
+           -refresh=true
       - name: Create test Terraform plan
         run: terraform plan -out=tfplan
       - name: Apply test Terraform plan
