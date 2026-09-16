@@ -336,6 +336,7 @@ jobs:
           terraform apply
           -auto-approve
           -target=time_sleep.secrets_rbac_propagation
+           -refresh=true
       - name: Recover dev OpenAI account and reconcile state
         run: node ../../../.github/scripts/recover-openai.mjs
       - name: Create Terraform plan
@@ -441,6 +442,7 @@ jobs:
           terraform apply
           -auto-approve
           -target=time_sleep.secrets_rbac_propagation
+           -refresh=true
       - name: Create test Terraform plan
         run: terraform plan -out=tfplan
       - name: Apply test Terraform plan
