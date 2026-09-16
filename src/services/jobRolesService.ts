@@ -16,6 +16,7 @@ import type { JobRoleResponse } from "../models/jobRoleResponse.js";
 import type { LocationResponse } from "../models/locationResponse.js";
 import type { StatusResponse } from "../models/statusResponse.js";
 import { getUkDateOnlyBoundary } from "../utils/jobRoleDates.js";
+import type { StatusEnum } from "../generated/prisma/enums.js";
 
 export class JobRolesService {
 	private jobRoleDao: JobRoleDao;
@@ -96,6 +97,19 @@ export class JobRolesService {
 		}
 
 		const jobRole = await this.jobRoleDao.updateJobRole(jobRoleId, data);
+		return this.jobRoleMapper.jobRoleToDetailedResponse(jobRole, true);
+	}
+
+	async updateJobRoleStatus(
+		jobRoleId: number,
+		status: StatusEnum,
+	): Promise<JobRoleDetailedResponse> {
+		const existingJobRole = await this.jobRoleDao.findById(jobRoleId, true);
+		if (!existingJobRole) {
+			throw new NotFoundError(`JobRole with id ${jobRoleId} not found`);
+		}
+
+		const jobRole = await this.jobRoleDao.updateJobRoleStatus(jobRoleId, status);
 		return this.jobRoleMapper.jobRoleToDetailedResponse(jobRole, true);
 	}
 

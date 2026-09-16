@@ -183,6 +183,28 @@ export class JobRoleDao {
 		return toJobRoleDomain(row);
 	}
 
+	async updateJobRoleStatus(
+		jobRoleId: number,
+		status: StatusEnum,
+	): Promise<JobRole> {
+		const row = await prisma.jobRole.update({
+			where: { jobRoleId },
+			data: {
+				status: {
+					connect: { statusName: status },
+				},
+			},
+			relationLoadStrategy: "join",
+			include: {
+				status: true,
+				capability: true,
+				band: true,
+				location: true,
+			},
+		});
+		return toJobRoleDomain(row);
+	}
+
 	async deleteJobRole(jobRoleId: number): Promise<void> {
 		await prisma.jobRole.delete({
 			where: { jobRoleId },

@@ -143,6 +143,10 @@ export const CreateJobRoleSchema = z
 
 export const UpdateJobRoleSchema = CreateJobRoleSchema;
 
+export const UpdateJobRoleStatusSchema = z.object({
+	status: z.enum(["OPEN", "CLOSED"]),
+});
+
 export type JobRoleIdParamDto = z.infer<typeof JobRoleIdParamSchema>;
 export type JobRoleFiltersDto = z.infer<typeof JobRoleFiltersSchema>;
 
@@ -156,3 +160,6 @@ export type CreateApplicationRequestDto = z.infer<
 >;
 export type CreateJobRoleRequestDto = z.infer<typeof CreateJobRoleSchema>;
 export type UpdateJobRoleRequestDto = z.infer<typeof UpdateJobRoleSchema>;
+export type UpdateJobRoleStatusRequestDto = z.infer<
+	typeof UpdateJobRoleStatusSchema
+>;

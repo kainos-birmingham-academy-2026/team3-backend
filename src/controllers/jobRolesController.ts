@@ -4,6 +4,7 @@ import type {
 	CreateJobRoleRequestDto,
 	JobRoleFiltersDto,
 	UpdateJobRoleRequestDto,
+	UpdateJobRoleStatusRequestDto,
 } from "../dtos/jobRoleDto.js";
 import { isTodayOrFuture } from "../dtos/jobRoleDto.js";
 import { ConflictError } from "../errors/conflictError.js";
@@ -80,6 +81,21 @@ export class JobRolesController {
 			}
 			if (error instanceof ConflictError) {
 				return res.status(error.statusCode).json({ message: error.message });
+			}
+			return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
+		}
+	}
+
+	async updateJobRoleStatus(req: Request<{ jobRoleId: string }>, res: Response) {
+		const jobRoleId = parseInt(req.params.jobRoleId, 10);
+		const { status } = req.body as UpdateJobRoleStatusRequestDto;
+
+		try {
+			const jobRole = await this.service.updateJobRoleStatus(jobRoleId, status);
+			return res.status(200).json(jobRole);
+		} catch (error) {
+			if (error instanceof NotFoundError) {
+				return res.status(404).json({ message: error.message });
 			}
 			return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
 		}

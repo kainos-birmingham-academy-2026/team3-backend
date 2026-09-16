@@ -5,6 +5,7 @@ import {
 	JobRoleFiltersSchema,
 	JobRoleIdParamSchema,
 	UpdateJobRoleSchema,
+	UpdateJobRoleStatusSchema,
 } from "../dtos/jobRoleDto";
 import { allowRoles, USER_ROLES } from "../middleware/authorise";
 import { optionalAuth, requireAuth } from "../middleware/requireAuth";
@@ -397,6 +398,17 @@ jobRolesRouter.patch(
 	validateBody(UpdateJobRoleSchema),
 	(req: R<{ jobRoleId: string }>, res: Res) => {
 		controller.updateJobRole(req, res);
+	},
+);
+
+jobRolesRouter.patch(
+	"/:jobRoleId/status",
+	requireAuth,
+	allowRoles([USER_ROLES.ADMIN]),
+	validateParams(JobRoleIdParamSchema),
+	validateBody(UpdateJobRoleStatusSchema),
+	(req: R<{ jobRoleId: string }>, res: Res) => {
+		controller.updateJobRoleStatus(req, res);
 	},
 );
 
