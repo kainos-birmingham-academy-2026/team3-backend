@@ -16,7 +16,15 @@ export function runRecruitmentReporting(
 		const child = spawn(process.execPath, [backendEtlScript], {
 			cwd: process.cwd(),
 			env: { ...process.env },
-			stdio: "inherit",
+			stdio: ["ignore", "pipe", "pipe"],
+		});
+
+		child.stdout?.on("data", (data: Buffer) => {
+			context.log(data.toString().trimEnd());
+		});
+
+		child.stderr?.on("data", (data: Buffer) => {
+			context.error(data.toString().trimEnd());
 		});
 
 		child.on("exit", (code) => {
