@@ -42,8 +42,8 @@ Each `snet-container-apps` subnet is delegated to `Microsoft.App/environments`
 for a future workload profiles Container Apps Environment. The /23 allocation
 leaves capacity for scaling; the rest of the VNet is unallocated.
 
-**These networks are initially empty.** Existing Container Apps Environments
-are not attached, and frontend/backend ingress, database access and Playwright
+**These networks are empty by default.** Existing Container Apps Environments
+are not attached unless the test3 pilot below is enabled. Frontend/backend ingress, database access and Playwright
 connectivity are unchanged. Network security groups, private DNS and any
 required outbound routing must be designed alongside workload integration.
 Adding a VNet alone does not make existing public services private.
@@ -71,6 +71,65 @@ terraform fmt -check -recursive infrastructure
 
 Provider locks are owned by the environment roots; the standalone module init
 may generate a local lock file that should not be committed.
+
+### Test3 VNet integration pilot
+
+The test root accepts `enable_vnet_integration`, defaulting to `false`, and rejects
+enabling it for any slot except `test3`. When enabled, the existing environment
+name `cae-team3-test3` is retained, its infrastructure attaches to
+`snet-container-apps`, and an explicit Consumption workload profile is configured.
+No Dedicated workload capacity, Front Door, VPN, firewall or private endpoints
+are provisioned by this pilot.
+
+The environment retains external load balancing. The frontend stays publicly
+reachable and the backend retains internal-only app ingress. This is compatible
+with the intended Front Door Standard public-origin design, but origin
+restrictions are a later phase. Do not enable external backend ingress to allow
+laptop tests: in this pilot that would expose the backend publicly.
+
+The frontend root discovers the environment by its unchanged name. Its current
+Terraform does not need a change for a fresh slot. Existing deployments must be
+coordinated because the frontend owns its app in a separate state.
+
+To deploy the pilot:
+
+1. Review the code and run the module checks below. Confirm the live slot state
+	before deployment; a previously absent slot may have been recreated.
+2. Set the backend GitHub repository Actions variable `TEST3_VNET_ENABLED` to
+	`true`. This is a repository variable, not a GitHub environment or a secret.
+	An authorised repository administrator may need to set it.
+3. Run CI from a ref containing this implementation, with `deploy_test=true`,
+	`test_environment=test3`, the intended `backend_ref` and `frontend_ref=main`.
+	Terraform comes from the workflow ref. Feature refs also require the matching
+	Azure federated credential.
+4. For an absent slot, CI creates the integrated environment and dispatches the
+	frontend after backend deployment. If an existing environment has a different
+	subnet configuration, preflight fails before either app deployment begins.
+	Do not bypass this check: obtain approval for coordinated recreation, including
+	test data loss, and account for both Terraform states and active deployments.
+5. Inspect the environment's `vnetConfiguration.infrastructureSubnetId` and
+	`workloadProfiles` in Azure, then verify frontend health, frontend-to-backend
+	requests, denied public backend access and the existing frontend E2E suite.
+
+CI also rejects full plans that delete or replace a Container Apps Environment.
+This protects against unexpected replacement beyond the subnet preflight check;
+it is not a replacement for reviewing the complete plan. Existing secret-RBAC
+bootstrap behaviour is unchanged.
+
+Keep `TEST3_VNET_ENABLED=true` for subsequent deployments and reprovisioning after
+scheduled teardown. Unsetting it requests removal of integration and is blocked
+while the integrated environment exists. Do not deploy older workflow refs that
+lack the setting and guards to the integrated slot. Local Terraform plans must
+use the matching setting, for example `TF_VAR_enable_vnet_integration=true` and
+`TF_VAR_environment=test3`, alongside the usual root inputs and backend setup.
+
+```bash
+terraform -chdir=infrastructure/modules/container-app-environment init -backend=false
+terraform -chdir=infrastructure/modules/container-app-environment test
+```
+
+Test1, test2, dev and prod do not opt into integration. This pilot establishes
+network attachment, not private dependency access or Front Door-only protection.
 
 ## Platform architecture
 

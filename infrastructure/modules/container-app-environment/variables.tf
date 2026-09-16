@@ -19,6 +19,12 @@ variable "log_analytics_workspace_id" {
   default     = null
 }
 
+variable "infrastructure_subnet_id" {
+  description = "Optional dedicated subnet for a VNet-integrated workload profiles environment. Changing this requires environment replacement."
+  type        = string
+  default     = null
+}
+
 variable "tags" {
   description = "Tags to apply to the Container App Environment."
   type        = map(string)
