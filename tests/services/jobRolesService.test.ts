@@ -4,7 +4,7 @@ const mockDao = {
 	findAll: vi.fn(),
 	findById: vi.fn(),
 	updateJobRole: vi.fn(),
-	deleteJobRole: vi.fn(),
+	updateJobRoleStatus: vi.fn(),
 	createApplication: vi.fn(),
 	findApplicationByUserIdAndJobRoleId: vi.fn(),
 	getStatus: vi.fn(),
@@ -27,7 +27,7 @@ vi.mock("../../src/models/jobRoleDao.js", () => ({
 		findAll = mockDao.findAll;
 		findById = mockDao.findById;
 		updateJobRole = mockDao.updateJobRole;
-		deleteJobRole = mockDao.deleteJobRole;
+		updateJobRoleStatus = mockDao.updateJobRoleStatus;
 		createApplication = mockDao.createApplication;
 		findApplicationByUserIdAndJobRoleId =
 			mockDao.findApplicationByUserIdAndJobRoleId;
@@ -208,24 +208,27 @@ describe("JobRolesService", () => {
 		});
 	});
 
-	describe("deleteJobRole", () => {
-		it("should delete an existing job role", async () => {
+	describe("updateJobRoleStatus", () => {
+		it("should update and map an existing job role status", async () => {
 			mockDao.findById.mockResolvedValue(jobRole1);
-			mockDao.deleteJobRole.mockResolvedValue(undefined);
+			mockDao.updateJobRoleStatus.mockResolvedValue(jobRole1);
+			mockMapper.jobRoleToDetailedResponse.mockReturnValue({
+				statusName: "CLOSED",
+			});
 
-			await service.deleteJobRole(1);
+			await service.updateJobRoleStatus(1, "CLOSED");
 
 			expect(mockDao.findById).toHaveBeenCalledWith(1, true);
-			expect(mockDao.deleteJobRole).toHaveBeenCalledWith(1);
+			expect(mockDao.updateJobRoleStatus).toHaveBeenCalledWith(1, "CLOSED");
 		});
 
-		it("should throw NotFoundError without deleting a missing role", async () => {
+		it("should throw NotFoundError without updating a missing role", async () => {
 			mockDao.findById.mockResolvedValue(null);
 
-			await expect(service.deleteJobRole(999)).rejects.toThrow(
+			await expect(service.updateJobRoleStatus(999, "OPEN")).rejects.toThrow(
 				"JobRole with id 999 not found",
 			);
-			expect(mockDao.deleteJobRole).not.toHaveBeenCalled();
+			expect(mockDao.updateJobRoleStatus).not.toHaveBeenCalled();
 		});
 	});
 

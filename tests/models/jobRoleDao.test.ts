@@ -507,20 +507,6 @@ describe("JobRoleDao", () => {
 		});
 	});
 
-	describe("deleteJobRole", () => {
-		it("should delete a job role by ID", async () => {
-			vi.mocked(
-				prisma.jobRole.delete as unknown as typeof prisma.jobRole.delete,
-			).mockResolvedValue(mockJobRoleRow());
-
-			await dao.deleteJobRole(1);
-
-			expect(prisma.jobRole.delete).toHaveBeenCalledWith({
-				where: { jobRoleId: 1 },
-			});
-		});
-	});
-
 	describe("findApplicationByUserIdAndJobRoleId", () => {
 		it("should return an application when one exists", async () => {
 			const application = mockApplicationRow();
