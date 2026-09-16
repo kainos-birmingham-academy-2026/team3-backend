@@ -55,6 +55,7 @@ resource "azurerm_function_app_flex_consumption" "this" {
   app_settings = {
     (var.service_bus_setting_name) = "@Microsoft.KeyVault(SecretUri=${var.service_bus_connection_secret_uri})"
     ACS_CONNECTION_STRING          = "@Microsoft.KeyVault(SecretUri=${var.acs_connection_secret_uri})"
+    DATABASE_URL                   = "@Microsoft.KeyVault(SecretUri=${var.database_url_secret_uri})"
     EMAIL_SENDER_ADDRESS           = var.email_sender_address
     AZURE_LOG_LEVEL                = "info"
   }

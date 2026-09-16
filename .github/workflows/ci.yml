@@ -284,6 +284,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: tfcmt -var "target:backend-dev" plan -- terraform plan -no-color
+        - name: Build backend ETL runtime
+          working-directory: ../..
+          run: |
+            npm ci
+            npx prisma generate
+            npm run build
 
   terraform-deploy:
     name: Deploy dev infrastructure
@@ -373,13 +379,21 @@ jobs:
           done
           echo "::error::Timed out waiting for private smoke-test execution $execution_name."
           exit 1
+      - name: Build backend ETL runtime
+        working-directory: ../..
+        run: |
+          npm ci
+          npx prisma generate
+          npm run build
       - name: Build notification Function
         working-directory: functions/notifications
         run: |
           npm ci
           npm run build
           npm prune --omit=dev
-          zip -r "$RUNNER_TEMP/notifications.zip" host.json package.json package-lock.json dist node_modules
+          cp -R ../../dist backend-dist
+          cp ../../src/generated/prisma/*.node backend-dist/src/generated/prisma/
+          zip -r "$RUNNER_TEMP/notifications.zip" host.json package.json package-lock.json dist backend-dist node_modules
       - name: Deploy notification Function
         uses: Azure/functions-action@v1
         with:
@@ -446,6 +460,14 @@ jobs:
       - name: Apply test Terraform plan
         run: terraform apply -auto-approve tfplan
       - name: Verify private database connectivity
+      - name: Build backend ETL runtime
+        working-directory: ../../..
+        run: |
+          npm ci
+          npx prisma generate
+          npm run build
+      - name: Verify test3 private database connectivity
+        if: inputs.test_environment == 'test3' && vars.TEST3_VNET_ENABLED == 'true'
         timeout-minutes: 12
         run: |
           job_name="caj-team3-private-smoke-${TEST_ENVIRONMENT}"
@@ -488,7 +510,9 @@ jobs:
           npm ci
           npm run build
           npm prune --omit=dev
-          zip -r "$RUNNER_TEMP/notifications.zip" host.json package.json package-lock.json dist node_modules
+          cp -R ../../../dist backend-dist
+          cp ../../../src/generated/prisma/*.node backend-dist/src/generated/prisma/
+          zip -r "$RUNNER_TEMP/notifications.zip" host.json package.json package-lock.json dist backend-dist node_modules
       - name: Deploy notification Function
         uses: Azure/functions-action@v1
         with:

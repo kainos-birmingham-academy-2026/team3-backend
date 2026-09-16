@@ -4,7 +4,7 @@ import { app, type InvocationContext } from "@azure/functions";
 
 const backendEtlScript = path.resolve(
   process.cwd(),
-  "../../src/etl/runRecruitmentReporting.ts",
+  "backend-dist/src/etl/runRecruitmentReporting.js",
 );
 
 export async function recruitmentReportingTimer(
@@ -16,9 +16,9 @@ export async function recruitmentReportingTimer(
   await new Promise<void>((resolve, reject) => {
     const child = spawn(
       process.execPath,
-      ["--import", "tsx", backendEtlScript],
+      [backendEtlScript],
       {
-        cwd: path.resolve(process.cwd(), "../.."),
+        cwd: process.cwd(),
         env: { ...process.env },
         stdio: "inherit",
       },
