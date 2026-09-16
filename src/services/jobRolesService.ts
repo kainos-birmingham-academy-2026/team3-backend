@@ -131,6 +131,10 @@ export class JobRolesService {
 		return await this.jobRoleDao.createApplication(jobRoleId, userId, data);
 	}
 
+	async getAppliedJobRoleIds(userId: number): Promise<number[]> {
+		return await this.jobRoleDao.findJobRoleIdsByUserId(userId);
+	}
+
 	//get status, band, capability, location for job role creation form
 	async getStatus(): Promise<StatusResponse[]> {
 		const status = await this.jobRoleDao.getStatus();

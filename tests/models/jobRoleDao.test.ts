@@ -12,6 +12,7 @@ vi.mock("../../src/prismaClient.js", () => ({
 		},
 		application: {
 			findFirst: vi.fn(),
+			findMany: vi.fn(),
 			create: vi.fn(),
 		},
 		status: {
@@ -522,6 +523,23 @@ describe("JobRoleDao", () => {
 			const result = await dao.findApplicationByUserIdAndJobRoleId(3, 999);
 
 			expect(result).toBeNull();
+		});
+	});
+
+	describe("findJobRoleIdsByUserId", () => {
+		it("should return the job role ids for a user's applications", async () => {
+			vi.mocked(
+				prisma.application
+					.findMany as unknown as typeof prisma.application.findMany,
+			).mockResolvedValue([{ jobRoleId: 1 }, { jobRoleId: 2 }]);
+
+			const result = await dao.findJobRoleIdsByUserId(3);
+
+			expect(prisma.application.findMany).toHaveBeenCalledWith({
+				where: { userId: 3 },
+				select: { jobRoleId: true },
+			});
+			expect(result).toEqual([1, 2]);
 		});
 	});
 

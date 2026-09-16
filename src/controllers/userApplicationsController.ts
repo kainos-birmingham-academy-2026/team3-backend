@@ -29,4 +29,16 @@ export class UserApplicationsController {
 			return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
 		}
 	}
+
+	public async getMine(_req: Request, res: Response): Promise<Response> {
+		const { userId } = res.locals.authUser as { userId: number };
+
+		try {
+			const jobRoleIds =
+				await this.jobRolesService.getAppliedJobRoleIds(userId);
+			return res.status(200).json({ jobRoleIds });
+		} catch {
+			return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
+		}
+	}
 }

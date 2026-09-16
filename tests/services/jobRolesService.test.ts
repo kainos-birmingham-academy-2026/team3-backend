@@ -7,6 +7,7 @@ const mockDao = {
 	deleteJobRole: vi.fn(),
 	createApplication: vi.fn(),
 	findApplicationByUserIdAndJobRoleId: vi.fn(),
+	findJobRoleIdsByUserId: vi.fn(),
 	getStatus: vi.fn(),
 	getBands: vi.fn(),
 	getCapabilities: vi.fn(),
@@ -31,6 +32,7 @@ vi.mock("../../src/models/jobRoleDao.js", () => ({
 		createApplication = mockDao.createApplication;
 		findApplicationByUserIdAndJobRoleId =
 			mockDao.findApplicationByUserIdAndJobRoleId;
+		findJobRoleIdsByUserId = mockDao.findJobRoleIdsByUserId;
 		getStatus = mockDao.getStatus;
 		getBands = mockDao.getBands;
 		getCapabilities = mockDao.getCapabilities;
@@ -490,6 +492,17 @@ describe("JobRolesService", () => {
 			);
 
 			expect(mockDao.createApplication).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("getAppliedJobRoleIds", () => {
+		it("should return the job role ids for the given user", async () => {
+			mockDao.findJobRoleIdsByUserId.mockResolvedValue([1, 2]);
+
+			const result = await service.getAppliedJobRoleIds(42);
+
+			expect(mockDao.findJobRoleIdsByUserId).toHaveBeenCalledWith(42);
+			expect(result).toEqual([1, 2]);
 		});
 	});
 
