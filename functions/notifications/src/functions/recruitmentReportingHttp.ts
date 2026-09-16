@@ -28,6 +28,6 @@ export async function recruitmentReportingHttp(
 app.http("recruitmentReportingHttp", {
 	methods: ["POST"],
 	authLevel: "admin",
-	route: "admin/recruitment-reporting/run",
+	route: "recruitment-reporting/run",
 	handler: recruitmentReportingHttp,
 });
