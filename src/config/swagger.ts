@@ -379,10 +379,16 @@ const options: swaggerJsdoc.Options = {
 				BandResponse: {
 					type: "object",
 					additionalProperties: false,
-					required: ["bandId", "bandName"],
+					required: ["bandId", "bandName", "bandLevel"],
 					properties: {
 						bandId: { type: "integer", minimum: 1, example: 3 },
 						bandName: { type: "string", example: "Engineer" },
+						bandLevel: {
+							type: "integer",
+							minimum: 1,
+							example: 5,
+							description: "Seniority ranking; lower values are more senior.",
+						},
 					},
 				},
 				CapabilityResponse: {

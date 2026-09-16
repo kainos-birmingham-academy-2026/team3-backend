@@ -512,7 +512,7 @@ describe("JobRolesService", () => {
 		});
 
 		it("should return mapped bands", async () => {
-			const bands = [{ bandId: 2, bandName: "Engineer" }];
+			const bands = [{ bandId: 2, bandName: "Engineer", bandLevel: 5 }];
 			mockDao.getBands.mockResolvedValue(bands);
 			mockMapper.bandToResponse.mockReturnValue(bands);
 

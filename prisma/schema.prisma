@@ -64,9 +64,10 @@ model Capability {
 }
 
 model Band {
-  bandId   Int       @id @default(autoincrement())
-  bandName String    @unique @db.VarChar(100)
-  jobRoles JobRole[]
+  bandId    Int       @id @default(autoincrement())
+  bandName  String    @unique @db.VarChar(100)
+  bandLevel Int       @unique
+  jobRoles  JobRole[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

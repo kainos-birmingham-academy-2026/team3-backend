@@ -52,8 +52,12 @@ export class JobRoleMapper {
 		return rows.map((row) => new StatusResponse(row.statusId, row.statusName));
 	}
 
-	bandToResponse(rows: { bandId: number; bandName: string }[]): BandResponse[] {
-		return rows.map((row) => new BandResponse(row.bandId, row.bandName));
+	bandToResponse(
+		rows: { bandId: number; bandName: string; bandLevel: number }[],
+	): BandResponse[] {
+		return rows.map(
+			(row) => new BandResponse(row.bandId, row.bandName, row.bandLevel),
+		);
 	}
 
 	capabilityToResponse(

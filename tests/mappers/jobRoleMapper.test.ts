@@ -196,10 +196,12 @@ describe("JobRoleMapper", () => {
 
 		it("should map band rows to band responses", () => {
 			const result = mapper.bandToResponse([
-				{ bandId: 2, bandName: "Engineer" },
+				{ bandId: 2, bandName: "Engineer", bandLevel: 5 },
 			]);
 
-			expect(result).toEqual([{ bandId: 2, bandName: "Engineer" }]);
+			expect(result).toEqual([
+				{ bandId: 2, bandName: "Engineer", bandLevel: 5 },
+			]);
 		});
 
 		it("should map capability rows to capability responses", () => {

@@ -196,43 +196,43 @@ async function main() {
 		}),
 	]);
 
-	// Bands
+	// Bands (bandLevel increases with seniority: 1 = most senior, 7 = most junior)
 	const [principal, manager, consultant, seniorAssociate, associate, trainee] =
 		await Promise.all([
 			prisma.band.upsert({
 				where: { bandName: "Principal" },
-				update: {},
-				create: { bandName: "Principal" },
+				update: { bandLevel: 1 },
+				create: { bandName: "Principal", bandLevel: 1 },
 			}),
 			prisma.band.upsert({
 				where: { bandName: "Manager" },
-				update: {},
-				create: { bandName: "Manager" },
+				update: { bandLevel: 2 },
+				create: { bandName: "Manager", bandLevel: 2 },
 			}),
 			prisma.band.upsert({
 				where: { bandName: "Consultant" },
-				update: {},
-				create: { bandName: "Consultant" },
+				update: { bandLevel: 3 },
+				create: { bandName: "Consultant", bandLevel: 3 },
 			}),
 			prisma.band.upsert({
 				where: { bandName: "Senior Associate" },
-				update: {},
-				create: { bandName: "Senior Associate" },
+				update: { bandLevel: 4 },
+				create: { bandName: "Senior Associate", bandLevel: 4 },
 			}),
 			prisma.band.upsert({
 				where: { bandName: "Associate" },
-				update: {},
-				create: { bandName: "Associate" },
+				update: { bandLevel: 5 },
+				create: { bandName: "Associate", bandLevel: 5 },
 			}),
 			prisma.band.upsert({
 				where: { bandName: "Trainee" },
-				update: {},
-				create: { bandName: "Trainee" },
+				update: { bandLevel: 6 },
+				create: { bandName: "Trainee", bandLevel: 6 },
 			}),
 			prisma.band.upsert({
 				where: { bandName: "Apprentice" },
-				update: {},
-				create: { bandName: "Apprentice" },
+				update: { bandLevel: 7 },
+				create: { bandName: "Apprentice", bandLevel: 7 },
 			}),
 		]);
 

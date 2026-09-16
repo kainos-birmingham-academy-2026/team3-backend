@@ -7,9 +7,7 @@ import { validateBody } from "../middleware/validate";
 import { JobRolesService } from "../services/jobRolesService";
 
 const userApplicationsRouter = Router();
-const controller = new UserApplicationsController(
-	new JobRolesService(),
-);
+const controller = new UserApplicationsController(new JobRolesService());
 
 userApplicationsRouter.use(requireAuth);
 
