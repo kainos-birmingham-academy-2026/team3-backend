@@ -36,6 +36,11 @@ on:
         required: true
         type: boolean
         default: false
+      enable_front_door:
+        description: Create or update Azure Front Door for the selected test environment
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -183,6 +188,7 @@ jobs:
           --field event_type=backend-test-deployed
           --raw-field "client_payload[frontend_ref]=${FRONTEND_SHA}"
           --raw-field "client_payload[test_environment]=${TEST_ENVIRONMENT}"
+          --raw-field "client_payload[enable_front_door]=${{ inputs.enable_front_door }}"
 
   test:
     name: Lint and test
