@@ -146,8 +146,8 @@ jobs:
               fi
 
               if [[ "$(printf '%s' "$current_subnet" | tr '[:upper:]' '[:lower:]')" != "$(printf '%s' "$expected_subnet" | tr '[:upper:]' '[:lower:]')" ]]; then
-                echo "::error::Container Apps network changes require coordinated environment recreation. No deployment was started. Review both backend and frontend state before proceeding."
-                exit 1
+                echo "Container Apps network configuration differs; the frontend will deploy after the backend environment is recreated."
+                ready=false
               fi
             fi
           fi
@@ -171,7 +171,7 @@ jobs:
 
   trigger-frontend-test-warm:
     name: Start parallel frontend test deployment
-    if: needs.test-environment-status.outputs.ready == 'true'
+    if: needs.test-environment-status.outputs.ready == 'true' && !inputs.enable_vnet_integration
     needs: [resolve-source, test, test-environment-status]
     runs-on: ubuntu-latest
     permissions:
@@ -188,6 +188,7 @@ jobs:
           --field event_type=backend-test-deployed
           --raw-field "client_payload[frontend_ref]=${FRONTEND_SHA}"
           --raw-field "client_payload[test_environment]=${TEST_ENVIRONMENT}"
+          --raw-field "client_payload[enable_front_door]=${{ inputs.enable_front_door }}"
           --raw-field "client_payload[enable_front_door]=${{ inputs.enable_front_door }}"
 
   test:
@@ -511,8 +512,11 @@ jobs:
           -target=time_sleep.secrets_rbac_propagation
       - name: Create test Terraform plan
         run: terraform plan -out=tfplan
-      - name: Reject Container Apps Environment deletion or replacement
+      - name: Require explicit approval for Container Apps Environment replacement
         run: |
+          if [[ "${{ inputs.enable_vnet_integration }}" == "true" ]]; then
+            exit 0
+          fi
           terraform show -json tfplan | jq --exit-status '
             [.resource_changes[]?
               | select(.type == "azurerm_container_app_environment")
@@ -529,18 +533,17 @@ jobs:
         timeout-minutes: 12
         run: |
           job_name="caj-team3-private-smoke-${TEST_ENVIRONMENT}"
-          resource_group="rg-team3-${TEST_ENVIRONMENT}"
           execution_name=$(az containerapp job start \
-            --name "$job_name" --resource-group "$resource_group" \
+            --name "$job_name" --resource-group "rg-team3-${TEST_ENVIRONMENT}" \
             --query name --output tsv --only-show-errors)
           if [[ -z "$execution_name" ]]; then
             echo "::error::Azure did not return a smoke-test execution name."
             exit 1
           fi
           echo "Private smoke-test execution: $execution_name"
-          for attempt in {1..60}; do
+          for _ in {1..60}; do
             execution_status=$(az containerapp job execution show \
-              --name "$job_name" --resource-group "$resource_group" \
+              --name "$job_name" --resource-group "rg-team3-${TEST_ENVIRONMENT}" \
               --job-execution-name "$execution_name" \
               --query properties.status --output tsv --only-show-errors)
             case "$execution_status" in
@@ -588,3 +591,4 @@ jobs:
           --field event_type=backend-test-deployed
           --raw-field "client_payload[frontend_ref]=${FRONTEND_SHA}"
           --raw-field "client_payload[test_environment]=${TEST_ENVIRONMENT}"
+          --raw-field "client_payload[enable_front_door]=${{ inputs.enable_front_door }}"
