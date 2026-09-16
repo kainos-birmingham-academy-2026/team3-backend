@@ -58,7 +58,7 @@ run "private_database_with_multiple_outbound_addresses" {
 
   assert {
     condition     = output.postgresql_public_network_access_enabled == false
-    error_message = "The private test3 server must disable public network access."
+    error_message = "Private-mode PostgreSQL must disable public network access."
   }
 
   plan_options {
@@ -73,7 +73,7 @@ run "private_database_with_multiple_outbound_addresses" {
 
   assert {
     condition     = length(azurerm_container_app_job.private_smoke_test) == 1 && azurerm_container_app_job.private_smoke_test[0].replica_retry_limit == 0 && azurerm_container_app_job.private_smoke_test[0].replica_timeout_in_seconds == 120
-    error_message = "The pilot requires one bounded smoke job without automatic retries."
+    error_message = "Private mode requires one bounded smoke job without automatic retries."
   }
 
   assert {
@@ -93,7 +93,7 @@ run "private_database_with_multiple_outbound_addresses" {
 
   assert {
     condition     = azurerm_private_dns_zone.postgresql[0].name == "privatelink.postgres.database.azure.com" && azurerm_private_dns_zone_virtual_network_link.postgresql[0].virtual_network_id == module.network.id && !azurerm_private_dns_zone_virtual_network_link.postgresql[0].registration_enabled
-    error_message = "PostgreSQL private DNS must be linked to the pilot VNet without VM registration."
+    error_message = "PostgreSQL private DNS must be linked to the environment VNet without VM registration."
   }
 
   assert {
@@ -102,16 +102,53 @@ run "private_database_with_multiple_outbound_addresses" {
   }
 }
 
-run "test1_public_access_unchanged" {
+run "private_database_for_test1" {
   command = plan
-
-  assert {
-    condition     = output.postgresql_public_network_access_enabled == true
-    error_message = "The legacy test1 server must retain public network access."
-  }
 
   variables {
     environment             = "test1"
+    enable_vnet_integration = true
+  }
+
+  override_module {
+    target = module.backend_container_app
+    outputs = {
+      outbound_ip_addresses = ["192.0.2.10"]
+      fqdn                  = "backend.internal.example.com"
+    }
+  }
+
+  plan_options {
+    target = [
+      module.postgresql,
+      azurerm_container_app_job.private_smoke_test,
+      azurerm_private_endpoint.postgresql,
+      azurerm_private_dns_zone_virtual_network_link.postgresql,
+      azurerm_postgresql_flexible_server_firewall_rule.backend_container_app,
+    ]
+  }
+
+  assert {
+    condition     = output.postgresql_public_network_access_enabled == false && length(azurerm_container_app_job.private_smoke_test) == 1
+    error_message = "Any enabled test slot must provision a private database and smoke job."
+  }
+
+  assert {
+    condition     = length(azurerm_private_endpoint.postgresql) == 1 && length(azurerm_subnet.private_endpoints) == 1 && length(azurerm_private_dns_zone.postgresql) == 1 && length(azurerm_private_dns_zone_virtual_network_link.postgresql) == 1
+    error_message = "Any enabled test slot must provision private networking resources."
+  }
+
+  assert {
+    condition     = length(azurerm_postgresql_flexible_server_firewall_rule.backend_container_app) == 0
+    error_message = "Private mode must not retain public database firewall rules."
+  }
+}
+
+run "public_mode_remains_opt_in" {
+  command = plan
+
+  variables {
+    environment             = "test2"
     enable_vnet_integration = false
   }
 
@@ -134,17 +171,7 @@ run "test1_public_access_unchanged" {
   }
 
   assert {
-    condition     = length(azurerm_container_app_job.private_smoke_test) == 0
-    error_message = "Non-pilot slots must not provision a private smoke job."
-  }
-
-  assert {
-    condition     = length(azurerm_private_endpoint.postgresql) == 0 && length(azurerm_subnet.private_endpoints) == 0 && length(azurerm_private_dns_zone.postgresql) == 0 && length(azurerm_private_dns_zone_virtual_network_link.postgresql) == 0
-    error_message = "Non-pilot slots must not provision private networking resources."
-  }
-
-  assert {
-    condition     = length(azurerm_postgresql_flexible_server_firewall_rule.backend_container_app) == 1 && azurerm_postgresql_flexible_server_firewall_rule.backend_container_app[0].start_ip_address == "192.0.2.10" && azurerm_postgresql_flexible_server_firewall_rule.backend_container_app[0].end_ip_address == "192.0.2.10"
-    error_message = "Non-pilot slots must retain their existing single-IP firewall rule."
+    condition     = output.postgresql_public_network_access_enabled && length(azurerm_container_app_job.private_smoke_test) == 0 && length(azurerm_private_endpoint.postgresql) == 0 && length(azurerm_postgresql_flexible_server_firewall_rule.backend_container_app) == 1
+    error_message = "Disabled private networking must retain the current public-access configuration."
   }
 }

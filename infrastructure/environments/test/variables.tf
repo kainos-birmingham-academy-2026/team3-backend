@@ -16,14 +16,9 @@ variable "environment" {
 }
 
 variable "enable_vnet_integration" {
-  description = "Opt in to Container Apps VNet integration for test3 only. Changing this requires environment replacement."
+  description = "Opt in to Container Apps VNet integration. Changing this requires environment replacement."
   type        = bool
   default     = false
-
-  validation {
-    condition     = !var.enable_vnet_integration || var.environment == "test3"
-    error_message = "VNet integration is currently supported only for the test3 pilot."
-  }
 }
 
 variable "location" {
