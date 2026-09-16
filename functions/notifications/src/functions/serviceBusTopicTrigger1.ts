@@ -3,7 +3,7 @@ import {
 	sendApplicationAcceptedEmail,
 	sendApplicationCreatedEmail,
 	sendApplicationRejectedEmail,
-	sendWelcomeEmail,
+	sendVerificationCodeEmail,
 } from "../services/emailService.js";
 
 interface NotificationMessage {
@@ -55,7 +55,10 @@ export async function serviceBusTopicTrigger1(
 
 	switch (notification.type) {
 		case "AccountCreated":
-			await sendWelcomeEmail(notification.email, notification.name ?? "User");
+			await sendVerificationCodeEmail(
+				notification.email,
+				notification.name ?? "User",
+			);
 			break;
 		case "ApplicationCreated":
 			await sendApplicationCreatedEmail(notification.email);

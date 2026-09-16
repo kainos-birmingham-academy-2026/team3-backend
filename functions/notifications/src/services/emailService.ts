@@ -1,4 +1,5 @@
 import { EmailClient } from "@azure/communication-email";
+import { randomInt } from "node:crypto";
 
 const sendTimeoutMs = 60_000;
 
@@ -16,7 +17,11 @@ export function escapeHtml(value: string): string {
 	);
 }
 
-export async function sendWelcomeEmail(
+export function generateVerificationCode(): string {
+	return randomInt(10_000, 100_000).toString();
+}
+
+export async function sendVerificationCodeEmail(
 	email: string,
 	name: string,
 ): Promise<void> {
@@ -32,6 +37,7 @@ export async function sendWelcomeEmail(
 	}
 
 	const safeName = escapeHtml(name);
+	const verificationCode = generateVerificationCode();
 	const emailClient = new EmailClient(connectionString);
 	const abortController = new AbortController();
 	const timeout = setTimeout(() => abortController.abort(), sendTimeoutMs);
@@ -41,14 +47,14 @@ export async function sendWelcomeEmail(
 			{
 				senderAddress,
 				content: {
-					subject: "Your account has been created",
+					subject: "Your verification code",
 					plainText: `Hi ${name},
 
-Welcome! Your account has been created successfully and is ready to use.
+Your verification code is: ${verificationCode}
 
-You can now sign in to complete your profile and get started.
+Enter this code to verify your email address.
 
-If you did not create this account, please contact the support team.
+If you did not request this code, you can ignore this email.
 
 Best regards,
 The Team`,
@@ -62,12 +68,12 @@ The Team`,
                       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background-color:#ffffff;border:1px solid #d9e2ec;">
                         <tr>
                           <td style="padding:32px;">
-                            <p style="margin:0 0 12px;font-size:14px;font-weight:700;color:#2563eb;text-transform:uppercase;">Account created</p>
-                            <h1 style="margin:0 0 20px;font-size:28px;line-height:1.25;color:#102a43;">Welcome, ${safeName}</h1>
-                            <p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Your account has been created successfully and is ready to use.</p>
-                            <p style="margin:0 0 24px;font-size:16px;line-height:1.6;">You can now sign in to complete your profile and get started.</p>
+														<p style="margin:0 0 12px;font-size:14px;font-weight:700;color:#2563eb;text-transform:uppercase;">Email verification</p>
+														<h1 style="margin:0 0 20px;font-size:28px;line-height:1.25;color:#102a43;">Hi, ${safeName}</h1>
+														<p style="margin:0 0 16px;font-size:16px;line-height:1.6;">Enter this code to verify your email address:</p>
+														<p style="margin:0 0 24px;font-size:32px;font-weight:700;letter-spacing:8px;color:#102a43;">${verificationCode}</p>
                             <hr style="margin:24px 0;border:0;border-top:1px solid #d9e2ec;">
-                            <p style="margin:0;font-size:13px;line-height:1.5;color:#627d98;">If you did not create this account, please contact the support team.</p>
+														<p style="margin:0;font-size:13px;line-height:1.5;color:#627d98;">If you did not request this code, you can ignore this email.</p>
                           </td>
                         </tr>
                       </table>
