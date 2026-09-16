@@ -6,6 +6,7 @@ import type {
 	UpdateJobRoleRequestDto,
 } from "../dtos/jobRoleDto.js";
 import { ConflictError } from "../errors/conflictError.js";
+import type { StatusEnum } from "../generated/prisma/enums.js";
 import { JobRoleMapper } from "../mappers/jobRoleMapper.js";
 import type { BandResponse } from "../models/bandResponse.js";
 import type { CapabilityResponse } from "../models/capabilityResponse.js";
@@ -99,13 +100,20 @@ export class JobRolesService {
 		return this.jobRoleMapper.jobRoleToDetailedResponse(jobRole, true);
 	}
 
-	async deleteJobRole(jobRoleId: number): Promise<void> {
+	async updateJobRoleStatus(
+		jobRoleId: number,
+		status: StatusEnum,
+	): Promise<JobRoleDetailedResponse> {
 		const existingJobRole = await this.jobRoleDao.findById(jobRoleId, true);
 		if (!existingJobRole) {
 			throw new NotFoundError(`JobRole with id ${jobRoleId} not found`);
 		}
 
-		await this.jobRoleDao.deleteJobRole(jobRoleId);
+		const jobRole = await this.jobRoleDao.updateJobRoleStatus(
+			jobRoleId,
+			status,
+		);
+		return this.jobRoleMapper.jobRoleToDetailedResponse(jobRole, true);
 	}
 
 	async createApplication(

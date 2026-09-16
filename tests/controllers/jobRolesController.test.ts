@@ -28,7 +28,7 @@ describe("JobRolesController", () => {
 		findById: vi.fn(),
 		createJobRole: vi.fn(),
 		updateJobRole: vi.fn(),
-		deleteJobRole: vi.fn(),
+		updateJobRoleStatus: vi.fn(),
 		createApplication: vi.fn(),
 		getStatus: vi.fn(),
 		getBands: vi.fn(),
@@ -119,32 +119,31 @@ describe("JobRolesController", () => {
 		});
 	});
 
-	describe("deleteJobRole", () => {
-		it("should return 204 when the job role is deleted", async () => {
-			const req = { params: { jobRoleId: "1" } };
+	describe("updateJobRoleStatus", () => {
+		it("should return the updated job role", async () => {
+			const req = { params: { jobRoleId: "1" }, body: { status: "CLOSED" } };
 			const res = createMockResponse();
-			vi.mocked(mockService.deleteJobRole).mockResolvedValue();
+			vi.mocked(mockService.updateJobRoleStatus).mockResolvedValue({
+				jobRoleId: 1,
+				statusName: "CLOSED",
+			});
 
-			await controller.deleteJobRole(req as never, res as never);
+			await controller.updateJobRoleStatus(req as never, res as never);
 
-			expect(mockService.deleteJobRole).toHaveBeenCalledWith(1);
-			expect(res.status).toHaveBeenCalledWith(204);
-			expect(res.send).toHaveBeenCalledWith();
+			expect(mockService.updateJobRoleStatus).toHaveBeenCalledWith(1, "CLOSED");
+			expect(res.status).toHaveBeenCalledWith(200);
 		});
 
 		it("should return 404 when the job role does not exist", async () => {
-			const req = { params: { jobRoleId: "999" } };
+			const req = { params: { jobRoleId: "999" }, body: { status: "OPEN" } };
 			const res = createMockResponse();
-			vi.mocked(mockService.deleteJobRole).mockRejectedValue(
+			vi.mocked(mockService.updateJobRoleStatus).mockRejectedValue(
 				new NotFoundError("JobRole with id 999 not found"),
 			);
 
-			await controller.deleteJobRole(req as never, res as never);
+			await controller.updateJobRoleStatus(req as never, res as never);
 
 			expect(res.status).toHaveBeenCalledWith(404);
-			expect(res.json).toHaveBeenCalledWith({
-				message: "JobRole with id 999 not found",
-			});
 		});
 
 		it("should return 409 when an opened role's opening date is changed", async () => {

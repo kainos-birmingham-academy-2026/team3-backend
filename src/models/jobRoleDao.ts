@@ -66,6 +66,11 @@ export class JobRoleDao {
 			? new Date(closingDateTo.getTime() + 24 * 60 * 60 * 1000)
 			: undefined;
 		const where = {
+			status: includeScheduled
+				? filters.status
+					? { statusName: filters.status }
+					: undefined
+				: { statusName: StatusEnum.OPEN },
 			openingDate: includeScheduled
 				? undefined
 				: { lt: getUkDateOnlyBoundary(1) },
@@ -183,10 +188,26 @@ export class JobRoleDao {
 		return toJobRoleDomain(row);
 	}
 
-	async deleteJobRole(jobRoleId: number): Promise<void> {
-		await prisma.jobRole.delete({
+	async updateJobRoleStatus(
+		jobRoleId: number,
+		status: StatusEnum,
+	): Promise<JobRole> {
+		const row = await prisma.jobRole.update({
 			where: { jobRoleId },
+			data: {
+				status: {
+					connect: { statusName: status },
+				},
+			},
+			relationLoadStrategy: "join",
+			include: {
+				status: true,
+				capability: true,
+				band: true,
+				location: true,
+			},
 		});
+		return toJobRoleDomain(row);
 	}
 
 	async findApplicationByUserIdAndJobRoleId(

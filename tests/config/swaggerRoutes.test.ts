@@ -124,6 +124,21 @@ describe("registerSwaggerRoutes", () => {
 		expect(jobRoleListParameterNames).toEqual(
 			expect.arrayContaining(["closingDateFrom", "closingDateTo"]),
 		);
+		expect(jobRoleListParameterNames).toContain("status");
+		const jobRoleStatusSchema =
+			specificationResponse.body.components.schemas.UpdateJobRoleStatusRequest;
+		expect(jobRoleStatusSchema.required).toEqual(["status"]);
+		expect(jobRoleStatusSchema.properties.status.enum).toEqual([
+			"OPEN",
+			"CLOSED",
+		]);
+		const jobRoleStatusOperation =
+			specificationResponse.body.paths["/api/job-roles/{jobRoleId}/status"]
+				.patch;
+		expect(
+			jobRoleStatusOperation.requestBody.content["application/json"].schema
+				.$ref,
+		).toBe("#/components/schemas/UpdateJobRoleStatusRequest");
 		expect(jobRoleListParameterNames).not.toContain("closingFrom");
 		expect(jobRoleListParameterNames).not.toContain("closingBy");
 		expect(documentationResponse.status).toBe(200);

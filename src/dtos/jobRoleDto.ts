@@ -22,6 +22,16 @@ const optionalFilterDate = z.preprocess(
 		.optional(),
 );
 
+const optionalStatus = z.preprocess(
+	(value) =>
+		value === "" || value === undefined
+			? undefined
+			: typeof value === "string"
+				? value.toUpperCase()
+				: value,
+	z.enum(["OPEN", "CLOSED"]).optional(),
+);
+
 export const JobRoleFiltersSchema = z
 	.object({
 		roleName: z.preprocess(
@@ -31,6 +41,7 @@ export const JobRoleFiltersSchema = z
 		locationId: optionalIdList,
 		capabilityId: optionalIdList,
 		bandId: optionalIdList,
+		status: optionalStatus,
 		closingDateFrom: optionalFilterDate,
 		closingDateTo: optionalFilterDate,
 		page: z.coerce.number().int().positive().default(1),
@@ -143,6 +154,10 @@ export const CreateJobRoleSchema = z
 
 export const UpdateJobRoleSchema = CreateJobRoleSchema;
 
+export const UpdateJobRoleStatusSchema = z.object({
+	status: z.enum(["OPEN", "CLOSED"]),
+});
+
 export type JobRoleIdParamDto = z.infer<typeof JobRoleIdParamSchema>;
 export type JobRoleFiltersDto = z.infer<typeof JobRoleFiltersSchema>;
 
@@ -156,3 +171,6 @@ export type CreateApplicationRequestDto = z.infer<
 >;
 export type CreateJobRoleRequestDto = z.infer<typeof CreateJobRoleSchema>;
 export type UpdateJobRoleRequestDto = z.infer<typeof UpdateJobRoleSchema>;
+export type UpdateJobRoleStatusRequestDto = z.infer<
+	typeof UpdateJobRoleStatusSchema
+>;

@@ -5,6 +5,7 @@ import {
 	JobRoleFiltersSchema,
 	JobRoleIdParamSchema,
 	UpdateJobRoleSchema,
+	UpdateJobRoleStatusSchema,
 } from "../dtos/jobRoleDto";
 import { allowRoles, USER_ROLES } from "../middleware/authorise";
 import { optionalAuth, requireAuth } from "../middleware/requireAuth";
@@ -188,6 +189,12 @@ jobRolesRouter.get("/locations", (req: R, res: Res) => {
  *           type: string
  *           format: date
  *         description: Include roles closing on or after this date
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [OPEN, CLOSED]
+ *         description: Filter roles by status. Public requests default to OPEN.
  *       - in: query
  *         name: closingDateTo
  *         schema:
@@ -402,11 +409,11 @@ jobRolesRouter.patch(
 
 /**
  * @openapi
- * /api/job-roles/{jobRoleId}:
- *   delete:
+ * /api/job-roles/{jobRoleId}/status:
+ *   patch:
  *     tags: [Job Roles]
- *     summary: Delete a job role
- *     description: Admin-only endpoint. Deletes a job role and its associated applications.
+ *     summary: Open or close a job role
+ *     description: Admin-only endpoint. Changes a job role between OPEN and CLOSED without deleting it.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -416,9 +423,17 @@ jobRolesRouter.patch(
  *         schema:
  *           type: integer
  *           minimum: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateJobRoleStatusRequest'
  *     responses:
- *       204:
- *         description: Job role deleted
+ *       200:
+ *         description: Updated job role
+ *       400:
+ *         description: Request validation failed
  *       401:
  *         description: Missing or invalid token
  *       403:
@@ -426,13 +441,14 @@ jobRolesRouter.patch(
  *       404:
  *         description: Job role not found
  */
-jobRolesRouter.delete(
-	"/:jobRoleId",
+jobRolesRouter.patch(
+	"/:jobRoleId/status",
 	requireAuth,
 	allowRoles([USER_ROLES.ADMIN]),
 	validateParams(JobRoleIdParamSchema),
+	validateBody(UpdateJobRoleStatusSchema),
 	(req: R<{ jobRoleId: string }>, res: Res) => {
-		controller.deleteJobRole(req, res);
+		controller.updateJobRoleStatus(req, res);
 	},
 );
 

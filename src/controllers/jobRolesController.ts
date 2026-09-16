@@ -4,6 +4,7 @@ import type {
 	CreateJobRoleRequestDto,
 	JobRoleFiltersDto,
 	UpdateJobRoleRequestDto,
+	UpdateJobRoleStatusRequestDto,
 } from "../dtos/jobRoleDto.js";
 import { isTodayOrFuture } from "../dtos/jobRoleDto.js";
 import { ConflictError } from "../errors/conflictError.js";
@@ -85,16 +86,16 @@ export class JobRolesController {
 		}
 	}
 
-	async deleteJobRole(req: Request<{ jobRoleId: string }>, res: Response) {
-		const idParam = req.params.jobRoleId;
-		const jobRoleId = parseInt(
-			Array.isArray(idParam) ? idParam[0] : idParam,
-			10,
-		);
+	async updateJobRoleStatus(
+		req: Request<{ jobRoleId: string }>,
+		res: Response,
+	) {
+		const jobRoleId = parseInt(req.params.jobRoleId, 10);
+		const { status } = req.body as UpdateJobRoleStatusRequestDto;
 
 		try {
-			await this.service.deleteJobRole(jobRoleId);
-			return res.status(204).send();
+			const jobRole = await this.service.updateJobRoleStatus(jobRoleId, status);
+			return res.status(200).json(jobRole);
 		} catch (error) {
 			if (error instanceof NotFoundError) {
 				return res.status(404).json({ message: error.message });

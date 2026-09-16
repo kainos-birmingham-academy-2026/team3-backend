@@ -390,25 +390,58 @@ describe("Job role route auth protection", () => {
 		expect(response.status).toBe(403);
 	});
 
-	it("should delete a job role for an admin", async () => {
+	it("should update a job role status for an admin", async () => {
 		const token = jwt.sign(
 			{ userId: 2, email: "admin@example.com", role: "ADMIN" },
 			process.env.JWT_SECRET as string,
 			{ expiresIn: "1h" },
 		);
-		const deleteSpy = vi
-			.spyOn(JobRolesService.prototype, "deleteJobRole")
-			.mockResolvedValueOnce();
+		const statusSpy = vi
+			.spyOn(JobRolesService.prototype, "updateJobRoleStatus")
+			.mockResolvedValueOnce({
+				jobRoleId: 1,
+				roleName: "Lead Engineer",
+				closingDate: null,
+				capabilityName: "Software",
+				bandName: "Lead",
+				locationName: "Birmingham",
+				statusName: "CLOSED",
+				addressLine1: "1 Street",
+				addressLine2: null,
+				postcode: "B1 1AA",
+			});
 
 		const response = await request(app)
-			.delete("/api/job-roles/1")
-			.set("Authorization", `Bearer ${token}`);
+			.patch("/api/job-roles/1/status")
+			.set("Authorization", `Bearer ${token}`)
+			.send({ status: "CLOSED" });
 
-		expect(response.status).toBe(204);
-		expect(deleteSpy).toHaveBeenCalledWith(1);
+		expect(response.status).toBe(200);
+		expect(response.body.statusName).toBe("CLOSED");
+		expect(statusSpy).toHaveBeenCalledWith(1, "CLOSED");
 	});
 
-	it("should forbid non-admin users from deleting a job role", async () => {
+	it("should reject an invalid job role status before calling the service", async () => {
+		const token = jwt.sign(
+			{ userId: 2, email: "admin@example.com", role: "ADMIN" },
+			process.env.JWT_SECRET as string,
+			{ expiresIn: "1h" },
+		);
+		const statusSpy = vi.spyOn(
+			JobRolesService.prototype,
+			"updateJobRoleStatus",
+		);
+
+		const response = await request(app)
+			.patch("/api/job-roles/1/status")
+			.set("Authorization", `Bearer ${token}`)
+			.send({ status: "ARCHIVED" });
+
+		expect(response.status).toBe(400);
+		expect(statusSpy).not.toHaveBeenCalled();
+	});
+
+	it("should forbid non-admin users from changing a job role status", async () => {
 		const token = jwt.sign(
 			{ userId: 1, email: "user@example.com", role: "USER" },
 			process.env.JWT_SECRET as string,
@@ -416,10 +449,25 @@ describe("Job role route auth protection", () => {
 		);
 
 		const response = await request(app)
+			.patch("/api/job-roles/1/status")
+			.set("Authorization", `Bearer ${token}`)
+			.send({ status: "CLOSED" });
+
+		expect(response.status).toBe(403);
+	});
+
+	it("should return 404 for the removed delete endpoint", async () => {
+		const token = jwt.sign(
+			{ userId: 2, email: "admin@example.com", role: "ADMIN" },
+			process.env.JWT_SECRET as string,
+			{ expiresIn: "1h" },
+		);
+
+		const response = await request(app)
 			.delete("/api/job-roles/1")
 			.set("Authorization", `Bearer ${token}`);
 
-		expect(response.status).toBe(403);
+		expect(response.status).toBe(404);
 	});
 });
 
