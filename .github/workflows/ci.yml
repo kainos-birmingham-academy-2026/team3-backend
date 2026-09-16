@@ -398,6 +398,7 @@ jobs:
     env:
       TF_VAR_postgresql_administrator_password: ${{ secrets.POSTGRESQL_ADMINISTRATOR_PASSWORD }}
       TF_VAR_backend_image_tag: dev-${{ needs.resolve-source.outputs.backend_sha }}
+      TF_VAR_enable_vnet_integration: ${{ vars.DEV_VNET_ENABLED == 'true' && 'true' || 'false' }}
     defaults:
       run:
         working-directory: infrastructure/environments/dev
@@ -441,6 +442,38 @@ jobs:
         run: terraform plan -out=tfplan
       - name: Apply Terraform plan
         run: terraform apply -auto-approve tfplan
+      - name: Verify private database connectivity
+        if: vars.DEV_VNET_ENABLED == 'true'
+        timeout-minutes: 12
+        run: |
+          job_name="caj-team3-private-smoke-dev"
+          execution_name=$(az containerapp job start \
+            --name "$job_name" --resource-group "rg-team3-dev" \
+            --query name --output tsv --only-show-errors)
+          if [[ -z "$execution_name" ]]; then
+            echo "::error::Azure did not return a smoke-test execution name."
+            exit 1
+          fi
+          echo "Private smoke-test execution: $execution_name"
+          for _ in {1..60}; do
+            execution_status=$(az containerapp job execution show \
+              --name "$job_name" --resource-group "rg-team3-dev" \
+              --job-execution-name "$execution_name" \
+              --query properties.status --output tsv --only-show-errors)
+            case "$execution_status" in
+              Succeeded)
+                echo "Private DNS and read-only database checks passed."
+                exit 0
+                ;;
+              Failed|Stopped|Degraded)
+                echo "::error::Private smoke-test execution $execution_name ended with $execution_status. Check its Container Apps logs."
+                exit 1
+                ;;
+            esac
+            sleep 10
+          done
+          echo "::error::Timed out waiting for private smoke-test execution $execution_name."
+          exit 1
       - name: Build notification Function
         working-directory: functions/notifications
         run: |
