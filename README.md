@@ -311,24 +311,33 @@ Example response:
 
 ### `GET /api/job-roles`
 
-Returns all job roles in the database (currently seeded with test data).
+Returns a paginated list of job roles. Public requests return open roles only;
+authenticated administrators can include scheduled roles and filter by status.
 
-This endpoint is public and does not require authentication.
+Query parameters include `roleName`, `locationId`, `capabilityId`, `bandId`,
+`closingDateFrom`, `closingDateTo`, `status`, `page`, and `pageSize`.
+The `status` filter accepts `OPEN` or `CLOSED`.
 
 Example response:
 
 ```json
-[
-  {
-    "jobRoleId": 1,
-    "roleName": "Software Engineer",
-    "closingDate": "2026-09-30T00:00:00.000Z",
-    "capabilityName": "Software Engineering",
-    "bandName": "Band 3",
-    "locationName": "Belfast",
-    "statusName": "OPEN"
-  }
-]
+{
+  "items": [
+    {
+      "jobRoleId": 1,
+      "roleName": "Software Engineer",
+      "closingDate": "2026-09-30T00:00:00.000Z",
+      "capabilityName": "Software Engineering",
+      "bandName": "Band 3",
+      "locationName": "Belfast",
+      "statusName": "OPEN"
+    }
+  ],
+  "page": 1,
+  "pageSize": 10,
+  "totalItems": 1,
+  "totalPages": 1
+}
 ```
 
 ### `GET /health`
@@ -431,9 +440,9 @@ These public endpoints provide the lookup data used when creating a job role. Th
 
 Each endpoint returns an array with status `200`. If no lookup records exist, it returns `404` with an error object; unexpected database or service failures return `500`.
 
-### `DELETE /api/job-roles/{jobRoleId}`
+### `PATCH /api/job-roles/{jobRoleId}/status`
 
-Deletes a job role and its associated applications.
+Opens or closes a job role without deleting it or its associated applications.
 
 Authentication:
 
@@ -442,9 +451,19 @@ Authentication:
 
 Path parameters:
 
-- `id` - A positive integer job role ID
+- `jobRoleId` - A positive integer job role ID
 
-Success response: `204 No Content`
+Request body:
+
+```json
+{
+  "status": "CLOSED"
+}
+```
+
+Allowed status values are `OPEN` and `CLOSED`.
+
+Success response: `200 OK` with the updated job role
 
 Error responses:
 
