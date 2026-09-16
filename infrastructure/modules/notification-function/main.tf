@@ -53,10 +53,11 @@ resource "azurerm_function_app_flex_consumption" "this" {
   instance_memory_in_mb  = 2048
 
   app_settings = {
-    (var.service_bus_setting_name) = "@Microsoft.KeyVault(SecretUri=${var.service_bus_connection_secret_uri})"
-    ACS_CONNECTION_STRING          = "@Microsoft.KeyVault(SecretUri=${var.acs_connection_secret_uri})"
-    EMAIL_SENDER_ADDRESS           = var.email_sender_address
-    AZURE_LOG_LEVEL                = "info"
+    (var.service_bus_setting_name)   = "@Microsoft.KeyVault(SecretUri=${var.service_bus_connection_secret_uri})"
+    ACS_CONNECTION_STRING            = "@Microsoft.KeyVault(SecretUri=${var.acs_connection_secret_uri})"
+    EMAIL_SENDER_ADDRESS             = var.email_sender_address
+    NOTIFICATION_CREDENTIALS_VERSION = tostring(var.credential_refresh_version)
+    AZURE_LOG_LEVEL                  = "info"
   }
 
   https_only = true

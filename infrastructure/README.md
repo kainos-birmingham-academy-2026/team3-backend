@@ -460,6 +460,7 @@ recovery because those assignments are deleted with the resource group.
 | `postgresql_administrator_password` | Sensitive dev PostgreSQL administrator password supplied by GitHub Actions; test generates its password |
 | `postgresql_administrator_password_version` | Rotation counter for the write-only PostgreSQL password; increment when changing it |
 | `application_secret_version` | Rotation counter for generated JWT and session credentials |
+| `notification_credentials_version` | Rotation counter for write-only Service Bus and ACS credentials; increment when either credential changes |
 | `acr_name` | Existing shared ACR name |
 | `acr_resource_group_name` | Resource group containing the shared ACR |
 | `backend_image_tag` | Immutable commit SHA in dev, `test-<commit-sha>` in test, or an immutable SHA/release tag in prod |

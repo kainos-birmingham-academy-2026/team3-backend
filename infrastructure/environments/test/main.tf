@@ -228,7 +228,7 @@ resource "azurerm_key_vault_secret" "service_bus_connection_string" {
   name             = "service-bus-connection-string"
   key_vault_id     = module.key_vault.id
   value_wo         = module.notification_service_bus.backend_send_primary_connection_string
-  value_wo_version = var.application_secret_version
+  value_wo_version = var.notification_credentials_version
 
   depends_on = [time_sleep.secrets_rbac_propagation]
 }
@@ -237,7 +237,7 @@ resource "azurerm_key_vault_secret" "function_service_bus_connection_string" {
   name             = "function-service-bus-connection-string"
   key_vault_id     = module.key_vault.id
   value_wo         = module.notification_service_bus.function_listen_primary_connection_string
-  value_wo_version = var.application_secret_version
+  value_wo_version = var.notification_credentials_version
 
   depends_on = [time_sleep.secrets_rbac_propagation]
 }
@@ -246,7 +246,7 @@ resource "azurerm_key_vault_secret" "acs_connection_string" {
   name             = "acs-connection-string"
   key_vault_id     = module.key_vault.id
   value_wo         = module.email_communication.primary_connection_string
-  value_wo_version = var.application_secret_version
+  value_wo_version = var.notification_credentials_version
 
   depends_on = [time_sleep.secrets_rbac_propagation]
 }
@@ -278,6 +278,7 @@ module "notification_function" {
   service_bus_connection_secret_uri = "${module.key_vault.vault_uri}secrets/function-service-bus-connection-string"
   acs_connection_secret_uri         = "${module.key_vault.vault_uri}secrets/acs-connection-string"
   email_sender_address              = "DoNotReply@${module.email_communication.sender_domain}"
+  credential_refresh_version        = var.notification_credentials_version
   tags = {
     environment = var.environment
     managed_by  = "terraform"

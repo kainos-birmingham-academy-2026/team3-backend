@@ -38,6 +38,12 @@ variable "application_secret_version" {
   default     = 1
 }
 
+variable "notification_credentials_version" {
+  description = "Version incremented whenever Service Bus or ACS credentials are rotated."
+  type        = number
+  default     = 2
+}
+
 variable "acr_name" {
   description = "Name of the existing shared Azure Container Registry."
   type        = string

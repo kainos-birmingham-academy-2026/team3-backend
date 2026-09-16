@@ -55,6 +55,11 @@ variable "email_sender_address" {
   type        = string
 }
 
+variable "credential_refresh_version" {
+  description = "Credential rotation counter used to refresh the Function's Key Vault references."
+  type        = number
+}
+
 variable "service_bus_setting_name" {
   description = "Function app setting named by the Service Bus trigger connection property."
   type        = string
