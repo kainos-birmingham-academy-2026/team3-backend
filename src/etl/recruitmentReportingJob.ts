@@ -95,7 +95,7 @@ export class RecruitmentReportingJob {
 			capabilityId: number;
 			capability?: { capabilityName?: string };
 			bandId: number;
-			band?: { bandName?: string };
+			band?: { bandName?: string; bandLevel?: number };
 			locationId: number;
 			location?: { locationName?: string };
 			status?: { statusName?: string };
@@ -111,7 +111,7 @@ export class RecruitmentReportingJob {
 			applicationId: number;
 			jobRoleId: number;
 			userId: number;
-			jobRole?: { capabilityId?: number; bandId?: number; locationId?: number };
+			jobRole: { capabilityId: number; bandId: number; locationId: number };
 			applicationStatus?: string | null;
 			createdAt: Date | string;
 			updatedAt: Date | string;
@@ -134,17 +134,16 @@ export class RecruitmentReportingJob {
 				applicationId: application.applicationId,
 				jobRoleId: application.jobRoleId,
 				userId: application.userId,
-				capabilityId:
-					application.jobRole?.capabilityId ?? application.jobRoleId,
-				bandId: application.jobRole?.bandId ?? application.jobRoleId,
-				locationId: application.jobRole?.locationId ?? application.jobRoleId,
+				capabilityId: application.jobRole.capabilityId,
+				bandId: application.jobRole.bandId,
+				locationId: application.jobRole.locationId,
 				applicationStatus: application.applicationStatus,
 				createdAt: application.createdAt,
 				updatedAt: application.updatedAt,
 			})),
 		);
 
-		await this.writeDimensionData();
+		await this.writeDimensionData(jobRoles);
 		await this.writeVacancySnapshots(vacancyRows);
 		await this.writeApplicationFacts(applicationRows);
 		await this.writeRunLog(
@@ -156,16 +155,59 @@ export class RecruitmentReportingJob {
 		return { vacancyRows, applicationRows };
 	}
 
-	private async writeDimensionData(): Promise<void> {
-		await this.prisma.$executeRawUnsafe(
-			"INSERT INTO reporting.dim_capability (capability_id, capability_name) VALUES (1, 'Software Engineering') ON CONFLICT (capability_id) DO NOTHING;",
-		);
-		await this.prisma.$executeRawUnsafe(
-			"INSERT INTO reporting.dim_band (band_id, band_name, band_level) VALUES (1, 'Engineer', 7) ON CONFLICT (band_id) DO NOTHING;",
-		);
-		await this.prisma.$executeRawUnsafe(
-			"INSERT INTO reporting.dim_location (location_id, location_name) VALUES (1, 'Birmingham') ON CONFLICT (location_id) DO NOTHING;",
-		);
+	private async writeDimensionData(
+		jobRoles: Array<{
+			capabilityId: number;
+			capability?: { capabilityName?: string };
+			bandId: number;
+			band?: { bandName?: string; bandLevel?: number };
+			locationId: number;
+			location?: { locationName?: string };
+		}>,
+	): Promise<void> {
+		const capabilities = new Map<number, string>();
+		const bands = new Map<number, { name: string; level: number }>();
+		const locations = new Map<number, string>();
+
+		for (const jobRole of jobRoles) {
+			if (jobRole.capability?.capabilityName) {
+				capabilities.set(jobRole.capabilityId, jobRole.capability.capabilityName);
+			}
+			if (jobRole.band?.bandName && jobRole.band.bandLevel !== undefined) {
+				bands.set(jobRole.bandId, {
+					name: jobRole.band.bandName,
+					level: jobRole.band.bandLevel,
+				});
+			}
+			if (jobRole.location?.locationName) {
+				locations.set(jobRole.locationId, jobRole.location.locationName);
+			}
+		}
+
+		for (const [capabilityId, capabilityName] of capabilities) {
+			await this.prisma.$executeRawUnsafe(
+				"INSERT INTO reporting.dim_capability (capability_id, capability_name) VALUES ($1, $2) ON CONFLICT (capability_id) DO UPDATE SET capability_name = EXCLUDED.capability_name, updated_at = CURRENT_TIMESTAMP;",
+				capabilityId,
+				capabilityName,
+			);
+		}
+
+		for (const [bandId, band] of bands) {
+			await this.prisma.$executeRawUnsafe(
+				"INSERT INTO reporting.dim_band (band_id, band_name, band_level) VALUES ($1, $2, $3) ON CONFLICT (band_id) DO UPDATE SET band_name = EXCLUDED.band_name, band_level = EXCLUDED.band_level, updated_at = CURRENT_TIMESTAMP;",
+				bandId,
+				band.name,
+				band.level,
+			);
+		}
+
+		for (const [locationId, locationName] of locations) {
+			await this.prisma.$executeRawUnsafe(
+				"INSERT INTO reporting.dim_location (location_id, location_name) VALUES ($1, $2) ON CONFLICT (location_id) DO UPDATE SET location_name = EXCLUDED.location_name, updated_at = CURRENT_TIMESTAMP;",
+				locationId,
+				locationName,
+			);
+		}
 	}
 
 	private async writeVacancySnapshots(

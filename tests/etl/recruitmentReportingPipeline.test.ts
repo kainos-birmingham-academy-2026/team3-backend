@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	buildApplicationFactSet,
 	buildVacancySnapshotRows,
-} from "../../src/etl/recruitmentReportingJob.js";
+} from "../../src/etl/recruitmentReportingJob.ts";
 
 describe("recruitment reporting ETL", () => {
 	it("builds vacancy snapshot rows from job-role records", () => {

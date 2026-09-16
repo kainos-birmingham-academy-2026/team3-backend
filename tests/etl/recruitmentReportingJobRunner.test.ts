@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { RecruitmentReportingJob } from "../../src/etl/recruitmentReportingJob.js";
+import { RecruitmentReportingJob } from "../../src/etl/recruitmentReportingJob.ts";
 
 describe("RecruitmentReportingJob", () => {
 	let job: RecruitmentReportingJob;
@@ -15,7 +15,7 @@ describe("RecruitmentReportingJob", () => {
 				capabilityId: 3,
 				capability: { capabilityName: "Software Engineering" },
 				bandId: 4,
-				band: { bandName: "Engineer" },
+				band: { bandName: "Engineer", bandLevel: 7 },
 				locationId: 2,
 				location: { locationName: "Birmingham" },
 				status: { statusName: "OPEN" },
@@ -62,6 +62,22 @@ describe("RecruitmentReportingJob", () => {
 			statusName: "REJECTED",
 			userKey: 99,
 		});
+		expect(mockExec).toHaveBeenCalledWith(
+			expect.stringContaining("reporting.dim_capability"),
+			3,
+			"Software Engineering",
+		);
+		expect(mockExec).toHaveBeenCalledWith(
+			expect.stringContaining("reporting.dim_band"),
+			4,
+			"Engineer",
+			7,
+		);
+		expect(mockExec).toHaveBeenCalledWith(
+			expect.stringContaining("reporting.dim_location"),
+			2,
+			"Birmingham",
+		);
 		expect(mockExec).toHaveBeenCalledTimes(6);
 	});
 });
