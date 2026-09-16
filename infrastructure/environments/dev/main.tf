@@ -88,6 +88,7 @@ module "container_app_environment" {
   location                   = var.location
   resource_group_name        = module.resource_group.name
   log_analytics_workspace_id = module.log_analytics.id
+  infrastructure_subnet_id   = var.enable_vnet_integration ? module.network.container_apps_subnet_id : null
   tags = {
     environment = var.environment
     managed_by  = "terraform"
@@ -136,6 +137,7 @@ module "postgresql" {
   backup_retention_days          = 7
   zone                           = "2"
   database_name                  = "jobRoles"
+  public_network_access_enabled  = !var.enable_vnet_integration
   tags = {
     environment = var.environment
     managed_by  = "terraform"
@@ -367,6 +369,8 @@ module "backend_container_app" {
 }
 
 resource "azurerm_postgresql_flexible_server_firewall_rule" "backend_container_app" {
+  count = var.enable_vnet_integration ? 0 : 1
+
   name             = "allow-team3-backend-container-app"
   server_id        = module.postgresql.id
   start_ip_address = one(module.backend_container_app.outbound_ip_addresses)
