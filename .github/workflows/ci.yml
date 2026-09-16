@@ -31,6 +31,11 @@ on:
         required: true
         type: string
         default: main
+      enable_vnet_integration:
+        description: Recreate the selected test Container Apps environment with VNet integration
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -113,7 +118,7 @@ jobs:
       - name: Check frontend prerequisites
         id: environment
         env:
-          VNET_INTEGRATION_ENABLED: ${{ inputs.test_environment == 'test3' && vars.TEST3_VNET_ENABLED == 'true' && 'true' || 'false' }}
+          VNET_INTEGRATION_ENABLED: ${{ inputs.enable_vnet_integration && 'true' || 'false' }}
         run: |
           ready=true
 
@@ -464,7 +469,7 @@ jobs:
       id-token: write
     env:
       TF_VAR_environment: ${{ inputs.test_environment }}
-      TF_VAR_enable_vnet_integration: ${{ inputs.test_environment == 'test3' && vars.TEST3_VNET_ENABLED == 'true' && 'true' || 'false' }}
+      TF_VAR_enable_vnet_integration: ${{ inputs.enable_vnet_integration && 'true' || 'false' }}
       TF_VAR_backend_image_tag: test-${{ needs.resolve-source.outputs.backend_sha }}
       TF_VAR_container_revision_suffix: test-${{ github.run_id }}
     defaults:
@@ -513,8 +518,8 @@ jobs:
           }
       - name: Apply test Terraform plan
         run: terraform apply -auto-approve tfplan
-      - name: Verify test3 private database connectivity
-        if: inputs.test_environment == 'test3' && vars.TEST3_VNET_ENABLED == 'true'
+      - name: Verify private database connectivity
+        if: inputs.enable_vnet_integration
         timeout-minutes: 12
         run: |
           job_name="caj-team3-private-smoke-${TEST_ENVIRONMENT}"
