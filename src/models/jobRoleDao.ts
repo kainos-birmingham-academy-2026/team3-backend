@@ -226,30 +226,17 @@ export class JobRoleDao {
 		}));
 	}
 
-	async getBands(): Promise<Array<{ bandId: number; bandName: string }>> {
-		const rows = await prisma.band.findMany();
-		const bandOrder = [
-			"Principal",
-			"Manager",
-			"Consultant",
-			"Senior Associate",
-			"Associate",
-			"Trainee",
-			"Apprentice",
-		];
-		return rows
-			.map((row) => ({ bandId: row.bandId, bandName: row.bandName }))
-			.sort((first, second) => {
-				const firstIndex = bandOrder.indexOf(first.bandName);
-				const secondIndex = bandOrder.indexOf(second.bandName);
-				const firstOrder = firstIndex === -1 ? bandOrder.length : firstIndex;
-				const secondOrder = secondIndex === -1 ? bandOrder.length : secondIndex;
-
-				return (
-					firstOrder - secondOrder ||
-					first.bandName.localeCompare(second.bandName)
-				);
-			});
+	async getBands(): Promise<
+		Array<{ bandId: number; bandName: string; bandLevel: number }>
+	> {
+		const rows = await prisma.band.findMany({
+			orderBy: { bandLevel: "asc" },
+		});
+		return rows.map((row) => ({
+			bandId: row.bandId,
+			bandName: row.bandName,
+			bandLevel: row.bandLevel,
+		}));
 	}
 
 	async getCapabilities(): Promise<

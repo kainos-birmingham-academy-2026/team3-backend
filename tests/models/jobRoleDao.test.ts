@@ -583,33 +583,21 @@ describe("JobRoleDao", () => {
 			expect(result).toEqual([{ statusId: 1, statusName: "OPEN" }]);
 		});
 
-		it("should return bands in hierarchy order followed by unknown values", async () => {
+		it("should return bands ordered by seniority level, most senior first", async () => {
 			vi.mocked(
 				prisma.band.findMany as unknown as typeof prisma.band.findMany,
 			).mockResolvedValue([
 				{
-					bandId: 8,
-					bandName: "Legacy",
+					bandId: 7,
+					bandName: "Principal",
+					bandLevel: 1,
 					createdAt: new Date(),
 					updatedAt: new Date(),
 				},
-				...[
-					"Apprentice",
-					"Associate",
-					"Senior Associate",
-					"Consultant",
-					"Manager",
-					"Principal",
-					"Trainee",
-				].map((bandName, index) => ({
-					bandId: index + 1,
-					bandName,
-					createdAt: new Date(),
-					updatedAt: new Date(),
-				})),
 				{
-					bandId: 9,
-					bandName: "Experimental",
+					bandId: 1,
+					bandName: "Apprentice",
+					bandLevel: 7,
 					createdAt: new Date(),
 					updatedAt: new Date(),
 				},
@@ -617,17 +605,12 @@ describe("JobRoleDao", () => {
 
 			const result = await dao.getBands();
 
-			expect(prisma.band.findMany).toHaveBeenCalledWith();
-			expect(result.map(({ bandName }) => bandName)).toEqual([
-				"Principal",
-				"Manager",
-				"Consultant",
-				"Senior Associate",
-				"Associate",
-				"Trainee",
-				"Apprentice",
-				"Experimental",
-				"Legacy",
+			expect(prisma.band.findMany).toHaveBeenCalledWith({
+				orderBy: { bandLevel: "asc" },
+			});
+			expect(result).toEqual([
+				{ bandId: 7, bandName: "Principal", bandLevel: 1 },
+				{ bandId: 1, bandName: "Apprentice", bandLevel: 7 },
 			]);
 		});
 
