@@ -272,8 +272,8 @@ module "notification_function" {
   location                          = var.location
   resource_group_name               = module.resource_group.name
   log_analytics_workspace_id        = module.log_analytics.id
-  service_bus_connection_secret_uri = azurerm_key_vault_secret.function_service_bus_connection_string.id
-  acs_connection_secret_uri         = azurerm_key_vault_secret.acs_connection_string.id
+  service_bus_connection_secret_uri = "${module.key_vault.vault_uri}secrets/function-service-bus-connection-string"
+  acs_connection_secret_uri         = "${module.key_vault.vault_uri}secrets/acs-connection-string"
   email_sender_address              = "DoNotReply@${module.email_communication.sender_domain}"
   tags = {
     environment = var.environment
@@ -315,7 +315,7 @@ module "backend_container_app" {
   jwt_secret_id                           = "${module.key_vault.vault_uri}secrets/jwt-secret"
   azure_openai_endpoint                   = data.azurerm_cognitive_account.openai.endpoint
   azure_openai_deployment                 = "team3-chatbot-gpt5-nano"
-  service_bus_connection_string_secret_id = azurerm_key_vault_secret.service_bus_connection_string.id
+  service_bus_connection_string_secret_id = "${module.key_vault.vault_uri}secrets/service-bus-connection-string"
   enable_swagger_docs                     = var.enable_swagger_docs
   seed_database                           = true
   tags = {

@@ -41,12 +41,12 @@ variable "log_analytics_workspace_id" {
 }
 
 variable "service_bus_connection_secret_uri" {
-  description = "Versioned Key Vault secret URI for the Function's Listen-only Service Bus connection."
+  description = "Versionless Key Vault secret URI for the Function's Listen-only Service Bus connection."
   type        = string
 }
 
 variable "acs_connection_secret_uri" {
-  description = "Versioned Key Vault secret URI for the Azure Communication Services connection."
+  description = "Versionless Key Vault secret URI for the Azure Communication Services connection."
   type        = string
 }
 
