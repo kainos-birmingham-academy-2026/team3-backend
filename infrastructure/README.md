@@ -21,8 +21,8 @@ other repository.
 
 The backend dev, test and prod roots each own a VNet through `modules/network`.
 The test root selects a separate network for each numbered slot. No peering,
-public IPs or gateways are created. Private endpoints are opt-in for the test3
-pilot described below.
+public IPs or gateways are created. Private endpoints are opt-in for each
+environment.
 
 | Environment | VNet address space | Container Apps subnet |
 | --- | --- | --- |
@@ -41,11 +41,11 @@ the table only guarantees separation within this project's address map.
 
 Each `snet-container-apps` subnet is delegated to `Microsoft.App/environments`
 for a workload profiles Container Apps Environment. The /23 allocation
-leaves capacity for scaling; the test3 pilot also reserves `10.63.2.0/24` for
-private endpoints. The rest of each VNet is unallocated.
+leaves capacity for scaling; private mode also reserves the next `/24` range
+for private endpoints. The rest of each VNet is unallocated.
 
 **These networks are empty by default.** Existing Container Apps Environments
-are not attached unless the test3 pilot below is enabled. Frontend/backend ingress, database access and Playwright
+are not attached unless private networking is explicitly enabled. Frontend/backend ingress, database access and Playwright
 connectivity are unchanged. Network security groups, private DNS and any
 required outbound routing must be designed alongside workload integration.
 Adding a VNet alone does not make existing public services private.
@@ -74,16 +74,15 @@ terraform fmt -check -recursive infrastructure
 Provider locks are owned by the environment roots; the standalone module init
 may generate a local lock file that should not be committed.
 
-### Test3 VNet integration pilot
+### Private environment networking
 
 #### Private database smoke test
 
-With the pilot enabled, Terraform provisions the manual Container Apps Job
-`caj-team3-private-smoke-test3` in the existing VNet-integrated environment.
+With private networking enabled, Terraform provisions the manual Container Apps Job
+`caj-team3-private-smoke-<environment>` in the VNet-integrated environment.
 The test deployment workflow starts it after applying Terraform and waits for
 that specific execution to succeed. A failure or timeout fails the deployment
-job; it does not roll back the applied infrastructure. Other environments do
-not provision or run this job.
+job; it does not roll back the applied infrastructure.
 
 The job reuses the deployed backend image but overrides its startup command,
 so it never runs migrations, seeding or E2E database resets. It requires all
@@ -106,13 +105,12 @@ npx vitest run tests/private-smoke-test.test.mjs
 terraform -chdir=infrastructure/environments/test test -filter=tests/private-postgresql.tftest.hcl
 ```
 
-#### Pilot configuration
+#### Configuration and migration
 
-The test root accepts `enable_vnet_integration`, defaulting to `false`, and rejects
-enabling it for any slot except `test3`. When enabled, the existing environment
-name `cae-team3-test3` is retained, its infrastructure attaches to
+The dev and test roots accept `enable_vnet_integration`, defaulting to `false`.
+When enabled, the matching Container Apps environment attaches to
 `snet-container-apps`, and an explicit Consumption workload profile is configured.
-The pilot also provisions private PostgreSQL connectivity as described below.
+Private mode also provisions PostgreSQL connectivity as described below.
 No Dedicated workload capacity, Front Door, VPN, NAT Gateway or Azure Firewall
 is provisioned.
 
@@ -120,35 +118,31 @@ The environment retains external load balancing. The frontend stays publicly
 reachable and the backend retains internal-only app ingress. This is compatible
 with the intended Front Door Standard public-origin design, but origin
 restrictions are a later phase. Do not enable external backend ingress to allow
-laptop tests: in this pilot that would expose the backend publicly.
+laptop tests: that would expose the backend publicly.
 
 The frontend root discovers the environment by its unchanged name. Its current
 Terraform does not need a change for a fresh slot. Existing deployments must be
 coordinated because the frontend owns its app in a separate state.
 
-To deploy the pilot:
+To deploy a test environment:
 
 1. Review the code and run the module checks below. Confirm the live slot state
 	before deployment; a previously absent slot may have been recreated.
-	For a migration requiring plan approval, review a separate full plan before
-	dispatching CI, using the intended workflow commit, the test3 remote-state key,
-	and matching deployment inputs. Do not apply that planning run.
-2. Set the backend GitHub repository Actions variable `TEST3_VNET_ENABLED` to
-	`true`. This is a repository variable, not a GitHub environment or a secret.
-	An authorised repository administrator may need to set it.
-3. Run CI from a ref containing this implementation, with `deploy_test=true`,
-	`test_environment=test3`, the intended `backend_ref` and `frontend_ref=main`.
-	Terraform comes from the workflow ref. Feature refs also require the matching
-	Azure federated credential.
+2. Run backend CI with `deploy_test=true`, select `test_environment`, and select
+	**Recreate the selected test Container Apps environment with VNet integration**.
+	Set **Create or update Azure Front Door** when the frontend should be protected
+	by Front Door.
+3. Use the intended `backend_ref` and `frontend_ref`. The frontend workflow must
+	contain the deployment controls on its default branch before a repository
+	dispatch can use them.
 4. For an absent slot, CI creates the integrated environment and dispatches the
-	frontend after backend deployment. If an existing environment has a different
-	subnet configuration, preflight fails before either app deployment begins.
-	Do not bypass this check: obtain approval for coordinated recreation, including
-	test data loss, and account for both Terraform states and active deployments.
+	frontend after backend deployment. An existing environment with a different
+	subnet configuration is deliberately recreated; account for both Terraform
+	states and test data loss before selecting the VNet integration option.
 5. Inspect the environment's `vnetConfiguration.infrastructureSubnetId` and
 	`workloadProfiles` in Azure, then verify frontend health, frontend-to-backend
 	requests and denied public backend access. Use a runner with private connectivity
-	for E2E tests that access the test3 database directly.
+	for E2E tests that access the environment database directly.
 
 CI automatically applies its saved plan after the Container Apps Environment
 deletion/replacement guard passes. There is no manual approval pause, and the
@@ -161,12 +155,11 @@ applying the reviewed artifact, and intervening changes can alter the result.
 If approval of the exact applied plan is required, do not dispatch this workflow
 until a plan-only/approval mechanism has been added.
 
-Keep `TEST3_VNET_ENABLED=true` for subsequent deployments and reprovisioning after
-scheduled teardown. Unsetting it requests removal of integration and is blocked
-while the integrated environment exists. Do not deploy older workflow refs that
-lack the setting and guards to the integrated slot. Local Terraform plans must
-use the matching setting, for example `TF_VAR_enable_vnet_integration=true` and
-`TF_VAR_environment=test3`, alongside the usual root inputs and backend setup.
+Keep VNet integration selected for subsequent test-environment deployments.
+For dev, set the backend repository Actions variable `DEV_VNET_ENABLED` to
+`true`. Do not deploy an older workflow ref that lacks the migration controls.
+Local Terraform plans must use `TF_VAR_enable_vnet_integration=true` and the
+matching `TF_VAR_environment`, alongside the usual root inputs and backend setup.
 
 ```bash
 terraform -chdir=infrastructure/modules/container-app-environment init -backend=false
@@ -175,9 +168,8 @@ terraform -chdir=infrastructure/environments/test init -backend=false -lockfile=
 terraform -chdir=infrastructure/environments/test test -filter=tests/private-postgresql.tftest.hcl
 ```
 
-Test1, test2, dev and prod do not opt into integration. This pilot establishes
-network attachment and private PostgreSQL access, not private access to all
-dependencies or Front Door-only protection.
+Private mode establishes network attachment and private PostgreSQL access, not
+private access to all dependencies or Front Door-only protection.
 
 #### Private PostgreSQL access
 
@@ -188,13 +180,13 @@ With `enable_vnet_integration=true`, the test root creates:
 - A PostgreSQL private endpoint targeting the existing server, with an
 	automatically approved `postgresqlServer` connection.
 - The `privatelink.postgres.database.azure.com` private DNS zone, a link to the
-	test3 VNet and an endpoint DNS zone group that manages the private address.
+	environment VNet and an endpoint DNS zone group that manages the private address.
 
 The same flag disables public network access on PostgreSQL and removes the
 backend's public-IP firewall rule. The VNet-integrated Container App can report
 many potential outbound IP addresses; none of those addresses is used to grant
-database access in private mode. Non-pilot slots retain the existing public
-network setting and singleton firewall rule. A Terraform `moved` block preserves
+database access in private mode. Environments without private mode retain the
+existing public network setting and singleton firewall rule. A Terraform `moved` block preserves
 the firewall's state address when introducing its conditional instance.
 
 The server and its database are not intentionally replaced. In the separate
@@ -221,14 +213,14 @@ verify the Terraform plan, not live DNS or database connectivity.
 
 Ordinary GitHub-hosted runners and laptops cannot connect directly to this
 database. Frontend E2E database-reset helpers need a private execution path when
-targeting test3. A Container Apps Job in the same environment is the intended
+targeting a private environment. A Container Apps Job in the same environment is the intended
 private test runner; it is not provisioned here. The frontend remains public,
 and Key Vault, Service Bus and the shared OpenAI service keep their existing
 networking. Private Endpoint traffic and Private DNS introduce Azure charges.
 
-Deploy a new CI run from a ref containing these changes, keeping
-`TEST3_VNET_ENABLED=true`; rerunning a failed job at its old commit will not use
-the fix. Retain the partially deployed slot and its Terraform state for recovery.
+Deploy a new CI run from a ref containing these changes; rerunning a failed job
+at an older commit will not use the fix. Retain partially deployed environment
+state for recovery.
 
 ## Platform architecture
 
