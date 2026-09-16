@@ -6,6 +6,7 @@ const backendEtlScript = path.resolve(
 	process.cwd(),
 	"backend-dist/etl/runRecruitmentReporting.js",
 );
+const tsxCli = path.resolve(process.cwd(), "node_modules/tsx/dist/cli.mjs");
 
 export function runRecruitmentReporting(
 	context: InvocationContext,
@@ -13,7 +14,7 @@ export function runRecruitmentReporting(
 	context.log(`Starting recruitment reporting ETL via ${backendEtlScript}`);
 
 	return new Promise<void>((resolve, reject) => {
-		const child = spawn(process.execPath, [backendEtlScript], {
+		const child = spawn(process.execPath, [tsxCli, backendEtlScript], {
 			cwd: process.cwd(),
 			env: { ...process.env },
 			stdio: ["ignore", "pipe", "pipe"],
