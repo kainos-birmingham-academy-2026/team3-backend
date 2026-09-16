@@ -15,8 +15,14 @@ export const RegisterSchema = z.object({
 		.regex(/[^A-Za-z0-9]/, "Password must include a special character"),
 });
 
+export const VerifyEmailSchema = z.object({
+	email: z.email(),
+	verificationCode: z.string().regex(/^\d{5}$/),
+});
+
 export type LoginRequestDto = z.infer<typeof LoginSchema>;
 export type RegisterRequestDto = z.infer<typeof RegisterSchema>;
+export type VerifyEmailRequestDto = z.infer<typeof VerifyEmailSchema>;
 
 export interface LoginResponseDto {
 	token: string;

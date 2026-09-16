@@ -10,6 +10,7 @@ interface NotificationMessage {
 	type: string;
 	email: string;
 	name?: string;
+	code?: string;
 }
 
 export function parseNotification(
@@ -37,6 +38,10 @@ export function parseNotification(
 			"name" in parsed && typeof parsed.name === "string"
 				? parsed.name
 				: undefined,
+		code:
+			"code" in parsed && typeof parsed.code === "string"
+				? parsed.code
+				: undefined,
 	};
 }
 
@@ -55,9 +60,14 @@ export async function serviceBusTopicTrigger1(
 
 	switch (notification.type) {
 		case "AccountCreated":
+			if (!notification.code) {
+				context.warn("Ignoring account-created notification without a code");
+				return;
+			}
 			await sendVerificationCodeEmail(
 				notification.email,
 				notification.name ?? "User",
+				notification.code,
 			);
 			break;
 		case "ApplicationCreated":

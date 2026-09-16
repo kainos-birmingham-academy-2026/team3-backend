@@ -4,6 +4,7 @@ import type {
 	LoginResponseDto,
 	RegisterRequestDto,
 	RegisterResponseDto,
+	VerifyEmailRequestDto,
 } from "../dtos/authDto.js";
 import { AuthError } from "../errors/authError.js";
 import { ConflictError } from "../errors/conflictError.js";
@@ -30,6 +31,15 @@ export class AuthController {
 			const token = await this.authService.login(req.body as LoginRequestDto);
 
 			return res.status(200).json({ token } satisfies LoginResponseDto);
+		} catch (error) {
+			return this.handleError(error, res);
+		}
+	}
+
+	public async verifyEmail(req: Request, res: Response): Promise<Response> {
+		try {
+			await this.authService.verifyEmail(req.body as VerifyEmailRequestDto);
+			return res.status(200).json({ message: "Email verified" });
 		} catch (error) {
 			return this.handleError(error, res);
 		}

@@ -1,5 +1,4 @@
 import { EmailClient } from "@azure/communication-email";
-import { randomInt } from "node:crypto";
 
 const sendTimeoutMs = 60_000;
 
@@ -17,13 +16,10 @@ export function escapeHtml(value: string): string {
 	);
 }
 
-export function generateVerificationCode(): string {
-	return randomInt(10_000, 100_000).toString();
-}
-
 export async function sendVerificationCodeEmail(
 	email: string,
 	name: string,
+	verificationCode: string,
 ): Promise<void> {
 	const connectionString = process.env.ACS_CONNECTION_STRING;
 	const senderAddress = process.env.EMAIL_SENDER_ADDRESS;
@@ -37,7 +33,6 @@ export async function sendVerificationCodeEmail(
 	}
 
 	const safeName = escapeHtml(name);
-	const verificationCode = generateVerificationCode();
 	const emailClient = new EmailClient(connectionString);
 	const abortController = new AbortController();
 	const timeout = setTimeout(() => abortController.abort(), sendTimeoutMs);

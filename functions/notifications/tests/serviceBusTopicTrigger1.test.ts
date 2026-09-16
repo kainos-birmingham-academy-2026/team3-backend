@@ -1,10 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { parseNotification } from "../src/functions/serviceBusTopicTrigger1.js";
-import {
-	escapeHtml,
-	generateVerificationCode,
-} from "../src/services/emailService.js";
+import { escapeHtml } from "../src/services/emailService.js";
 
 describe("parseNotification", () => {
 	it("parses an account-created notification", () => {
@@ -13,11 +10,13 @@ describe("parseNotification", () => {
 				type: "AccountCreated",
 				email: "user@example.com",
 				name: "Mahdi",
+				code: "12345",
 			}),
 			{
 				type: "AccountCreated",
 				email: "user@example.com",
 				name: "Mahdi",
+				code: "12345",
 			},
 		);
 	});
@@ -34,6 +33,7 @@ describe("parseNotification", () => {
 				type: "AccountCreated",
 				email: "user@example.com",
 				name: undefined,
+				code: undefined,
 			},
 		);
 	});
@@ -49,13 +49,5 @@ describe("escapeHtml", () => {
 			escapeHtml('<script>alert("x")</script>'),
 			"&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;",
 		);
-	});
-});
-
-describe("generateVerificationCode", () => {
-	it("generates a five-digit numeric code", () => {
-		for (let attempt = 0; attempt < 100; attempt += 1) {
-			assert.match(generateVerificationCode(), /^\d{5}$/);
-		}
 	});
 });
