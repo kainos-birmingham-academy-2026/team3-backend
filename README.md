@@ -425,7 +425,7 @@ Example response (`200`):
 These public endpoints provide the lookup data used when creating a job role. They do not require authentication and do not accept a request body or query parameters.
 
 - `GET /api/job-roles/statuses` returns `{ "statusId": 1, "statusName": "OPEN" }` objects.
-- `GET /api/job-roles/bands` returns `{ "bandId": 3, "bandName": "Engineer" }` objects.
+- `GET /api/job-roles/bands` returns `{ "bandId": 3, "bandName": "Engineer", "bandLevel": 5 }` objects, ordered by `bandLevel` ascending (1 = most senior).
 - `GET /api/job-roles/capabilities` returns `{ "capabilityId": 1, "capabilityName": "Software Engineering" }` objects.
 - `GET /api/job-roles/locations` returns `{ "locationId": 1, "locationName": "Belfast" }` objects.
 
