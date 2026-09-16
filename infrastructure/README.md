@@ -417,9 +417,15 @@ account/model in Dev. Additional slots consume Azure quota and incur costs.
 ### Scheduled lifecycle
 
 The **Test environment lifecycle** workflow accepts `start` or `stop` and a slot
-dropdown for manual runs. Weekday schedules request `test1` startup at roughly
-08:05 UK time and delete `test1`, `test2` and `test3` at roughly 18:05 UK
-time. Each schedule uses `timezone: Europe/London` to handle GMT/BST automatically.
+dropdown for manual runs. Weekday cron triggers are 01:15 UK time for `test1`
+startup and 15:30 UK time for deletion of `test1`, `test2` and `test3`.
+These are temporary empirical offsets based on the September 2026 run history:
+startup was 5h 04m to 6h 48m late, and deletion had a median offset of 2h 35m.
+If those offsets persist, startup should trigger around 06:19-08:03, with
+deployment time additional, and deletion should typically trigger around 18:05.
+Reassess after subsequent runs; if the offsets disappear, actions will run at
+the earlier cron times, including deletion at 15:30.
+Each schedule uses `timezone: Europe/London` to handle GMT/BST automatically.
 The triggering cron selects start or stop; there is no execution-time gate.
 GitHub schedules can be delayed, and delayed runs still perform their scheduled
 action, including deletion. These are requested start times, not timing guarantees.
