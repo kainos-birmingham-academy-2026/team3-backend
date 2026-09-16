@@ -391,8 +391,11 @@ jobs:
           npm ci
           npm run build
           npm prune --omit=dev
-          cp -R ../../dist backend-dist
+          rm -rf backend-dist
+          mkdir -p backend-dist
+          cp -R ../../dist/. backend-dist/
           cp ../../src/generated/prisma/*.node backend-dist/generated/prisma/
+          test -f backend-dist/generated/prisma/internal/class.js
           zip -r "$RUNNER_TEMP/notifications.zip" host.json package.json package-lock.json dist backend-dist node_modules
       - name: Deploy notification Function
         uses: Azure/functions-action@v1
@@ -511,8 +514,11 @@ jobs:
           npm ci
           npm run build
           npm prune --omit=dev
-          cp -R ../../../dist backend-dist
+          rm -rf backend-dist
+          mkdir -p backend-dist
+          cp -R ../../../dist/. backend-dist/
           cp ../../../src/generated/prisma/*.node backend-dist/generated/prisma/
+          test -f backend-dist/generated/prisma/internal/class.js
           zip -r "$RUNNER_TEMP/notifications.zip" host.json package.json package-lock.json dist backend-dist node_modules
       - name: Deploy notification Function
         uses: Azure/functions-action@v1
