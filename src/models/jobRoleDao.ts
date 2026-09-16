@@ -223,6 +223,14 @@ export class JobRoleDao {
 		return application ? toApplicationDomain(application) : null;
 	}
 
+	async findJobRoleIdsByUserId(userId: number): Promise<number[]> {
+		const applications = await prisma.application.findMany({
+			where: { userId },
+			select: { jobRoleId: true },
+		});
+		return applications.map((application) => application.jobRoleId);
+	}
+
 	async createApplication(
 		jobRoleId: number,
 		userId: number,

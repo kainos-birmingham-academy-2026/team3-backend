@@ -26,6 +26,20 @@ export class UserApplicationsController {
 			if (error instanceof ConflictError) {
 				return res.status(error.statusCode).json({ message: error.message });
 			}
+			console.error("Failed to create application", error);
+			return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
+		}
+	}
+
+	public async getMine(_req: Request, res: Response): Promise<Response> {
+		const { userId } = res.locals.authUser as { userId: number };
+
+		try {
+			const jobRoleIds =
+				await this.jobRolesService.getAppliedJobRoleIds(userId);
+			return res.status(200).json({ jobRoleIds });
+		} catch (error) {
+			console.error("Failed to fetch applied job role ids", error);
 			return res.status(500).json({ message: INTERNAL_SERVER_ERROR });
 		}
 	}

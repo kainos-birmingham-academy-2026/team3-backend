@@ -22,6 +22,7 @@ const createMockResponse = () => {
 describe("UserApplicationsController", () => {
 	const mockJobRolesService = {
 		createApplication: vi.fn(),
+		getAppliedJobRoleIds: vi.fn(),
 	};
 	let controller: UserApplicationsController;
 
@@ -51,5 +52,37 @@ describe("UserApplicationsController", () => {
 			cvText: "CV-2026-001",
 		});
 		expect(res.status).toHaveBeenCalledWith(201);
+	});
+
+	it("returns the job role ids the authenticated user has applied to", async () => {
+		const req = {};
+		const res = createMockResponse();
+		vi.mocked(mockJobRolesService.getAppliedJobRoleIds).mockResolvedValue([
+			1, 2,
+		]);
+
+		await controller.getMine(
+			req as unknown as Request,
+			res as unknown as Response,
+		);
+
+		expect(mockJobRolesService.getAppliedJobRoleIds).toHaveBeenCalledWith(42);
+		expect(res.status).toHaveBeenCalledWith(200);
+		expect(res.json).toHaveBeenCalledWith({ jobRoleIds: [1, 2] });
+	});
+
+	it("returns a 500 error when fetching applied job role ids fails", async () => {
+		const req = {};
+		const res = createMockResponse();
+		vi.mocked(mockJobRolesService.getAppliedJobRoleIds).mockRejectedValue(
+			new Error("db error"),
+		);
+
+		await controller.getMine(
+			req as unknown as Request,
+			res as unknown as Response,
+		);
+
+		expect(res.status).toHaveBeenCalledWith(500);
 	});
 });

@@ -9,6 +9,7 @@ import { JobRolesService } from "../services/jobRolesService";
 const userApplicationsRouter = Router();
 const controller = new UserApplicationsController(new JobRolesService());
 
+// Any route added below requires auth via this router-level middleware.
 userApplicationsRouter.use(requireAuth);
 
 /**
@@ -52,5 +53,23 @@ userApplicationsRouter.post(
 	validateBody(CreateApplicationSchema),
 	controller.create.bind(controller),
 );
+
+/**
+ * @openapi
+ * /api/job-applications/me:
+ *   get:
+ *     tags: [Applications]
+ *     summary: Get the job role IDs the authenticated user has applied to
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of job role IDs the user has applied to
+ *       401:
+ *         description: Missing or invalid token
+ *       500:
+ *         description: Internal server error
+ */
+userApplicationsRouter.get("/me", controller.getMine.bind(controller));
 
 export default userApplicationsRouter;
