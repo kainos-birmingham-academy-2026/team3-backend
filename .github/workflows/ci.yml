@@ -513,6 +513,39 @@ jobs:
           }
       - name: Apply test Terraform plan
         run: terraform apply -auto-approve tfplan
+      - name: Verify test3 private database connectivity
+        if: inputs.test_environment == 'test3' && vars.TEST3_VNET_ENABLED == 'true'
+        timeout-minutes: 12
+        run: |
+          job_name="caj-team3-private-smoke-${TEST_ENVIRONMENT}"
+          resource_group="rg-team3-${TEST_ENVIRONMENT}"
+          execution_name=$(az containerapp job start \
+            --name "$job_name" --resource-group "$resource_group" \
+            --query name --output tsv --only-show-errors)
+          if [[ -z "$execution_name" ]]; then
+            echo "::error::Azure did not return a smoke-test execution name."
+            exit 1
+          fi
+          echo "Private smoke-test execution: $execution_name"
+          for attempt in {1..60}; do
+            execution_status=$(az containerapp job execution show \
+              --name "$job_name" --resource-group "$resource_group" \
+              --job-execution-name "$execution_name" \
+              --query properties.status --output tsv --only-show-errors)
+            case "$execution_status" in
+              Succeeded)
+                echo "Private DNS and read-only database checks passed."
+                exit 0
+                ;;
+              Failed|Stopped|Degraded)
+                echo "::error::Private smoke-test execution $execution_name ended with $execution_status. Check its Container Apps logs."
+                exit 1
+                ;;
+            esac
+            sleep 10
+          done
+          echo "::error::Timed out waiting for private smoke-test execution $execution_name."
+          exit 1
       - name: Check out notification Function source
         uses: actions/checkout@v7
         with:
