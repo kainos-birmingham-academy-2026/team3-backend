@@ -407,6 +407,40 @@ jobRolesRouter.patch(
 	},
 );
 
+/**
+ * @openapi
+ * /api/job-roles/{jobRoleId}/status:
+ *   patch:
+ *     tags: [Job Roles]
+ *     summary: Open or close a job role
+ *     description: Admin-only endpoint. Changes a job role between OPEN and CLOSED without deleting it.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: jobRoleId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateJobRoleStatusRequest'
+ *     responses:
+ *       200:
+ *         description: Updated job role
+ *       400:
+ *         description: Request validation failed
+ *       401:
+ *         description: Missing or invalid token
+ *       403:
+ *         description: Forbidden for non-admin roles
+ *       404:
+ *         description: Job role not found
+ */
 jobRolesRouter.patch(
 	"/:jobRoleId/status",
 	requireAuth,

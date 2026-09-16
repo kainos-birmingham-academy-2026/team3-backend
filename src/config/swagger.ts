@@ -325,6 +325,18 @@ const options: swaggerJsdoc.Options = {
 						locationId: { type: "integer", minimum: 1, example: 1 },
 					},
 				},
+				UpdateJobRoleStatusRequest: {
+					type: "object",
+					additionalProperties: false,
+					required: ["status"],
+					properties: {
+						status: {
+							type: "string",
+							enum: ["OPEN", "CLOSED"],
+							example: "CLOSED",
+						},
+					},
+				},
 				CreateJobRoleResponse: {
 					type: "object",
 					additionalProperties: false,
