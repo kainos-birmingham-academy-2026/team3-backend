@@ -171,7 +171,10 @@ export class RecruitmentReportingJob {
 
 		for (const jobRole of jobRoles) {
 			if (jobRole.capability?.capabilityName) {
-				capabilities.set(jobRole.capabilityId, jobRole.capability.capabilityName);
+				capabilities.set(
+					jobRole.capabilityId,
+					jobRole.capability.capabilityName,
+				);
 			}
 			if (jobRole.band?.bandName && jobRole.band.bandLevel !== undefined) {
 				bands.set(jobRole.bandId, {
