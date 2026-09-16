@@ -126,8 +126,7 @@ describe("registerSwaggerRoutes", () => {
 		);
 		expect(jobRoleListParameterNames).toContain("status");
 		const jobRoleStatusSchema =
-			specificationResponse.body.components.schemas
-				.UpdateJobRoleStatusRequest;
+			specificationResponse.body.components.schemas.UpdateJobRoleStatusRequest;
 		expect(jobRoleStatusSchema.required).toEqual(["status"]);
 		expect(jobRoleStatusSchema.properties.status.enum).toEqual([
 			"OPEN",
@@ -137,7 +136,8 @@ describe("registerSwaggerRoutes", () => {
 			specificationResponse.body.paths["/api/job-roles/{jobRoleId}/status"]
 				.patch;
 		expect(
-			jobRoleStatusOperation.requestBody.content["application/json"].schema.$ref,
+			jobRoleStatusOperation.requestBody.content["application/json"].schema
+				.$ref,
 		).toBe("#/components/schemas/UpdateJobRoleStatusRequest");
 		expect(jobRoleListParameterNames).not.toContain("closingFrom");
 		expect(jobRoleListParameterNames).not.toContain("closingBy");
