@@ -462,7 +462,7 @@ jobs:
         run: terraform apply -auto-approve tfplan
       - name: Verify private database connectivity
       - name: Build backend ETL runtime
-        working-directory: ../../..
+        working-directory: ${{ github.workspace }}
         run: |
           npm ci
           npx prisma generate
