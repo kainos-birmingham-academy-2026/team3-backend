@@ -4,7 +4,7 @@ import { app, type InvocationContext } from "@azure/functions";
 
 const backendEtlScript = path.resolve(
 	process.cwd(),
-	"backend-dist/src/etl/runRecruitmentReporting.js",
+	"backend-dist/etl/runRecruitmentReporting.js",
 );
 
 export async function recruitmentReportingTimer(
