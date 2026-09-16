@@ -9,6 +9,7 @@ import { JobRolesService } from "../services/jobRolesService";
 const userApplicationsRouter = Router();
 const controller = new UserApplicationsController(new JobRolesService());
 
+// Any route added below requires auth via this router-level middleware.
 userApplicationsRouter.use(requireAuth);
 
 /**
