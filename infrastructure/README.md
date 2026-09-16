@@ -76,6 +76,38 @@ may generate a local lock file that should not be committed.
 
 ### Test3 VNet integration pilot
 
+#### Private database smoke test
+
+With the pilot enabled, Terraform provisions the manual Container Apps Job
+`caj-team3-private-smoke-test3` in the existing VNet-integrated environment.
+The test deployment workflow starts it after applying Terraform and waits for
+that specific execution to succeed. A failure or timeout fails the deployment
+job; it does not roll back the applied infrastructure. Other environments do
+not provision or run this job.
+
+The job reuses the deployed backend image but overrides its startup command,
+so it never runs migrations, seeding or E2E database resets. It requires all
+PostgreSQL DNS answers to match the private endpoint address, then executes
+only `SELECT 1`. It has a 60-second probe deadline, a 120-second replica limit,
+and no automatic retries. CI waits up to ten minutes (with a 12-minute step
+limit) to allow for image pulls and scheduling.
+
+The existing backend identity pulls the image and retrieves `database-url`
+from Key Vault. This reuses the application's database credentials; it is not
+a dedicated least-privilege database identity. Logs report only the stage and
+outcome, never the URL or database exception. Inspect execution logs in Azure
+Container Apps if the CI step reports failure. The job checks private DNS and
+database access only, not backend HTTP routes or frontend E2E behaviour.
+
+Offline checks:
+
+```bash
+npx vitest run tests/private-smoke-test.test.mjs
+terraform -chdir=infrastructure/environments/test test -filter=tests/private-postgresql.tftest.hcl
+```
+
+#### Pilot configuration
+
 The test root accepts `enable_vnet_integration`, defaulting to `false`, and rejects
 enabling it for any slot except `test3`. When enabled, the existing environment
 name `cae-team3-test3` is retained, its infrastructure attaches to

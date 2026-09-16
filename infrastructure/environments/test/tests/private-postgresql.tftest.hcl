@@ -64,10 +64,21 @@ run "private_database_with_multiple_outbound_addresses" {
   plan_options {
     target = [
       module.postgresql,
+      azurerm_container_app_job.private_smoke_test,
       azurerm_private_endpoint.postgresql,
       azurerm_private_dns_zone_virtual_network_link.postgresql,
       azurerm_postgresql_flexible_server_firewall_rule.backend_container_app,
     ]
+  }
+
+  assert {
+    condition     = length(azurerm_container_app_job.private_smoke_test) == 1 && azurerm_container_app_job.private_smoke_test[0].replica_retry_limit == 0 && azurerm_container_app_job.private_smoke_test[0].replica_timeout_in_seconds == 120
+    error_message = "The pilot requires one bounded smoke job without automatic retries."
+  }
+
+  assert {
+    condition     = azurerm_container_app_job.private_smoke_test[0].template[0].container[0].command == tolist(["node", "--import", "tsx", "--input-type=module", "--eval"])
+    error_message = "The smoke job must bypass image startup migrations and seeding."
   }
 
   assert {
@@ -115,10 +126,16 @@ run "test1_public_access_unchanged" {
   plan_options {
     target = [
       module.postgresql,
+      azurerm_container_app_job.private_smoke_test,
       azurerm_private_endpoint.postgresql,
       azurerm_private_dns_zone_virtual_network_link.postgresql,
       azurerm_postgresql_flexible_server_firewall_rule.backend_container_app,
     ]
+  }
+
+  assert {
+    condition     = length(azurerm_container_app_job.private_smoke_test) == 0
+    error_message = "Non-pilot slots must not provision a private smoke job."
   }
 
   assert {
