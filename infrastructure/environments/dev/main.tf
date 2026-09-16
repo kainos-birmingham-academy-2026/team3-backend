@@ -249,28 +249,25 @@ resource "azurerm_key_vault_secret" "session_secret" {
 }
 
 resource "azurerm_key_vault_secret" "service_bus_connection_string" {
-  name             = "service-bus-connection-string"
-  key_vault_id     = module.key_vault.id
-  value_wo         = module.notification_service_bus.backend_send_primary_connection_string
-  value_wo_version = var.notification_credentials_version
+  name         = "service-bus-connection-string"
+  key_vault_id = module.key_vault.id
+  value        = module.notification_service_bus.backend_send_primary_connection_string
 
   depends_on = [time_sleep.secrets_rbac_propagation]
 }
 
 resource "azurerm_key_vault_secret" "function_service_bus_connection_string" {
-  name             = "function-service-bus-connection-string"
-  key_vault_id     = module.key_vault.id
-  value_wo         = module.notification_service_bus.function_listen_primary_connection_string
-  value_wo_version = var.notification_credentials_version
+  name         = "function-service-bus-connection-string"
+  key_vault_id = module.key_vault.id
+  value        = module.notification_service_bus.function_listen_primary_connection_string
 
   depends_on = [time_sleep.secrets_rbac_propagation]
 }
 
 resource "azurerm_key_vault_secret" "acs_connection_string" {
-  name             = "acs-connection-string"
-  key_vault_id     = module.key_vault.id
-  value_wo         = module.email_communication.primary_connection_string
-  value_wo_version = var.notification_credentials_version
+  name         = "acs-connection-string"
+  key_vault_id = module.key_vault.id
+  value        = module.email_communication.primary_connection_string
 
   depends_on = [time_sleep.secrets_rbac_propagation]
 }
@@ -304,10 +301,9 @@ module "notification_function" {
   location                          = var.location
   resource_group_name               = module.resource_group.name
   log_analytics_workspace_id        = module.log_analytics.id
-  service_bus_connection_secret_uri = "${module.key_vault.vault_uri}secrets/function-service-bus-connection-string"
-  acs_connection_secret_uri         = "${module.key_vault.vault_uri}secrets/acs-connection-string"
+  service_bus_connection_secret_uri = azurerm_key_vault_secret.function_service_bus_connection_string.id
+  acs_connection_secret_uri         = azurerm_key_vault_secret.acs_connection_string.id
   email_sender_address              = "DoNotReply@${module.email_communication.sender_domain}"
-  credential_refresh_version        = var.notification_credentials_version
   tags = {
     environment = var.environment
     managed_by  = "terraform"
@@ -349,7 +345,7 @@ module "backend_container_app" {
   jwt_secret_id                           = "${module.key_vault.vault_uri}secrets/jwt-secret"
   azure_openai_endpoint                   = azurerm_cognitive_account.openai.endpoint
   azure_openai_deployment                 = "team3-chatbot-gpt5-nano"
-  service_bus_connection_string_secret_id = "${module.key_vault.vault_uri}secrets/service-bus-connection-string"
+  service_bus_connection_string_secret_id = azurerm_key_vault_secret.service_bus_connection_string.id
   enable_swagger_docs                     = var.enable_swagger_docs
   seed_database                           = true
   tags = {

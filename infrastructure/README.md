@@ -460,7 +460,6 @@ recovery because those assignments are deleted with the resource group.
 | `postgresql_administrator_password` | Sensitive dev PostgreSQL administrator password supplied by GitHub Actions; test generates its password |
 | `postgresql_administrator_password_version` | Rotation counter for the write-only PostgreSQL password; increment when changing it |
 | `application_secret_version` | Rotation counter for generated JWT and session credentials |
-| `notification_credentials_version` | Rotation counter for write-only Service Bus and ACS credentials; increment when either credential changes |
 | `acr_name` | Existing shared ACR name |
 | `acr_resource_group_name` | Resource group containing the shared ACR |
 | `backend_image_tag` | Immutable commit SHA in dev, `test-<commit-sha>` in test, or an immutable SHA/release tag in prod |
@@ -468,6 +467,11 @@ recovery because those assignments are deleted with the resource group.
 | `enable_swagger_docs` | Exposes `/docs` and `/docs.json` when `true`; defaults to `false` |
 
 GitHub Actions currently sets `enable_swagger_docs` to `true` for dev.
+
+In dev and test, Terraform tracks the Service Bus and Azure Communication
+Services connection strings as Key Vault secret values. When either source
+credential changes, Terraform creates a new secret version and updates the
+backend or notification Function to reference that exact version.
 
 ## CI/CD behaviour
 

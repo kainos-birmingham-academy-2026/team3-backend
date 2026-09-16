@@ -41,23 +41,18 @@ variable "log_analytics_workspace_id" {
 }
 
 variable "service_bus_connection_secret_uri" {
-  description = "Versionless Key Vault secret URI for the Function's Listen-only Service Bus connection."
+  description = "Versioned Key Vault secret URI for the Function's Listen-only Service Bus connection."
   type        = string
 }
 
 variable "acs_connection_secret_uri" {
-  description = "Versionless Key Vault secret URI for the Azure Communication Services connection."
+  description = "Versioned Key Vault secret URI for the Azure Communication Services connection."
   type        = string
 }
 
 variable "email_sender_address" {
   description = "Verified Azure Communication Services sender address."
   type        = string
-}
-
-variable "credential_refresh_version" {
-  description = "Credential rotation counter used to refresh the Function's Key Vault references."
-  type        = number
 }
 
 variable "service_bus_setting_name" {
