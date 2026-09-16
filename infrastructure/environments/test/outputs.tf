@@ -1,3 +1,8 @@
+output "postgresql_public_network_access_enabled" {
+  description = "Effective public network access setting of the test PostgreSQL server."
+  value       = module.postgresql.public_network_access_enabled
+}
+
 output "virtual_network_id" {
   description = "Resource ID of the environment virtual network."
   value       = module.network.id

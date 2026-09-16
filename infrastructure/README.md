@@ -98,6 +98,9 @@ To deploy the pilot:
 
 1. Review the code and run the module checks below. Confirm the live slot state
 	before deployment; a previously absent slot may have been recreated.
+	For a migration requiring plan approval, review a separate full plan before
+	dispatching CI, using the intended workflow commit, the test3 remote-state key,
+	and matching deployment inputs. Do not apply that planning run.
 2. Set the backend GitHub repository Actions variable `TEST3_VNET_ENABLED` to
 	`true`. This is a repository variable, not a GitHub environment or a secret.
 	An authorised repository administrator may need to set it.
@@ -115,10 +118,16 @@ To deploy the pilot:
 	requests and denied public backend access. Use a runner with private connectivity
 	for E2E tests that access the test3 database directly.
 
-CI also rejects full plans that delete or replace a Container Apps Environment.
-This protects against unexpected replacement beyond the subnet preflight check;
-it is not a replacement for reviewing the complete plan. Existing secret-RBAC
-bootstrap behaviour is unchanged.
+CI automatically applies its saved plan after the Container Apps Environment
+deletion/replacement guard passes. There is no manual approval pause, and the
+guard does not reject PostgreSQL server or database replacement. Do not rely on
+cancelling a running workflow between plan and apply as a review gate. Existing
+secret-RBAC bootstrap behaviour is unchanged and also applies automatically.
+
+A separately reviewed plan is advisory: CI generates a fresh plan, rather than
+applying the reviewed artifact, and intervening changes can alter the result.
+If approval of the exact applied plan is required, do not dispatch this workflow
+until a plan-only/approval mechanism has been added.
 
 Keep `TEST3_VNET_ENABLED=true` for subsequent deployments and reprovisioning after
 scheduled teardown. Unsetting it requests removal of integration and is blocked
@@ -156,8 +165,9 @@ database access in private mode. Non-pilot slots retain the existing public
 network setting and singleton firewall rule. A Terraform `moved` block preserves
 the firewall's state address when introducing its conditional instance.
 
-The server and its database are not intentionally replaced. Review the full
-plan and stop if it proposes deleting or replacing either. Existing servers
+The server and its database are not intentionally replaced. In the separate
+pre-deployment plan review described above, stop before dispatching CI if the
+plan proposes deleting or replacing either. Existing servers
 must advertise Private Link support; servers created in PostgreSQL's delegated
 VNet integration mode cannot use this approach. Disabling public access may
 briefly interrupt database connectivity while the endpoint and DNS become

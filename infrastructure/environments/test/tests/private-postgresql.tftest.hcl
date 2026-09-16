@@ -56,6 +56,11 @@ override_module {
 run "private_database_with_multiple_outbound_addresses" {
   command = plan
 
+  assert {
+    condition     = output.postgresql_public_network_access_enabled == false
+    error_message = "The private test3 server must disable public network access."
+  }
+
   plan_options {
     target = [
       module.postgresql,
@@ -88,6 +93,11 @@ run "private_database_with_multiple_outbound_addresses" {
 
 run "test1_public_access_unchanged" {
   command = plan
+
+  assert {
+    condition     = output.postgresql_public_network_access_enabled == true
+    error_message = "The legacy test1 server must retain public network access."
+  }
 
   variables {
     environment             = "test1"
