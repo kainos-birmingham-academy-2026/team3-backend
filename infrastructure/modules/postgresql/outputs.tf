@@ -1,3 +1,8 @@
+output "public_network_access_enabled" {
+  description = "Effective public network access setting of the PostgreSQL server."
+  value       = azurerm_postgresql_flexible_server.this.public_network_access_enabled
+}
+
 output "id" {
   description = "Resource ID of the PostgreSQL Flexible Server."
   value       = azurerm_postgresql_flexible_server.this.id

@@ -112,11 +112,34 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Check frontend prerequisites
         id: environment
+        env:
+          VNET_INTEGRATION_ENABLED: ${{ inputs.test_environment == 'test3' && vars.TEST3_VNET_ENABLED == 'true' && 'true' || 'false' }}
         run: |
           ready=true
 
           if [[ "$(az group exists --name "rg-team3-${TEST_ENVIRONMENT}")" != "true" ]]; then
             ready=false
+          else
+            environment_id=$(az resource list \
+              --resource-group "rg-team3-${TEST_ENVIRONMENT}" \
+              --resource-type Microsoft.App/managedEnvironments \
+              --query "[?name=='cae-team3-${TEST_ENVIRONMENT}'].id | [0]" \
+              --output tsv)
+
+            if [[ -n "$environment_id" ]]; then
+              current_subnet=$(az resource show --ids "$environment_id" \
+                --query properties.vnetConfiguration.infrastructureSubnetId --output tsv)
+              expected_subnet=""
+              if [[ "$VNET_INTEGRATION_ENABLED" == "true" ]]; then
+                subscription_id=$(az account show --query id --output tsv)
+                expected_subnet="/subscriptions/${subscription_id}/resourceGroups/rg-team3-${TEST_ENVIRONMENT}/providers/Microsoft.Network/virtualNetworks/vnet-team3-${TEST_ENVIRONMENT}/subnets/snet-container-apps"
+              fi
+
+              if [[ "$(printf '%s' "$current_subnet" | tr '[:upper:]' '[:lower:]')" != "$(printf '%s' "$expected_subnet" | tr '[:upper:]' '[:lower:]')" ]]; then
+                echo "::error::Container Apps network changes require coordinated environment recreation. No deployment was started. Review both backend and frontend state before proceeding."
+                exit 1
+              fi
+            fi
           fi
 
           while IFS='|' read -r resource_type resource_name; do
@@ -441,6 +464,7 @@ jobs:
       id-token: write
     env:
       TF_VAR_environment: ${{ inputs.test_environment }}
+      TF_VAR_enable_vnet_integration: ${{ inputs.test_environment == 'test3' && vars.TEST3_VNET_ENABLED == 'true' && 'true' || 'false' }}
       TF_VAR_backend_image_tag: test-${{ needs.resolve-source.outputs.backend_sha }}
       TF_VAR_container_revision_suffix: test-${{ github.run_id }}
     defaults:
@@ -476,6 +500,17 @@ jobs:
           -target=time_sleep.secrets_rbac_propagation
       - name: Create test Terraform plan
         run: terraform plan -out=tfplan
+      - name: Reject Container Apps Environment deletion or replacement
+        run: |
+          terraform show -json tfplan | jq --exit-status '
+            [.resource_changes[]?
+              | select(.type == "azurerm_container_app_environment")
+              | select(.change.actions | index("delete"))]
+            | length == 0
+          ' > /dev/null || {
+            echo "::error::The plan deletes or replaces a shared Container Apps Environment. Coordinate frontend and backend migration before applying."
+            exit 1
+          }
       - name: Apply test Terraform plan
         run: terraform apply -auto-approve tfplan
       - name: Check out notification Function source
