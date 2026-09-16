@@ -3,7 +3,7 @@ import {
 	buildApplicationFact,
 	buildVacancyDailySnapshot,
 	normaliseRecruitmentStatus,
-} from "../../src/analytics/recruitmentReporting.js";
+} from "../../src/analytics/recruitmentReporting.ts";
 
 describe("recruitment reporting helpers", () => {
 	it("normalises status values for reporting", () => {
