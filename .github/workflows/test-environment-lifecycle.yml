@@ -2,9 +2,9 @@ name: Test environment lifecycle
 
 on:
   schedule:
-    - cron: "5 8 * * 1-5"
+    - cron: "15 1 * * 1-5"
       timezone: Europe/London
-    - cron: "5 18 * * 1-5"
+    - cron: "30 15 * * 1-5"
       timezone: Europe/London
   workflow_dispatch:
     inputs:
@@ -58,8 +58,8 @@ jobs:
             slots=$(jq -cn --arg slot "$REQUESTED_ENVIRONMENT" '[$slot]')
           else
             case "$TRIGGERING_SCHEDULE" in
-              "5 8 * * 1-5") action=start; slots='["test1"]' ;;
-              "5 18 * * 1-5") action=stop; slots='["test1","test2","test3"]' ;;
+              "15 1 * * 1-5") action=start; slots='["test1"]' ;;
+              "30 15 * * 1-5") action=stop; slots='["test1","test2","test3"]' ;;
               *) echo "Unsupported lifecycle schedule"; exit 1 ;;
             esac
           fi
