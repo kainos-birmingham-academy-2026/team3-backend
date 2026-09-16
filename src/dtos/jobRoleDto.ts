@@ -22,6 +22,16 @@ const optionalFilterDate = z.preprocess(
 		.optional(),
 );
 
+const optionalStatus = z.preprocess(
+	(value) =>
+		value === "" || value === undefined
+			? undefined
+			: typeof value === "string"
+				? value.toUpperCase()
+				: value,
+	z.enum(["OPEN", "CLOSED"]).optional(),
+);
+
 export const JobRoleFiltersSchema = z
 	.object({
 		roleName: z.preprocess(
@@ -31,6 +41,7 @@ export const JobRoleFiltersSchema = z
 		locationId: optionalIdList,
 		capabilityId: optionalIdList,
 		bandId: optionalIdList,
+		status: optionalStatus,
 		closingDateFrom: optionalFilterDate,
 		closingDateTo: optionalFilterDate,
 		page: z.coerce.number().int().positive().default(1),

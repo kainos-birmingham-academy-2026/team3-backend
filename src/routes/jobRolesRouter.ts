@@ -190,6 +190,12 @@ jobRolesRouter.get("/locations", (req: R, res: Res) => {
  *           format: date
  *         description: Include roles closing on or after this date
  *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [OPEN, CLOSED]
+ *         description: Filter roles by status. Public requests default to OPEN.
+ *       - in: query
  *         name: closingDateTo
  *         schema:
  *           type: string

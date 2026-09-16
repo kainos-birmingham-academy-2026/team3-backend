@@ -66,6 +66,11 @@ export class JobRoleDao {
 			? new Date(closingDateTo.getTime() + 24 * 60 * 60 * 1000)
 			: undefined;
 		const where = {
+			status: includeScheduled
+				? filters.status
+					? { statusName: filters.status }
+					: undefined
+				: { statusName: StatusEnum.OPEN },
 			openingDate: includeScheduled
 				? undefined
 				: { lt: getUkDateOnlyBoundary(1) },

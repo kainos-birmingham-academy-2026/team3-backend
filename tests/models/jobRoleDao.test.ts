@@ -165,10 +165,18 @@ describe("JobRoleDao", () => {
 						openingDate: { lt: new Date(cutoff) },
 					});
 					expect(prisma.jobRole.findMany).toHaveBeenCalledWith(
-						expect.objectContaining({ where: expectedWhere }),
+						expect.objectContaining({
+							where: expect.objectContaining({
+								openingDate: { lt: new Date(cutoff) },
+								status: { statusName: StatusEnum.OPEN },
+							}),
+						}),
 					);
 					expect(prisma.jobRole.count).toHaveBeenCalledWith({
-						where: expectedWhere,
+						where: expect.objectContaining({
+							openingDate: { lt: new Date(cutoff) },
+							status: { statusName: StatusEnum.OPEN },
+						}),
 					});
 					expect(prisma.jobRole.findUnique).toHaveBeenCalledWith(
 						expect.objectContaining({ where: expectedWhere }),
@@ -195,6 +203,7 @@ describe("JobRoleDao", () => {
 			expect(prisma.jobRole.findMany).toHaveBeenCalledWith({
 				where: {
 					openingDate: { lt: expect.any(Date) },
+					status: { statusName: StatusEnum.OPEN },
 					roleName: undefined,
 					locationId: undefined,
 					capabilityId: undefined,
@@ -234,6 +243,7 @@ describe("JobRoleDao", () => {
 			expect(prisma.jobRole.findMany).toHaveBeenCalledWith(
 				expect.objectContaining({
 					where: {
+						status: { statusName: StatusEnum.OPEN },
 						openingDate: { lt: expect.any(Date) },
 						roleName: { contains: "engineer", mode: "insensitive" },
 						locationId: { in: [1, 2] },
@@ -250,6 +260,7 @@ describe("JobRoleDao", () => {
 			);
 			expect(prisma.jobRole.count).toHaveBeenCalledWith({
 				where: {
+					status: { statusName: StatusEnum.OPEN },
 					openingDate: { lt: expect.any(Date) },
 					roleName: { contains: "engineer", mode: "insensitive" },
 					locationId: { in: [1, 2] },
@@ -261,6 +272,24 @@ describe("JobRoleDao", () => {
 					},
 				},
 			});
+		});
+
+		it("should filter admins by closed status", async () => {
+			vi.mocked(
+				prisma.jobRole.findMany as unknown as typeof prisma.jobRole.findMany,
+			).mockResolvedValue([]);
+			vi.mocked(prisma.jobRole.count).mockResolvedValue(0);
+
+			await dao.findAll({ status: "CLOSED", page: 1, pageSize: 10 }, true);
+
+			expect(prisma.jobRole.findMany).toHaveBeenCalledWith(
+				expect.objectContaining({
+					where: expect.objectContaining({
+						status: { statusName: StatusEnum.CLOSED },
+						openingDate: undefined,
+					}),
+				}),
+			);
 		});
 
 		it("should include scheduled roles for admins", async () => {
