@@ -59,6 +59,12 @@ variable "database_name" {
   type        = string
 }
 
+variable "public_network_access_enabled" {
+  description = "Whether PostgreSQL accepts public network connections. Disable when private connectivity is configured."
+  type        = bool
+  default     = true
+}
+
 variable "tags" {
   description = "Tags applied to PostgreSQL."
   type        = map(string)

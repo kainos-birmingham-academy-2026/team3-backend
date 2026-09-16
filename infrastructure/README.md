@@ -21,7 +21,8 @@ other repository.
 
 The backend dev, test and prod roots each own a VNet through `modules/network`.
 The test root selects a separate network for each numbered slot. No peering,
-public IPs, gateways or private endpoints are created in this phase.
+public IPs or gateways are created. Private endpoints are opt-in for the test3
+pilot described below.
 
 | Environment | VNet address space | Container Apps subnet |
 | --- | --- | --- |
@@ -39,8 +40,9 @@ these ranges against existing Azure, corporate and VPN networks before applying;
 the table only guarantees separation within this project's address map.
 
 Each `snet-container-apps` subnet is delegated to `Microsoft.App/environments`
-for a future workload profiles Container Apps Environment. The /23 allocation
-leaves capacity for scaling; the rest of the VNet is unallocated.
+for a workload profiles Container Apps Environment. The /23 allocation
+leaves capacity for scaling; the test3 pilot also reserves `10.63.2.0/24` for
+private endpoints. The rest of each VNet is unallocated.
 
 **These networks are empty by default.** Existing Container Apps Environments
 are not attached unless the test3 pilot below is enabled. Frontend/backend ingress, database access and Playwright
@@ -78,8 +80,9 @@ The test root accepts `enable_vnet_integration`, defaulting to `false`, and reje
 enabling it for any slot except `test3`. When enabled, the existing environment
 name `cae-team3-test3` is retained, its infrastructure attaches to
 `snet-container-apps`, and an explicit Consumption workload profile is configured.
-No Dedicated workload capacity, Front Door, VPN, firewall or private endpoints
-are provisioned by this pilot.
+The pilot also provisions private PostgreSQL connectivity as described below.
+No Dedicated workload capacity, Front Door, VPN, NAT Gateway or Azure Firewall
+is provisioned.
 
 The environment retains external load balancing. The frontend stays publicly
 reachable and the backend retains internal-only app ingress. This is compatible
@@ -109,7 +112,8 @@ To deploy the pilot:
 	test data loss, and account for both Terraform states and active deployments.
 5. Inspect the environment's `vnetConfiguration.infrastructureSubnetId` and
 	`workloadProfiles` in Azure, then verify frontend health, frontend-to-backend
-	requests, denied public backend access and the existing frontend E2E suite.
+	requests and denied public backend access. Use a runner with private connectivity
+	for E2E tests that access the test3 database directly.
 
 CI also rejects full plans that delete or replace a Container Apps Environment.
 This protects against unexpected replacement beyond the subnet preflight check;
@@ -126,10 +130,63 @@ use the matching setting, for example `TF_VAR_enable_vnet_integration=true` and
 ```bash
 terraform -chdir=infrastructure/modules/container-app-environment init -backend=false
 terraform -chdir=infrastructure/modules/container-app-environment test
+terraform -chdir=infrastructure/environments/test init -backend=false -lockfile=readonly
+terraform -chdir=infrastructure/environments/test test -filter=tests/private-postgresql.tftest.hcl
 ```
 
 Test1, test2, dev and prod do not opt into integration. This pilot establishes
-network attachment, not private dependency access or Front Door-only protection.
+network attachment and private PostgreSQL access, not private access to all
+dependencies or Front Door-only protection.
+
+#### Private PostgreSQL access
+
+With `enable_vnet_integration=true`, the test root creates:
+
+- A non-delegated `snet-private-endpoints` subnet at `10.63.2.0/24`, separate
+	from the Container Apps infrastructure subnet.
+- A PostgreSQL private endpoint targeting the existing server, with an
+	automatically approved `postgresqlServer` connection.
+- The `privatelink.postgres.database.azure.com` private DNS zone, a link to the
+	test3 VNet and an endpoint DNS zone group that manages the private address.
+
+The same flag disables public network access on PostgreSQL and removes the
+backend's public-IP firewall rule. The VNet-integrated Container App can report
+many potential outbound IP addresses; none of those addresses is used to grant
+database access in private mode. Non-pilot slots retain the existing public
+network setting and singleton firewall rule. A Terraform `moved` block preserves
+the firewall's state address when introducing its conditional instance.
+
+The server and its database are not intentionally replaced. Review the full
+plan and stop if it proposes deleting or replacing either. Existing servers
+must advertise Private Link support; servers created in PostgreSQL's delegated
+VNet integration mode cannot use this approach. Disabling public access may
+briefly interrupt database connectivity while the endpoint and DNS become
+available. This is not a zero-downtime migration.
+
+The database URL keeps the existing server FQDN and `sslmode=require`. No password
+rotation or Key Vault secret version increment is needed just for this networking
+change. Backend deployment depends on the endpoint and DNS link; Prisma
+migrations and seeding run inside that container, not on the GitHub runner.
+Azure resource completion does not guarantee immediate DNS propagation. Check
+revision logs and restart or deploy a fresh revision if an initial DNS lookup
+prevents startup.
+
+After applying, verify that PostgreSQL public access is `Disabled`, the private
+endpoint connection is `Approved`, and the server FQDN resolves to an address in
+`10.63.2.0/24` from the Container Apps environment. Confirm a database-backed
+frontend request succeeds and public database connectivity is denied. Mock tests
+verify the Terraform plan, not live DNS or database connectivity.
+
+Ordinary GitHub-hosted runners and laptops cannot connect directly to this
+database. Frontend E2E database-reset helpers need a private execution path when
+targeting test3. A Container Apps Job in the same environment is the intended
+private test runner; it is not provisioned here. The frontend remains public,
+and Key Vault, Service Bus and the shared OpenAI service keep their existing
+networking. Private Endpoint traffic and Private DNS introduce Azure charges.
+
+Deploy a new CI run from a ref containing these changes, keeping
+`TEST3_VNET_ENABLED=true`; rerunning a failed job at its old commit will not use
+the fix. Retain the partially deployed slot and its Terraform state for recovery.
 
 ## Platform architecture
 
