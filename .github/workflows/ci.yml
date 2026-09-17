@@ -285,7 +285,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: tfcmt -var "target:backend-dev" plan -- terraform plan -no-color
       - name: Build backend ETL runtime
-        working-directory: ../..
+        working-directory: ${{ github.workspace }}
         run: |
           npm ci
           npx prisma generate
@@ -380,7 +380,7 @@ jobs:
           echo "::error::Timed out waiting for private smoke-test execution $execution_name."
           exit 1
       - name: Build backend ETL runtime
-        working-directory: ../..
+        working-directory: ${{ github.workspace }}
         run: |
           npm ci
           npx prisma generate
