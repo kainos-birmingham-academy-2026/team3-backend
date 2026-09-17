@@ -284,12 +284,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: tfcmt -var "target:backend-dev" plan -- terraform plan -no-color
-        - name: Build backend ETL runtime
-          working-directory: ../..
-          run: |
-            npm ci
-            npx prisma generate
-            npm run build
+      - name: Build backend ETL runtime
+        working-directory: ../..
+        run: |
+          npm ci
+          npx prisma generate
+          npm run build
 
   terraform-deploy:
     name: Deploy dev infrastructure
