@@ -147,6 +147,29 @@ terraform -chdir=infrastructure/environments/test test -filter=tests/private-pos
 Private mode establishes network attachment and private PostgreSQL access, not
 private access to all dependencies or Front Door-only protection.
 
+### Power BI reporting in test3
+
+The reporting migration creates the `power_bi_reader` database role with
+`SELECT` access only to the curated `reporting.vw_*` views. In `test3`,
+`enable_power_bi_reporting` defaults to `true`, which adds PostgreSQL's Azure
+services firewall rule so that Power BI Service can reach the public endpoint.
+Set it to `false` to remove that rule. The rule is never created for `test1` or
+`test2`.
+
+Create a separate login with a strong, externally managed password, then grant
+it the reporting role after Prisma migrations have run:
+
+```sql
+CREATE ROLE power_bi_service LOGIN PASSWORD '<managed-secret>' NOINHERIT;
+GRANT power_bi_reader TO power_bi_service;
+```
+
+Configure Power BI's PostgreSQL connector with the `test3` server FQDN,
+database name and this login. Do not use the application administrator login
+or grant access to the reporting tables. For private environments or
+production, use an on-premises data gateway with private network reachability
+instead of enabling public database access.
+
 #### Private PostgreSQL access
 
 The dev and test roots create:

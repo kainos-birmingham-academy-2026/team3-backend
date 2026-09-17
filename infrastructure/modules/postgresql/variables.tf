@@ -65,6 +65,12 @@ variable "public_network_access_enabled" {
   default     = true
 }
 
+variable "allow_azure_services" {
+  description = "Whether to allow Azure services, including Power BI Service, through the PostgreSQL public firewall."
+  type        = bool
+  default     = false
+}
+
 variable "tags" {
   description = "Tags applied to PostgreSQL."
   type        = map(string)

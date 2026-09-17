@@ -151,3 +151,37 @@ run "private_database_for_test2" {
     error_message = "Test2 must provision private PostgreSQL and its smoke job."
   }
 }
+
+run "power_bi_firewall_for_test3" {
+  command = plan
+
+  plan_options {
+    target = [
+      module.postgresql,
+    ]
+  }
+
+  assert {
+    condition     = output.postgresql_azure_services_firewall_enabled
+    error_message = "Test3 must permit Azure services for the Power BI Service data source."
+  }
+}
+
+run "power_bi_firewall_excluded_from_private_test1" {
+  command = plan
+
+  variables {
+    environment = "test1"
+  }
+
+  plan_options {
+    target = [
+      module.postgresql,
+    ]
+  }
+
+  assert {
+    condition     = !output.postgresql_azure_services_firewall_enabled
+    error_message = "Test1 must not allow Azure services through the PostgreSQL firewall."
+  }
+}

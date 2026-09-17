@@ -147,6 +147,7 @@ module "postgresql" {
   zone                           = "2"
   database_name                  = "jobRoles"
   public_network_access_enabled  = var.environment == "test3"
+  allow_azure_services           = var.environment == "test3" && var.enable_power_bi_reporting
   tags = {
     environment = var.environment
     managed_by  = "terraform"

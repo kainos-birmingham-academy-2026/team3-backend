@@ -3,6 +3,11 @@ output "public_network_access_enabled" {
   value       = azurerm_postgresql_flexible_server.this.public_network_access_enabled
 }
 
+output "azure_services_firewall_enabled" {
+  description = "Whether the PostgreSQL firewall permits Azure services."
+  value       = length(azurerm_postgresql_flexible_server_firewall_rule.azure_services) == 1
+}
+
 output "id" {
   description = "Resource ID of the PostgreSQL Flexible Server."
   value       = azurerm_postgresql_flexible_server.this.id

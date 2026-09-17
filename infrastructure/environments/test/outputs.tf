@@ -3,6 +3,11 @@ output "postgresql_public_network_access_enabled" {
   value       = module.postgresql.public_network_access_enabled
 }
 
+output "postgresql_azure_services_firewall_enabled" {
+  description = "Whether the test PostgreSQL firewall permits Azure services."
+  value       = module.postgresql.azure_services_firewall_enabled
+}
+
 output "virtual_network_id" {
   description = "Resource ID of the environment virtual network."
   value       = module.network.id

@@ -32,6 +32,12 @@ variable "postgresql_administrator_password_version" {
   default     = 1
 }
 
+variable "enable_power_bi_reporting" {
+  description = "Whether test3 permits Power BI Service through the PostgreSQL Azure-services firewall rule."
+  type        = bool
+  default     = true
+}
+
 variable "application_secret_version" {
   description = "Version incremented to rotate the generated JWT and session secrets."
   type        = number
