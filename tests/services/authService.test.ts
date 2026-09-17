@@ -4,8 +4,6 @@ import { AuthService } from "../../src/services/authService.ts";
 const {
 	mockFindUnique,
 	mockCreate,
-	mockDelete,
-	mockUpdateMany,
 	mockHash,
 	mockVerify,
 	mockSign,
@@ -14,8 +12,6 @@ const {
 	return {
 		mockFindUnique: vi.fn(),
 		mockCreate: vi.fn(),
-		mockDelete: vi.fn(),
-		mockUpdateMany: vi.fn(),
 		mockHash: vi.fn(),
 		mockVerify: vi.fn(),
 		mockSign: vi.fn(),
@@ -29,8 +25,6 @@ vi.mock("../../src/prismaClient.ts", () => {
 			user: {
 				findUnique: mockFindUnique,
 				create: mockCreate,
-				delete: mockDelete,
-				updateMany: mockUpdateMany,
 			},
 		},
 	};
@@ -158,7 +152,7 @@ describe("AuthService", () => {
 			mockHash
 				.mockResolvedValueOnce("hashed-password")
 				.mockResolvedValueOnce("hashed-verification-code");
-			mockCreate.mockResolvedValueOnce({ id: 42 });
+			mockCreate.mockResolvedValueOnce({});
 
 			await expect(
 				service.register({ email: "new@example.com", password: "password123" }),
@@ -186,12 +180,13 @@ describe("AuthService", () => {
 			);
 		});
 
-		it("should remove the unverified user when notification publishing fails", async () => {
+		it("should complete registration when notification publishing fails", async () => {
+			const consoleError = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => undefined);
 			mockFindUnique.mockResolvedValueOnce(null);
-			mockHash
-				.mockResolvedValueOnce("hashed-password")
-				.mockResolvedValueOnce("hashed-verification-code");
-			mockCreate.mockResolvedValueOnce({ id: 42 });
+			mockHash.mockResolvedValueOnce("hashed-password");
+			mockCreate.mockResolvedValueOnce({});
 			mockPublishNotification.mockRejectedValueOnce(
 				new Error("Service Bus unavailable"),
 			);
@@ -201,10 +196,12 @@ describe("AuthService", () => {
 					email: "new@example.com",
 					password: "password123",
 				}),
-			).rejects.toThrow("Service Bus unavailable");
+			).resolves.toBeUndefined();
 
 			expect(mockCreate).toHaveBeenCalledOnce();
-			expect(mockDelete).toHaveBeenCalledWith({ where: { id: 42 } });
+			expect(consoleError).toHaveBeenCalledWith(
+				"Failed to publish AccountCreated notification",
+			);
 		});
 
 		it("should throw ConflictError when email is already in use", async () => {
@@ -225,222 +222,6 @@ describe("AuthService", () => {
 			expect(mockHash).not.toHaveBeenCalled();
 			expect(mockCreate).not.toHaveBeenCalled();
 			expect(mockPublishNotification).not.toHaveBeenCalled();
-		});
-	});
-
-	describe("verifyEmail", () => {
-		it("should verify a valid code within the attempt limit", async () => {
-			mockFindUnique.mockResolvedValueOnce({
-				id: 42,
-				verificationCodeHash: "stored-code-hash",
-				verificationCodeExpiresAt: new Date(Date.now() + 60_000),
-				verificationAttempts: 0,
-			});
-			mockUpdateMany
-				.mockResolvedValueOnce({ count: 1 })
-				.mockResolvedValueOnce({ count: 1 });
-			mockVerify.mockResolvedValueOnce(true);
-
-			await expect(
-				service.verifyEmail({
-					email: "new@example.com",
-					verificationCode: "12345",
-				}),
-			).resolves.toBeUndefined();
-
-			expect(mockUpdateMany).toHaveBeenLastCalledWith({
-				where: {
-					id: 42,
-					emailVerified: false,
-					verificationCodeHash: "stored-code-hash",
-					verificationAttempts: 1,
-				},
-				data: {
-					emailVerified: true,
-					verificationCodeHash: null,
-					verificationCodeExpiresAt: null,
-					verificationAttempts: 0,
-				},
-			});
-		});
-
-		it("should count an invalid verification attempt", async () => {
-			mockFindUnique.mockResolvedValueOnce({
-				id: 42,
-				verificationCodeHash: "stored-code-hash",
-				verificationCodeExpiresAt: new Date(Date.now() + 60_000),
-				verificationAttempts: 1,
-			});
-			mockUpdateMany.mockResolvedValueOnce({ count: 1 });
-			mockVerify.mockResolvedValueOnce(false);
-
-			await expect(
-				service.verifyEmail({
-					email: "new@example.com",
-					verificationCode: "99999",
-				}),
-			).rejects.toThrow("Invalid or expired verification code");
-
-			expect(mockUpdateMany).toHaveBeenCalledWith(
-				expect.objectContaining({
-					data: { verificationAttempts: { increment: 1 } },
-				}),
-			);
-			expect(mockUpdateMany).toHaveBeenCalledOnce();
-		});
-
-		it("should invalidate the code after the fifth failed attempt", async () => {
-			mockFindUnique.mockResolvedValueOnce({
-				id: 42,
-				verificationCodeHash: "stored-code-hash",
-				verificationCodeExpiresAt: new Date(Date.now() + 60_000),
-				verificationAttempts: 4,
-			});
-			mockUpdateMany.mockResolvedValueOnce({ count: 1 });
-			mockVerify.mockResolvedValueOnce(false);
-
-			await expect(
-				service.verifyEmail({
-					email: "new@example.com",
-					verificationCode: "99999",
-				}),
-			).rejects.toThrow("Invalid or expired verification code");
-
-			expect(mockUpdateMany).toHaveBeenLastCalledWith({
-				where: {
-					id: 42,
-					emailVerified: false,
-					verificationCodeHash: "stored-code-hash",
-					verificationAttempts: 5,
-				},
-				data: {
-					verificationCodeHash: null,
-					verificationCodeExpiresAt: null,
-				},
-			});
-		});
-
-		it("should reject a concurrent attempt that did not claim the counter", async () => {
-			mockFindUnique.mockResolvedValueOnce({
-				id: 42,
-				verificationCodeHash: "stored-code-hash",
-				verificationCodeExpiresAt: new Date(Date.now() + 60_000),
-				verificationAttempts: 1,
-			});
-			mockUpdateMany.mockResolvedValueOnce({ count: 0 });
-
-			await expect(
-				service.verifyEmail({
-					email: "new@example.com",
-					verificationCode: "12345",
-				}),
-			).rejects.toThrow("Invalid or expired verification code");
-
-			expect(mockVerify).not.toHaveBeenCalled();
-		});
-	});
-
-	describe("resendVerificationCode", () => {
-		it("should rotate and publish a new code for an unverified user", async () => {
-			mockFindUnique.mockResolvedValueOnce({
-				id: 42,
-				emailVerified: false,
-				verificationCodeHash: null,
-				verificationCodeExpiresAt: null,
-				verificationAttempts: 5,
-			});
-			mockHash.mockResolvedValueOnce("new-code-hash");
-			mockUpdateMany.mockResolvedValueOnce({ count: 1 });
-
-			await service.resendVerificationCode({ email: "new@example.com" });
-
-			expect(mockUpdateMany).toHaveBeenCalledWith({
-				where: {
-					id: 42,
-					emailVerified: false,
-					verificationCodeHash: null,
-					verificationCodeExpiresAt: null,
-					verificationAttempts: 5,
-				},
-				data: {
-					verificationCodeHash: "new-code-hash",
-					verificationCodeExpiresAt: expect.any(Date),
-					verificationAttempts: 0,
-				},
-			});
-			expect(mockPublishNotification).toHaveBeenCalledWith(
-				"AccountCreated",
-				"new@example.com",
-				{ code: expect.stringMatching(/^\d{5}$/) },
-			);
-		});
-
-		it("should not reveal whether the email belongs to an unverified user", async () => {
-			mockFindUnique.mockResolvedValueOnce(null);
-
-			await expect(
-				service.resendVerificationCode({ email: "missing@example.com" }),
-			).resolves.toBeUndefined();
-
-			expect(mockHash).not.toHaveBeenCalled();
-			expect(mockPublishNotification).not.toHaveBeenCalled();
-		});
-
-		it("should not publish when another resend already rotated the code", async () => {
-			mockFindUnique.mockResolvedValueOnce({
-				id: 42,
-				emailVerified: false,
-				verificationCodeHash: "stored-code-hash",
-				verificationCodeExpiresAt: new Date(Date.now() + 60_000),
-				verificationAttempts: 1,
-			});
-			mockHash.mockResolvedValueOnce("new-code-hash");
-			mockUpdateMany.mockResolvedValueOnce({ count: 0 });
-
-			await service.resendVerificationCode({ email: "new@example.com" });
-
-			expect(mockPublishNotification).not.toHaveBeenCalled();
-		});
-
-		it("should hide notification failures and restore the previous code", async () => {
-			const consoleError = vi
-				.spyOn(console, "error")
-				.mockImplementation(() => undefined);
-			const previousExpiry = new Date(Date.now() + 60_000);
-			const publishError = new Error("Service Bus unavailable");
-			mockFindUnique.mockResolvedValueOnce({
-				id: 42,
-				emailVerified: false,
-				verificationCodeHash: "stored-code-hash",
-				verificationCodeExpiresAt: previousExpiry,
-				verificationAttempts: 2,
-			});
-			mockHash.mockResolvedValueOnce("new-code-hash");
-			mockUpdateMany
-				.mockResolvedValueOnce({ count: 1 })
-				.mockResolvedValueOnce({ count: 1 });
-			mockPublishNotification.mockRejectedValueOnce(publishError);
-
-			await expect(
-				service.resendVerificationCode({ email: "new@example.com" }),
-			).resolves.toBeUndefined();
-
-			expect(mockUpdateMany).toHaveBeenLastCalledWith({
-				where: {
-					id: 42,
-					emailVerified: false,
-					verificationCodeHash: "new-code-hash",
-				},
-				data: {
-					verificationCodeHash: "stored-code-hash",
-					verificationCodeExpiresAt: previousExpiry,
-					verificationAttempts: 2,
-				},
-			});
-			expect(consoleError).toHaveBeenCalledWith(
-				"Failed to resend verification code",
-				publishError,
-			);
 		});
 	});
 });

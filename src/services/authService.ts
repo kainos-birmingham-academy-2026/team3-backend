@@ -4,15 +4,12 @@ import { randomInt } from "node:crypto";
 import type {
 	LoginRequestDto,
 	RegisterRequestDto,
-	ResendVerificationRequestDto,
 	VerifyEmailRequestDto,
 } from "../dtos/authDto.js";
 import { AuthError, LOGIN_ERROR } from "../errors/authError.js";
 import { ConflictError } from "../errors/conflictError.js";
 import { publishNotification } from "../notificationPublisher.js";
 import prisma from "../prismaClient.js";
-
-const MAX_VERIFICATION_ATTEMPTS = 5;
 
 export class AuthService {
 	public async register(input: RegisterRequestDto): Promise<void> {
@@ -32,7 +29,7 @@ export class AuthService {
 			type: argon2.argon2id,
 		});
 
-		const user = await prisma.user.create({
+		await prisma.user.create({
 			data: {
 				email: input.email,
 				passwordHash,
@@ -46,9 +43,8 @@ export class AuthService {
 			await publishNotification("AccountCreated", input.email, {
 				code: verificationCode,
 			});
-		} catch (error) {
-			await prisma.user.delete({ where: { id: user.id } });
-			throw error;
+		} catch {
+			console.error("Failed to publish AccountCreated notification");
 		}
 	}
 
@@ -97,124 +93,21 @@ export class AuthService {
 			!user?.verificationCodeHash ||
 			!user.verificationCodeExpiresAt ||
 			user.verificationCodeExpiresAt < new Date() ||
-			user.verificationAttempts >= MAX_VERIFICATION_ATTEMPTS
+			!(await argon2.verify(
+				user.verificationCodeHash,
+				input.verificationCode,
+			))
 		) {
 			throw new AuthError(400, "Invalid or expired verification code");
 		}
 
-		const claimedAttempt = await prisma.user.updateMany({
-			where: {
-				id: user.id,
-				emailVerified: false,
-				verificationCodeHash: { not: null },
-				verificationCodeExpiresAt: { gt: new Date() },
-				verificationAttempts: user.verificationAttempts,
-			},
-			data: { verificationAttempts: { increment: 1 } },
-		});
-
-		if (claimedAttempt.count === 0) {
-			throw new AuthError(400, "Invalid or expired verification code");
-		}
-
-		const validCode = await argon2.verify(
-			user.verificationCodeHash,
-			input.verificationCode,
-		);
-		const claimedAttemptCount = user.verificationAttempts + 1;
-
-		if (!validCode) {
-			if (claimedAttemptCount >= MAX_VERIFICATION_ATTEMPTS) {
-				await prisma.user.updateMany({
-					where: {
-						id: user.id,
-						emailVerified: false,
-						verificationCodeHash: user.verificationCodeHash,
-						verificationAttempts: claimedAttemptCount,
-					},
-					data: {
-						verificationCodeHash: null,
-						verificationCodeExpiresAt: null,
-					},
-				});
-			}
-
-			throw new AuthError(400, "Invalid or expired verification code");
-		}
-
-		const verified = await prisma.user.updateMany({
-			where: {
-				id: user.id,
-				emailVerified: false,
-				verificationCodeHash: user.verificationCodeHash,
-				verificationAttempts: claimedAttemptCount,
-			},
+		await prisma.user.update({
+			where: { email: input.email },
 			data: {
 				emailVerified: true,
 				verificationCodeHash: null,
 				verificationCodeExpiresAt: null,
-				verificationAttempts: 0,
 			},
 		});
-
-		if (verified.count === 0) {
-			throw new AuthError(400, "Invalid or expired verification code");
-		}
-	}
-
-	public async resendVerificationCode(
-		input: ResendVerificationRequestDto,
-	): Promise<void> {
-		const user = await prisma.user.findUnique({
-			where: { email: input.email },
-		});
-
-		if (!user || user.emailVerified) {
-			return;
-		}
-
-		const verificationCode = randomInt(10_000, 100_000).toString();
-		const verificationCodeHash = await argon2.hash(verificationCode, {
-			type: argon2.argon2id,
-		});
-		const verificationCodeExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
-		const rotated = await prisma.user.updateMany({
-			where: {
-				id: user.id,
-				emailVerified: false,
-				verificationCodeHash: user.verificationCodeHash,
-				verificationCodeExpiresAt: user.verificationCodeExpiresAt,
-				verificationAttempts: user.verificationAttempts,
-			},
-			data: {
-				verificationCodeHash,
-				verificationCodeExpiresAt,
-				verificationAttempts: 0,
-			},
-		});
-
-		if (rotated.count === 0) {
-			return;
-		}
-
-		try {
-			await publishNotification("AccountCreated", input.email, {
-				code: verificationCode,
-			});
-		} catch (error) {
-			await prisma.user.updateMany({
-				where: {
-					id: user.id,
-					emailVerified: false,
-					verificationCodeHash,
-				},
-				data: {
-					verificationCodeHash: user.verificationCodeHash,
-					verificationCodeExpiresAt: user.verificationCodeExpiresAt,
-					verificationAttempts: user.verificationAttempts,
-				},
-			});
-			console.error("Failed to resend verification code", error);
-		}
 	}
 }

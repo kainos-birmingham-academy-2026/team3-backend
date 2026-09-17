@@ -102,7 +102,6 @@ model User {
   emailVerified             Boolean       @default(false)
   verificationCodeHash      String?
   verificationCodeExpiresAt DateTime?
-  verificationAttempts      Int           @default(0)
   applications              Application[]
 
   createdAt DateTime @default(now())

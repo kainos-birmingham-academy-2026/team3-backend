@@ -14,7 +14,6 @@ const PORT = 4000;
 const swaggerDocsEnabled = process.env.ENABLE_SWAGGER_DOCS === "true";
 
 // Middleware
-app.set("trust proxy", 1);
 app.use(express.json());
 app.use(requestLogger);
 registerSwaggerRoutes(app, swaggerDocsEnabled);

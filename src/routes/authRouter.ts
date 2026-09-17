@@ -3,14 +3,8 @@ import { AuthController } from "../controllers/authController.js";
 import {
 	LoginSchema,
 	RegisterSchema,
-	ResendVerificationSchema,
 	VerifyEmailSchema,
 } from "../dtos/authDto.js";
-import {
-	registrationRateLimit,
-	resendVerificationRateLimit,
-	verificationRateLimit,
-} from "../middleware/authRateLimit.js";
 import { validateBody } from "../middleware/validate";
 import { AuthService } from "../services/authService.js";
 
@@ -106,23 +100,14 @@ router.post(
  */
 router.post(
 	"/register",
-	registrationRateLimit,
 	validateBody(RegisterSchema),
 	controller.register.bind(controller),
 );
 
 router.post(
 	"/verify-email",
-	verificationRateLimit,
 	validateBody(VerifyEmailSchema),
 	controller.verifyEmail.bind(controller),
-);
-
-router.post(
-	"/resend-verification",
-	resendVerificationRateLimit,
-	validateBody(ResendVerificationSchema),
-	controller.resendVerificationCode.bind(controller),
 );
 
 export default router;

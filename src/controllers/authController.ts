@@ -4,7 +4,6 @@ import type {
 	LoginResponseDto,
 	RegisterRequestDto,
 	RegisterResponseDto,
-	ResendVerificationRequestDto,
 	VerifyEmailRequestDto,
 } from "../dtos/authDto.js";
 import { AuthError } from "../errors/authError.js";
@@ -41,22 +40,6 @@ export class AuthController {
 		try {
 			await this.authService.verifyEmail(req.body as VerifyEmailRequestDto);
 			return res.status(200).json({ message: "Email verified" });
-		} catch (error) {
-			return this.handleError(error, res);
-		}
-	}
-
-	public async resendVerificationCode(
-		req: Request,
-		res: Response,
-	): Promise<Response> {
-		try {
-			await this.authService.resendVerificationCode(
-				req.body as ResendVerificationRequestDto,
-			);
-			return res.status(202).json({
-				message: "If the account is awaiting verification, a new code was sent",
-			});
 		} catch (error) {
 			return this.handleError(error, res);
 		}

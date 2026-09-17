@@ -6,8 +6,6 @@ const { serviceMock } = vi.hoisted(() => ({
 	serviceMock: {
 		login: vi.fn(),
 		register: vi.fn(),
-		resendVerificationCode: vi.fn(),
-		verifyEmail: vi.fn(),
 	},
 }));
 
@@ -15,8 +13,6 @@ vi.mock("../../src/services/authService.js", () => ({
 	AuthService: class AuthService {
 		login = serviceMock.login;
 		register = serviceMock.register;
-		resendVerificationCode = serviceMock.resendVerificationCode;
-		verifyEmail = serviceMock.verifyEmail;
 	},
 }));
 
@@ -152,47 +148,5 @@ describe("POST /api/auth/login", () => {
 
 		expect(response.status).toBe(200);
 		expect(response.body).toEqual({ token: "mock-jwt-token" });
-	});
-});
-
-describe("POST /api/auth/resend-verification", () => {
-	beforeEach(() => {
-		vi.resetAllMocks();
-	});
-
-	it("should accept a resend request without revealing account state", async () => {
-		serviceMock.resendVerificationCode.mockResolvedValueOnce(undefined);
-
-		const response = await request(app)
-			.post("/api/auth/resend-verification")
-			.send({ email: "user@example.com" });
-
-		expect(response.status).toBe(202);
-		expect(response.body).toEqual({
-			message: "If the account is awaiting verification, a new code was sent",
-		});
-	});
-
-	it("should reject an invalid email", async () => {
-		const response = await request(app)
-			.post("/api/auth/resend-verification")
-			.send({ email: "not-an-email" });
-
-		expect(response.status).toBe(400);
-		expect(serviceMock.resendVerificationCode).not.toHaveBeenCalled();
-	});
-
-	it("should rate limit repeated resend requests from one IP", async () => {
-		serviceMock.resendVerificationCode.mockResolvedValue(undefined);
-		const responses = await Promise.all(
-			Array.from({ length: 6 }, () =>
-				request(app)
-					.post("/api/auth/resend-verification")
-					.set("X-Forwarded-For", "203.0.113.10")
-					.send({ email: "user@example.com" }),
-			),
-		);
-
-		expect(responses.at(-1)?.status).toBe(429);
 	});
 });

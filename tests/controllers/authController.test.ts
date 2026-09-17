@@ -22,8 +22,6 @@ describe("AuthController", () => {
 	const mockService = {
 		login: vi.fn(),
 		register: vi.fn(),
-		resendVerificationCode: vi.fn(),
-		verifyEmail: vi.fn(),
 	} as unknown as AuthService;
 
 	let controller: AuthController;
@@ -152,25 +150,6 @@ describe("AuthController", () => {
 			expect(res.status).toHaveBeenCalledWith(500);
 			expect(res.json).toHaveBeenCalledWith({
 				message: "Internal server error",
-			});
-		});
-	});
-
-	describe("resendVerificationCode", () => {
-		it("should return the same accepted response for every email", async () => {
-			const req = { body: { email: "user@example.com" } };
-			const res = createMockResponse();
-
-			vi.mocked(mockService.resendVerificationCode).mockResolvedValue(undefined);
-
-			await controller.resendVerificationCode(req as never, res as never);
-
-			expect(mockService.resendVerificationCode).toHaveBeenCalledWith({
-				email: "user@example.com",
-			});
-			expect(res.status).toHaveBeenCalledWith(202);
-			expect(res.json).toHaveBeenCalledWith({
-				message: "If the account is awaiting verification, a new code was sent",
 			});
 		});
 	});

@@ -20,16 +20,9 @@ export const VerifyEmailSchema = z.object({
 	verificationCode: z.string().regex(/^\d{5}$/),
 });
 
-export const ResendVerificationSchema = z.object({
-	email: z.email(),
-});
-
 export type LoginRequestDto = z.infer<typeof LoginSchema>;
 export type RegisterRequestDto = z.infer<typeof RegisterSchema>;
 export type VerifyEmailRequestDto = z.infer<typeof VerifyEmailSchema>;
-export type ResendVerificationRequestDto = z.infer<
-	typeof ResendVerificationSchema
->;
 
 export interface LoginResponseDto {
 	token: string;
