@@ -284,6 +284,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: tfcmt -var "target:backend-dev" plan -- terraform plan -no-color
+      - name: Build backend ETL runtime
+        working-directory: ${{ github.workspace }}
+        run: |
+          npm ci
+          npx prisma generate
+          npm run build
 
   terraform-deploy:
     name: Deploy dev infrastructure
@@ -373,13 +379,24 @@ jobs:
           done
           echo "::error::Timed out waiting for private smoke-test execution $execution_name."
           exit 1
+      - name: Build backend ETL runtime
+        working-directory: ${{ github.workspace }}
+        run: |
+          npm ci
+          npx prisma generate
+          npm run build
       - name: Build notification Function
         working-directory: functions/notifications
         run: |
           npm ci
           npm run build
           npm prune --omit=dev
-          zip -r "$RUNNER_TEMP/notifications.zip" host.json package.json package-lock.json dist node_modules
+          rm -rf backend-dist
+          mkdir -p backend-dist
+          cp -R ../../dist/. backend-dist/
+          cp ../../src/generated/prisma/*.node backend-dist/generated/prisma/
+          test -f backend-dist/generated/prisma/internal/class.js
+          zip -r "$RUNNER_TEMP/notifications.zip" host.json package.json package-lock.json dist backend-dist node_modules
       - name: Deploy notification Function
         uses: Azure/functions-action@v1
         with:
@@ -441,11 +458,24 @@ jobs:
           terraform apply
           -auto-approve
           -target=time_sleep.secrets_rbac_propagation
+          -target=azurerm_postgresql_flexible_server_firewall_rule.backend_container_app
+          -target=azurerm_container_app_job.private_smoke_test
+          -target=azurerm_private_dns_zone.postgresql
+          -target=azurerm_private_dns_zone_virtual_network_link.postgresql
+          -target=azurerm_private_endpoint.postgresql
+          -target=azurerm_subnet.private_endpoints
       - name: Create test Terraform plan
         run: terraform plan -out=tfplan
       - name: Apply test Terraform plan
         run: terraform apply -auto-approve tfplan
-      - name: Verify private database connectivity
+      - name: Build backend ETL runtime
+        working-directory: ${{ github.workspace }}
+        run: |
+          npm ci
+          npx prisma generate
+          npm run build
+      - name: Verify test3 private database connectivity
+        if: inputs.test_environment == 'test3' && vars.TEST3_VNET_ENABLED == 'true'
         timeout-minutes: 12
         run: |
           job_name="caj-team3-private-smoke-${TEST_ENVIRONMENT}"
@@ -488,7 +518,12 @@ jobs:
           npm ci
           npm run build
           npm prune --omit=dev
-          zip -r "$RUNNER_TEMP/notifications.zip" host.json package.json package-lock.json dist node_modules
+          rm -rf backend-dist
+          mkdir -p backend-dist
+          cp -R ../../../dist/. backend-dist/
+          cp ../../../src/generated/prisma/*.node backend-dist/generated/prisma/
+          test -f backend-dist/generated/prisma/internal/class.js
+          zip -r "$RUNNER_TEMP/notifications.zip" host.json package.json package-lock.json dist backend-dist node_modules
       - name: Deploy notification Function
         uses: Azure/functions-action@v1
         with:

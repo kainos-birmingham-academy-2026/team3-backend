@@ -146,7 +146,7 @@ module "postgresql" {
   backup_retention_days          = 7
   zone                           = "2"
   database_name                  = "jobRoles"
-  public_network_access_enabled  = false
+  public_network_access_enabled  = var.environment == "test3"
   tags = {
     environment = var.environment
     managed_by  = "terraform"
@@ -277,6 +277,7 @@ module "notification_function" {
   log_analytics_workspace_id        = module.log_analytics.id
   service_bus_connection_secret_uri = "${module.key_vault.vault_uri}secrets/function-service-bus-connection-string"
   acs_connection_secret_uri         = "${module.key_vault.vault_uri}secrets/acs-connection-string"
+  database_url_secret_uri           = "${module.key_vault.vault_uri}secrets/database-url"
   email_sender_address              = "DoNotReply@${module.email_communication.sender_domain}"
   tags = {
     environment = var.environment
@@ -287,6 +288,7 @@ module "notification_function" {
   depends_on = [
     azurerm_key_vault_secret.function_service_bus_connection_string,
     azurerm_key_vault_secret.acs_connection_string,
+    azurerm_key_vault_secret.database_url,
   ]
 }
 resource "azurerm_role_assignment" "notification_function_key_vault_secrets_user" {

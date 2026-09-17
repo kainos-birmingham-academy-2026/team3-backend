@@ -56,8 +56,8 @@ run "private_database_with_multiple_outbound_addresses" {
   command = plan
 
   assert {
-    condition     = output.postgresql_public_network_access_enabled == false
-    error_message = "Private-mode PostgreSQL must disable public network access."
+    condition     = output.postgresql_public_network_access_enabled == true
+    error_message = "Test3 PostgreSQL must allow public network access for the Grafana data source."
   }
 
   plan_options {

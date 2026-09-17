@@ -50,6 +50,11 @@ variable "acs_connection_secret_uri" {
   type        = string
 }
 
+variable "database_url_secret_uri" {
+  description = "Versionless Key Vault secret URI for the PostgreSQL connection string."
+  type        = string
+}
+
 variable "email_sender_address" {
   description = "Verified Azure Communication Services sender address."
   type        = string
