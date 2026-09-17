@@ -40,6 +40,11 @@ variable "log_analytics_workspace_id" {
   default     = null
 }
 
+variable "key_vault_reference_identity_id" {
+  description = "Resource ID of the pre-authorized user-assigned identity used to resolve Key Vault references."
+  type        = string
+}
+
 variable "service_bus_connection_secret_uri" {
   description = "Versionless Key Vault secret URI for the Function's Listen-only Service Bus connection."
   type        = string

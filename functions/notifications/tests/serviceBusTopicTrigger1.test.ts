@@ -10,11 +10,13 @@ describe("parseNotification", () => {
 				type: "AccountCreated",
 				email: "user@example.com",
 				name: "Mahdi",
+				code: "12345",
 			}),
 			{
 				type: "AccountCreated",
 				email: "user@example.com",
 				name: "Mahdi",
+				code: "12345",
 			},
 		);
 	});
@@ -31,6 +33,7 @@ describe("parseNotification", () => {
 				type: "AccountCreated",
 				email: "user@example.com",
 				name: undefined,
+				code: undefined,
 			},
 		);
 	});

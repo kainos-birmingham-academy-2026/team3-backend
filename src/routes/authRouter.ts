@@ -1,6 +1,10 @@
 import { Router } from "express";
 import { AuthController } from "../controllers/authController.js";
-import { LoginSchema, RegisterSchema } from "../dtos/authDto.js";
+import {
+	LoginSchema,
+	RegisterSchema,
+	VerifyEmailSchema,
+} from "../dtos/authDto.js";
 import { validateBody } from "../middleware/validate";
 import { AuthService } from "../services/authService.js";
 
@@ -98,6 +102,12 @@ router.post(
 	"/register",
 	validateBody(RegisterSchema),
 	controller.register.bind(controller),
+);
+
+router.post(
+	"/verify-email",
+	validateBody(VerifyEmailSchema),
+	controller.verifyEmail.bind(controller),
 );
 
 export default router;

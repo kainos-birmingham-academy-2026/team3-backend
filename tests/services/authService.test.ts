@@ -149,7 +149,9 @@ describe("AuthService", () => {
 	describe("register", () => {
 		it("should register a new user with USER role", async () => {
 			mockFindUnique.mockResolvedValueOnce(null);
-			mockHash.mockResolvedValueOnce("hashed-password");
+			mockHash
+				.mockResolvedValueOnce("hashed-password")
+				.mockResolvedValueOnce("hashed-verification-code");
 			mockCreate.mockResolvedValueOnce({});
 
 			await expect(
@@ -167,11 +169,14 @@ describe("AuthService", () => {
 					email: "new@example.com",
 					passwordHash: "hashed-password",
 					role: "USER",
+					verificationCodeHash: "hashed-verification-code",
+					verificationCodeExpiresAt: expect.any(Date),
 				},
 			});
 			expect(mockPublishNotification).toHaveBeenCalledWith(
 				"AccountCreated",
 				"new@example.com",
+				{ code: expect.stringMatching(/^\d{5}$/) },
 			);
 		});
 

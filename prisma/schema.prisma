@@ -95,11 +95,14 @@ model Location {
 }
 
 model User {
-  id           Int           @id @default(autoincrement())
-  email        String        @unique
-  passwordHash String
-  role         UserRole      @default(USER)
-  applications Application[]
+  id                        Int           @id @default(autoincrement())
+  email                     String        @unique
+  passwordHash              String
+  role                      UserRole      @default(USER)
+  emailVerified             Boolean       @default(false)
+  verificationCodeHash      String?
+  verificationCodeExpiresAt DateTime?
+  applications              Application[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -62,7 +62,8 @@ resource "azurerm_function_app_flex_consumption" "this" {
   https_only = true
 
   identity {
-    type = "SystemAssigned"
+    type         = "SystemAssigned, UserAssigned"
+    identity_ids = [var.key_vault_reference_identity_id]
   }
 
   site_config {
@@ -72,4 +73,15 @@ resource "azurerm_function_app_flex_consumption" "this" {
   }
 
   tags = var.tags
+}
+
+resource "azapi_update_resource" "key_vault_reference_identity" {
+  type        = "Microsoft.Web/sites@2024-04-01"
+  resource_id = azurerm_function_app_flex_consumption.this.id
+
+  body = {
+    properties = {
+      keyVaultReferenceIdentity = var.key_vault_reference_identity_id
+    }
+  }
 }
