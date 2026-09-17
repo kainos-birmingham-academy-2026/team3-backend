@@ -463,7 +463,6 @@ jobs:
         run: terraform plan -out=tfplan
       - name: Apply test Terraform plan
         run: terraform apply -auto-approve tfplan
-      - name: Verify private database connectivity
       - name: Build backend ETL runtime
         working-directory: ${{ github.workspace }}
         run: |
