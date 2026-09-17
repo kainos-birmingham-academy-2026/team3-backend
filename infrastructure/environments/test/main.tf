@@ -146,7 +146,7 @@ module "postgresql" {
   backup_retention_days          = 7
   zone                           = "2"
   database_name                  = "jobRoles"
-  public_network_access_enabled  = false
+  public_network_access_enabled  = var.environment == "test3"
   tags = {
     environment = var.environment
     managed_by  = "terraform"
