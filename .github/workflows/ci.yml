@@ -459,6 +459,11 @@ jobs:
           -auto-approve
           -target=time_sleep.secrets_rbac_propagation
           -target=azurerm_postgresql_flexible_server_firewall_rule.backend_container_app
+          -target=azurerm_container_app_job.private_smoke_test
+          -target=azurerm_private_dns_zone.postgresql
+          -target=azurerm_private_dns_zone_virtual_network_link.postgresql
+          -target=azurerm_private_endpoint.postgresql
+          -target=azurerm_subnet.private_endpoints
       - name: Create test Terraform plan
         run: terraform plan -out=tfplan
       - name: Apply test Terraform plan
