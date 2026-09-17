@@ -1,6 +1,4 @@
 resource "azurerm_container_app_job" "private_smoke_test" {
-  count = var.enable_vnet_integration ? 1 : 0
-
   name                         = "caj-${var.project_name}-private-smoke-${var.environment}"
   location                     = var.location
   resource_group_name          = module.resource_group.name
@@ -44,7 +42,7 @@ resource "azurerm_container_app_job" "private_smoke_test" {
       }
       env {
         name  = "EXPECTED_PRIVATE_IP"
-        value = azurerm_private_endpoint.postgresql[0].private_service_connection[0].private_ip_address
+        value = azurerm_private_endpoint.postgresql.private_service_connection[0].private_ip_address
       }
     }
   }

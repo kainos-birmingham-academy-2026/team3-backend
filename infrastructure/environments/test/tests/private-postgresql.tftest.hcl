@@ -22,7 +22,6 @@ mock_provider "time" {}
 
 variables {
   environment                    = "test3"
-  enable_vnet_integration        = true
   deployment_principal_object_id = "00000000-0000-0000-0000-000000000001"
   backend_image_tag              = "test-private-network"
 }
@@ -67,37 +66,31 @@ run "private_database_with_multiple_outbound_addresses" {
       azurerm_container_app_job.private_smoke_test,
       azurerm_private_endpoint.postgresql,
       azurerm_private_dns_zone_virtual_network_link.postgresql,
-      azurerm_postgresql_flexible_server_firewall_rule.backend_container_app,
     ]
   }
 
   assert {
-    condition     = length(azurerm_container_app_job.private_smoke_test) == 1 && azurerm_container_app_job.private_smoke_test[0].replica_retry_limit == 0 && azurerm_container_app_job.private_smoke_test[0].replica_timeout_in_seconds == 120
-    error_message = "Private mode requires one bounded smoke job without automatic retries."
+    condition     = azurerm_container_app_job.private_smoke_test.replica_retry_limit == 0 && azurerm_container_app_job.private_smoke_test.replica_timeout_in_seconds == 120
+    error_message = "Every test environment requires one bounded smoke job without automatic retries."
   }
 
   assert {
-    condition     = azurerm_container_app_job.private_smoke_test[0].template[0].container[0].command == tolist(["node", "--import", "tsx", "--input-type=module", "--eval"])
+    condition     = azurerm_container_app_job.private_smoke_test.template[0].container[0].command == tolist(["node", "--import", "tsx", "--input-type=module", "--eval"])
     error_message = "The smoke job must bypass image startup migrations and seeding."
   }
 
   assert {
-    condition     = length(azurerm_postgresql_flexible_server_firewall_rule.backend_container_app) == 0
-    error_message = "Private mode must not evaluate one() against the 161 outbound addresses or allow public IPs."
-  }
-
-  assert {
-    condition     = azurerm_subnet.private_endpoints[0].address_prefixes == tolist(["10.63.2.0/24"]) && length(azurerm_subnet.private_endpoints[0].delegation) == 0
+    condition     = azurerm_subnet.private_endpoints.address_prefixes == tolist(["10.63.2.0/24"]) && length(azurerm_subnet.private_endpoints.delegation) == 0
     error_message = "Private endpoints require a separate non-delegated subnet outside the Container Apps /23."
   }
 
   assert {
-    condition     = azurerm_private_dns_zone.postgresql[0].name == "privatelink.postgres.database.azure.com" && azurerm_private_dns_zone_virtual_network_link.postgresql[0].virtual_network_id == module.network.id && !azurerm_private_dns_zone_virtual_network_link.postgresql[0].registration_enabled
+    condition     = azurerm_private_dns_zone.postgresql.name == "privatelink.postgres.database.azure.com" && azurerm_private_dns_zone_virtual_network_link.postgresql.virtual_network_id == module.network.id && !azurerm_private_dns_zone_virtual_network_link.postgresql.registration_enabled
     error_message = "PostgreSQL private DNS must be linked to the environment VNet without VM registration."
   }
 
   assert {
-    condition     = azurerm_private_endpoint.postgresql[0].private_service_connection[0].subresource_names == tolist(["postgresqlServer"]) && !azurerm_private_endpoint.postgresql[0].private_service_connection[0].is_manual_connection && length(azurerm_private_endpoint.postgresql[0].private_dns_zone_group) == 1
+    condition     = azurerm_private_endpoint.postgresql.private_service_connection[0].subresource_names == tolist(["postgresqlServer"]) && !azurerm_private_endpoint.postgresql.private_service_connection[0].is_manual_connection && length(azurerm_private_endpoint.postgresql.private_dns_zone_group) == 1
     error_message = "The endpoint must connect to PostgreSQL and register its private address through a DNS zone group."
   }
 }
@@ -106,8 +99,7 @@ run "private_database_for_test1" {
   command = plan
 
   variables {
-    environment             = "test1"
-    enable_vnet_integration = true
+    environment = "test1"
   }
 
   override_module {
@@ -124,40 +116,25 @@ run "private_database_for_test1" {
       azurerm_container_app_job.private_smoke_test,
       azurerm_private_endpoint.postgresql,
       azurerm_private_dns_zone_virtual_network_link.postgresql,
-      azurerm_postgresql_flexible_server_firewall_rule.backend_container_app,
     ]
   }
 
   assert {
-    condition     = output.postgresql_public_network_access_enabled == false && length(azurerm_container_app_job.private_smoke_test) == 1
-    error_message = "Any enabled test slot must provision a private database and smoke job."
+    condition     = output.postgresql_public_network_access_enabled == false && azurerm_container_app_job.private_smoke_test.name == "caj-team3-private-smoke-test1"
+    error_message = "Test1 must provision a private database and smoke job."
   }
 
   assert {
-    condition     = length(azurerm_private_endpoint.postgresql) == 1 && length(azurerm_subnet.private_endpoints) == 1 && length(azurerm_private_dns_zone.postgresql) == 1 && length(azurerm_private_dns_zone_virtual_network_link.postgresql) == 1
-    error_message = "Any enabled test slot must provision private networking resources."
-  }
-
-  assert {
-    condition     = length(azurerm_postgresql_flexible_server_firewall_rule.backend_container_app) == 0
-    error_message = "Private mode must not retain public database firewall rules."
+    condition     = azurerm_private_endpoint.postgresql.name == "pe-team3-postgresql-test1" && azurerm_private_dns_zone.postgresql.name == "privatelink.postgres.database.azure.com"
+    error_message = "Test1 must provision private endpoint and DNS resources."
   }
 }
 
-run "public_mode_remains_opt_in" {
+run "private_database_for_test2" {
   command = plan
 
   variables {
-    environment             = "test2"
-    enable_vnet_integration = false
-  }
-
-  override_module {
-    target = module.backend_container_app
-    outputs = {
-      outbound_ip_addresses = ["192.0.2.10"]
-      fqdn                  = "backend.internal.example.com"
-    }
+    environment = "test2"
   }
 
   plan_options {
@@ -166,12 +143,11 @@ run "public_mode_remains_opt_in" {
       azurerm_container_app_job.private_smoke_test,
       azurerm_private_endpoint.postgresql,
       azurerm_private_dns_zone_virtual_network_link.postgresql,
-      azurerm_postgresql_flexible_server_firewall_rule.backend_container_app,
     ]
   }
 
   assert {
-    condition     = output.postgresql_public_network_access_enabled && length(azurerm_container_app_job.private_smoke_test) == 0 && length(azurerm_private_endpoint.postgresql) == 0 && length(azurerm_postgresql_flexible_server_firewall_rule.backend_container_app) == 1
-    error_message = "Disabled private networking must retain the current public-access configuration."
+    condition     = output.postgresql_public_network_access_enabled == false && azurerm_container_app_job.private_smoke_test.name == "caj-team3-private-smoke-test2" && azurerm_private_endpoint.postgresql.name == "pe-team3-postgresql-test2"
+    error_message = "Test2 must provision private PostgreSQL and its smoke job."
   }
 }

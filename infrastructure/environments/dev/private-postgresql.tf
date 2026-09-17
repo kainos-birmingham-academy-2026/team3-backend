@@ -1,6 +1,4 @@
 resource "azurerm_subnet" "private_endpoints" {
-  count = var.enable_vnet_integration ? 1 : 0
-
   name                 = "snet-private-endpoints"
   resource_group_name  = module.resource_group.name
   virtual_network_name = module.network.name
@@ -8,8 +6,6 @@ resource "azurerm_subnet" "private_endpoints" {
 }
 
 resource "azurerm_private_dns_zone" "postgresql" {
-  count = var.enable_vnet_integration ? 1 : 0
-
   name                = "privatelink.postgres.database.azure.com"
   resource_group_name = module.resource_group.name
   tags = {
@@ -20,22 +16,18 @@ resource "azurerm_private_dns_zone" "postgresql" {
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "postgresql" {
-  count = var.enable_vnet_integration ? 1 : 0
-
   name                  = "postgresql-${var.environment}"
   resource_group_name   = module.resource_group.name
-  private_dns_zone_name = azurerm_private_dns_zone.postgresql[0].name
+  private_dns_zone_name = azurerm_private_dns_zone.postgresql.name
   virtual_network_id    = module.network.id
   registration_enabled  = false
 }
 
 resource "azurerm_private_endpoint" "postgresql" {
-  count = var.enable_vnet_integration ? 1 : 0
-
   name                = "pe-${var.project_name}-postgresql-${var.environment}"
   location            = var.location
   resource_group_name = module.resource_group.name
-  subnet_id           = azurerm_subnet.private_endpoints[0].id
+  subnet_id           = azurerm_subnet.private_endpoints.id
   tags = {
     environment = var.environment
     managed_by  = "terraform"
@@ -51,6 +43,6 @@ resource "azurerm_private_endpoint" "postgresql" {
 
   private_dns_zone_group {
     name                 = "postgresql"
-    private_dns_zone_ids = [azurerm_private_dns_zone.postgresql[0].id]
+    private_dns_zone_ids = [azurerm_private_dns_zone.postgresql.id]
   }
 }

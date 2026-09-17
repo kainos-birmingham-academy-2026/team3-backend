@@ -15,12 +15,6 @@ variable "environment" {
   }
 }
 
-variable "enable_vnet_integration" {
-  description = "Opt in to Container Apps VNet integration. Changing this requires environment replacement."
-  type        = bool
-  default     = false
-}
-
 variable "location" {
   description = "Azure region in which to create resources."
   type        = string

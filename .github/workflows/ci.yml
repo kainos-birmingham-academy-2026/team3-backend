@@ -31,17 +31,6 @@ on:
         required: true
         type: string
         default: main
-      enable_vnet_integration:
-        description: Recreate the selected test Container Apps environment with VNet integration
-        required: true
-        type: boolean
-        default: false
-      enable_front_door:
-        description: Create or update Azure Front Door for the selected test environment
-        required: true
-        type: boolean
-        default: false
-
 permissions:
   contents: read
 
@@ -102,94 +91,6 @@ jobs:
           encoded_ref=$(jq --null-input --raw-output --arg ref "$FRONTEND_REF" '$ref | @uri')
           sha=$(gh api "repos/kainos-birmingham-academy-2026/team3-frontend/commits/${encoded_ref}" --jq '.sha')
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
-
-  test-environment-status:
-    name: Check test environment
-    if: github.event_name == 'workflow_dispatch' && inputs.deploy_test
-    needs: resolve-source
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    outputs:
-      ready: ${{ steps.environment.outputs.ready }}
-    steps:
-      - name: Sign in to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - name: Check frontend prerequisites
-        id: environment
-        env:
-          VNET_INTEGRATION_ENABLED: ${{ inputs.enable_vnet_integration && 'true' || 'false' }}
-        run: |
-          ready=true
-
-          if [[ "$(az group exists --name "rg-team3-${TEST_ENVIRONMENT}")" != "true" ]]; then
-            ready=false
-          else
-            environment_id=$(az resource list \
-              --resource-group "rg-team3-${TEST_ENVIRONMENT}" \
-              --resource-type Microsoft.App/managedEnvironments \
-              --query "[?name=='cae-team3-${TEST_ENVIRONMENT}'].id | [0]" \
-              --output tsv)
-
-            if [[ -n "$environment_id" ]]; then
-              current_subnet=$(az resource show --ids "$environment_id" \
-                --query properties.vnetConfiguration.infrastructureSubnetId --output tsv)
-              expected_subnet=""
-              if [[ "$VNET_INTEGRATION_ENABLED" == "true" ]]; then
-                subscription_id=$(az account show --query id --output tsv)
-                expected_subnet="/subscriptions/${subscription_id}/resourceGroups/rg-team3-${TEST_ENVIRONMENT}/providers/Microsoft.Network/virtualNetworks/vnet-team3-${TEST_ENVIRONMENT}/subnets/snet-container-apps"
-              fi
-
-              if [[ "$(printf '%s' "$current_subnet" | tr '[:upper:]' '[:lower:]')" != "$(printf '%s' "$expected_subnet" | tr '[:upper:]' '[:lower:]')" ]]; then
-                echo "Container Apps network configuration differs; the frontend will deploy after the backend environment is recreated."
-                ready=false
-              fi
-            fi
-          fi
-
-          while IFS='|' read -r resource_type resource_name; do
-            if ! az resource show \
-              --resource-group "rg-team3-${TEST_ENVIRONMENT}" \
-              --resource-type "$resource_type" \
-              --name "$resource_name" \
-              --only-show-errors \
-              --output none; then
-              ready=false
-            fi
-          done <<RESOURCES
-          Microsoft.KeyVault/vaults|kv-team3-${TEST_ENVIRONMENT}
-          Microsoft.App/managedEnvironments|cae-team3-${TEST_ENVIRONMENT}
-          Microsoft.App/containerApps|ca-team3-backend-${TEST_ENVIRONMENT}
-          RESOURCES
-
-          echo "ready=$ready" >> "$GITHUB_OUTPUT"
-
-  trigger-frontend-test-warm:
-    name: Start parallel frontend test deployment
-    if: needs.test-environment-status.outputs.ready == 'true' && !inputs.enable_vnet_integration
-    needs: [resolve-source, test, test-environment-status]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Trigger frontend test deployment
-        env:
-          FRONTEND_SHA: ${{ needs.resolve-source.outputs.frontend_sha }}
-          GH_TOKEN: ${{ secrets.FRONTEND_REPOSITORY_DISPATCH_TOKEN }}
-        run: >-
-          gh api
-          --method POST
-          repos/kainos-birmingham-academy-2026/team3-frontend/dispatches
-          --field event_type=backend-test-deployed
-          --raw-field "client_payload[frontend_ref]=${FRONTEND_SHA}"
-          --raw-field "client_payload[test_environment]=${TEST_ENVIRONMENT}"
-          --raw-field "client_payload[enable_front_door]=${{ inputs.enable_front_door }}"
-          --raw-field "client_payload[enable_front_door]=${{ inputs.enable_front_door }}"
 
   test:
     name: Lint and test
@@ -398,7 +299,6 @@ jobs:
     env:
       TF_VAR_postgresql_administrator_password: ${{ secrets.POSTGRESQL_ADMINISTRATOR_PASSWORD }}
       TF_VAR_backend_image_tag: dev-${{ needs.resolve-source.outputs.backend_sha }}
-      TF_VAR_enable_vnet_integration: ${{ vars.DEV_VNET_ENABLED == 'true' && 'true' || 'false' }}
     defaults:
       run:
         working-directory: infrastructure/environments/dev
@@ -443,7 +343,6 @@ jobs:
       - name: Apply Terraform plan
         run: terraform apply -auto-approve tfplan
       - name: Verify private database connectivity
-        if: vars.DEV_VNET_ENABLED == 'true'
         timeout-minutes: 12
         run: |
           job_name="caj-team3-private-smoke-dev"
@@ -499,7 +398,7 @@ jobs:
   terraform-deploy-test:
     name: Deploy test infrastructure
     if: github.event_name == 'workflow_dispatch' && inputs.deploy_test
-    needs: [resolve-source, push-test-image, test-environment-status]
+    needs: [resolve-source, push-test-image]
     runs-on: ubuntu-latest
     concurrency:
       group: backend-infrastructure-${{ inputs.test_environment }}
@@ -509,7 +408,6 @@ jobs:
       id-token: write
     env:
       TF_VAR_environment: ${{ inputs.test_environment }}
-      TF_VAR_enable_vnet_integration: ${{ inputs.enable_vnet_integration && 'true' || 'false' }}
       TF_VAR_backend_image_tag: test-${{ needs.resolve-source.outputs.backend_sha }}
       TF_VAR_container_revision_suffix: test-${{ github.run_id }}
     defaults:
@@ -545,24 +443,9 @@ jobs:
           -target=time_sleep.secrets_rbac_propagation
       - name: Create test Terraform plan
         run: terraform plan -out=tfplan
-      - name: Require explicit approval for Container Apps Environment replacement
-        run: |
-          if [[ "${{ inputs.enable_vnet_integration }}" == "true" ]]; then
-            exit 0
-          fi
-          terraform show -json tfplan | jq --exit-status '
-            [.resource_changes[]?
-              | select(.type == "azurerm_container_app_environment")
-              | select(.change.actions | index("delete"))]
-            | length == 0
-          ' > /dev/null || {
-            echo "::error::The plan deletes or replaces a shared Container Apps Environment. Coordinate frontend and backend migration before applying."
-            exit 1
-          }
       - name: Apply test Terraform plan
         run: terraform apply -auto-approve tfplan
       - name: Verify private database connectivity
-        if: inputs.enable_vnet_integration
         timeout-minutes: 12
         run: |
           job_name="caj-team3-private-smoke-${TEST_ENVIRONMENT}"
@@ -613,7 +496,6 @@ jobs:
           package: ${{ runner.temp }}/notifications.zip
           sku: flexconsumption
       - name: Trigger frontend test deployment
-        if: needs.test-environment-status.outputs.ready != 'true'
         env:
           FRONTEND_SHA: ${{ needs.resolve-source.outputs.frontend_sha }}
           GH_TOKEN: ${{ secrets.FRONTEND_REPOSITORY_DISPATCH_TOKEN }}
@@ -624,4 +506,3 @@ jobs:
           --field event_type=backend-test-deployed
           --raw-field "client_payload[frontend_ref]=${FRONTEND_SHA}"
           --raw-field "client_payload[test_environment]=${TEST_ENVIRONMENT}"
-          --raw-field "client_payload[enable_front_door]=${{ inputs.enable_front_door }}"
