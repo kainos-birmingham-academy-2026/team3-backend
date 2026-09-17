@@ -68,7 +68,7 @@ variable "jwt_secret_id" {
 }
 
 variable "service_bus_connection_string_secret_id" {
-  description = "Versionless Key Vault secret ID for AZURE_SERVICE_BUS_CONNECTION_STRING."
+  description = "Key Vault secret ID for AZURE_SERVICE_BUS_CONNECTION_STRING."
   type        = string
 }
 

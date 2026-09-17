@@ -225,28 +225,25 @@ resource "azurerm_key_vault_secret" "session_secret" {
 }
 
 resource "azurerm_key_vault_secret" "service_bus_connection_string" {
-  name             = "service-bus-connection-string"
-  key_vault_id     = module.key_vault.id
-  value_wo         = module.notification_service_bus.backend_send_primary_connection_string
-  value_wo_version = var.application_secret_version
+  name         = "service-bus-connection-string"
+  key_vault_id = module.key_vault.id
+  value        = module.notification_service_bus.backend_send_primary_connection_string
 
   depends_on = [time_sleep.secrets_rbac_propagation]
 }
 
 resource "azurerm_key_vault_secret" "function_service_bus_connection_string" {
-  name             = "function-service-bus-connection-string"
-  key_vault_id     = module.key_vault.id
-  value_wo         = module.notification_service_bus.function_listen_primary_connection_string
-  value_wo_version = var.application_secret_version
+  name         = "function-service-bus-connection-string"
+  key_vault_id = module.key_vault.id
+  value        = module.notification_service_bus.function_listen_primary_connection_string
 
   depends_on = [time_sleep.secrets_rbac_propagation]
 }
 
 resource "azurerm_key_vault_secret" "acs_connection_string" {
-  name             = "acs-connection-string"
-  key_vault_id     = module.key_vault.id
-  value_wo         = module.email_communication.primary_connection_string
-  value_wo_version = var.application_secret_version
+  name         = "acs-connection-string"
+  key_vault_id = module.key_vault.id
+  value        = module.email_communication.primary_connection_string
 
   depends_on = [time_sleep.secrets_rbac_propagation]
 }

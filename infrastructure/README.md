@@ -468,6 +468,12 @@ recovery because those assignments are deleted with the resource group.
 
 GitHub Actions currently sets `enable_swagger_docs` to `true` for dev.
 
+In dev and test, Terraform tracks the Service Bus and Azure Communication
+Services connection strings as Key Vault secret values. When either source
+credential changes, Terraform creates a new secret version. Workloads use
+versionless Key Vault references so Azure resolves the latest enabled version
+without embedding a secret version that changes during `terraform apply`.
+
 ## CI/CD behaviour
 
 Every pull request runs linting, tests, a container build, Terraform format
