@@ -255,6 +255,14 @@ resource "azurerm_role_assignment" "key_vault_secrets_user" {
   principal_type       = "ServicePrincipal"
 }
 
+resource "time_sleep" "runtime_secrets_rbac_propagation" {
+  create_duration = "30s"
+
+  triggers = {
+    role_assignment_id = azurerm_role_assignment.key_vault_secrets_user.id
+  }
+}
+
 resource "azurerm_role_assignment" "acr_pull" {
   scope                = data.azurerm_container_registry.shared.id
   role_definition_name = "AcrPull"
@@ -272,6 +280,7 @@ module "notification_function" {
   location                          = var.location
   resource_group_name               = module.resource_group.name
   log_analytics_workspace_id        = module.log_analytics.id
+  key_vault_reference_identity_id   = module.managed_identity.id
   service_bus_connection_secret_uri = "${module.key_vault.vault_uri}secrets/function-service-bus-connection-string"
   acs_connection_secret_uri         = "${module.key_vault.vault_uri}secrets/acs-connection-string"
   email_sender_address              = "DoNotReply@${module.email_communication.sender_domain}"
@@ -284,13 +293,8 @@ module "notification_function" {
   depends_on = [
     azurerm_key_vault_secret.function_service_bus_connection_string,
     azurerm_key_vault_secret.acs_connection_string,
+    time_sleep.runtime_secrets_rbac_propagation,
   ]
-}
-resource "azurerm_role_assignment" "notification_function_key_vault_secrets_user" {
-  scope                = module.key_vault.id
-  role_definition_name = "Key Vault Secrets User"
-  principal_id         = module.notification_function.principal_id
-  principal_type       = "ServicePrincipal"
 }
 
 resource "azurerm_role_assignment" "openai_user" {
