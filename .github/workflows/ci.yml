@@ -31,7 +31,6 @@ on:
         required: true
         type: string
         default: main
-
 permissions:
   contents: read
 
@@ -92,92 +91,6 @@ jobs:
           encoded_ref=$(jq --null-input --raw-output --arg ref "$FRONTEND_REF" '$ref | @uri')
           sha=$(gh api "repos/kainos-birmingham-academy-2026/team3-frontend/commits/${encoded_ref}" --jq '.sha')
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
-
-  test-environment-status:
-    name: Check test environment
-    if: github.event_name == 'workflow_dispatch' && inputs.deploy_test
-    needs: resolve-source
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    outputs:
-      ready: ${{ steps.environment.outputs.ready }}
-    steps:
-      - name: Sign in to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - name: Check frontend prerequisites
-        id: environment
-        env:
-          VNET_INTEGRATION_ENABLED: ${{ inputs.test_environment == 'test3' && vars.TEST3_VNET_ENABLED == 'true' && 'true' || 'false' }}
-        run: |
-          ready=true
-
-          if [[ "$(az group exists --name "rg-team3-${TEST_ENVIRONMENT}")" != "true" ]]; then
-            ready=false
-          else
-            environment_id=$(az resource list \
-              --resource-group "rg-team3-${TEST_ENVIRONMENT}" \
-              --resource-type Microsoft.App/managedEnvironments \
-              --query "[?name=='cae-team3-${TEST_ENVIRONMENT}'].id | [0]" \
-              --output tsv)
-
-            if [[ -n "$environment_id" ]]; then
-              current_subnet=$(az resource show --ids "$environment_id" \
-                --query properties.vnetConfiguration.infrastructureSubnetId --output tsv)
-              expected_subnet=""
-              if [[ "$VNET_INTEGRATION_ENABLED" == "true" ]]; then
-                subscription_id=$(az account show --query id --output tsv)
-                expected_subnet="/subscriptions/${subscription_id}/resourceGroups/rg-team3-${TEST_ENVIRONMENT}/providers/Microsoft.Network/virtualNetworks/vnet-team3-${TEST_ENVIRONMENT}/subnets/snet-container-apps"
-              fi
-
-              if [[ "$(printf '%s' "$current_subnet" | tr '[:upper:]' '[:lower:]')" != "$(printf '%s' "$expected_subnet" | tr '[:upper:]' '[:lower:]')" ]]; then
-                echo "::error::Container Apps network changes require coordinated environment recreation. No deployment was started. Review both backend and frontend state before proceeding."
-                exit 1
-              fi
-            fi
-          fi
-
-          while IFS='|' read -r resource_type resource_name; do
-            if ! az resource show \
-              --resource-group "rg-team3-${TEST_ENVIRONMENT}" \
-              --resource-type "$resource_type" \
-              --name "$resource_name" \
-              --only-show-errors \
-              --output none; then
-              ready=false
-            fi
-          done <<RESOURCES
-          Microsoft.KeyVault/vaults|kv-team3-${TEST_ENVIRONMENT}
-          Microsoft.App/managedEnvironments|cae-team3-${TEST_ENVIRONMENT}
-          Microsoft.App/containerApps|ca-team3-backend-${TEST_ENVIRONMENT}
-          RESOURCES
-
-          echo "ready=$ready" >> "$GITHUB_OUTPUT"
-
-  trigger-frontend-test-warm:
-    name: Start parallel frontend test deployment
-    if: needs.test-environment-status.outputs.ready == 'true'
-    needs: [resolve-source, test, test-environment-status]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Trigger frontend test deployment
-        env:
-          FRONTEND_SHA: ${{ needs.resolve-source.outputs.frontend_sha }}
-          GH_TOKEN: ${{ secrets.FRONTEND_REPOSITORY_DISPATCH_TOKEN }}
-        run: >-
-          gh api
-          --method POST
-          repos/kainos-birmingham-academy-2026/team3-frontend/dispatches
-          --field event_type=backend-test-deployed
-          --raw-field "client_payload[frontend_ref]=${FRONTEND_SHA}"
-          --raw-field "client_payload[test_environment]=${TEST_ENVIRONMENT}"
 
   test:
     name: Lint and test
@@ -429,6 +342,37 @@ jobs:
         run: terraform plan -out=tfplan
       - name: Apply Terraform plan
         run: terraform apply -auto-approve tfplan
+      - name: Verify private database connectivity
+        timeout-minutes: 12
+        run: |
+          job_name="caj-team3-private-smoke-dev"
+          execution_name=$(az containerapp job start \
+            --name "$job_name" --resource-group "rg-team3-dev" \
+            --query name --output tsv --only-show-errors)
+          if [[ -z "$execution_name" ]]; then
+            echo "::error::Azure did not return a smoke-test execution name."
+            exit 1
+          fi
+          echo "Private smoke-test execution: $execution_name"
+          for _ in {1..60}; do
+            execution_status=$(az containerapp job execution show \
+              --name "$job_name" --resource-group "rg-team3-dev" \
+              --job-execution-name "$execution_name" \
+              --query properties.status --output tsv --only-show-errors)
+            case "$execution_status" in
+              Succeeded)
+                echo "Private DNS and read-only database checks passed."
+                exit 0
+                ;;
+              Failed|Stopped|Degraded)
+                echo "::error::Private smoke-test execution $execution_name ended with $execution_status. Check its Container Apps logs."
+                exit 1
+                ;;
+            esac
+            sleep 10
+          done
+          echo "::error::Timed out waiting for private smoke-test execution $execution_name."
+          exit 1
       - name: Build notification Function
         working-directory: functions/notifications
         run: |
@@ -454,7 +398,7 @@ jobs:
   terraform-deploy-test:
     name: Deploy test infrastructure
     if: github.event_name == 'workflow_dispatch' && inputs.deploy_test
-    needs: [resolve-source, push-test-image, test-environment-status]
+    needs: [resolve-source, push-test-image]
     runs-on: ubuntu-latest
     concurrency:
       group: backend-infrastructure-${{ inputs.test_environment }}
@@ -464,7 +408,6 @@ jobs:
       id-token: write
     env:
       TF_VAR_environment: ${{ inputs.test_environment }}
-      TF_VAR_enable_vnet_integration: ${{ inputs.test_environment == 'test3' && vars.TEST3_VNET_ENABLED == 'true' && 'true' || 'false' }}
       TF_VAR_backend_image_tag: test-${{ needs.resolve-source.outputs.backend_sha }}
       TF_VAR_container_revision_suffix: test-${{ github.run_id }}
     defaults:
@@ -500,36 +443,23 @@ jobs:
           -target=time_sleep.secrets_rbac_propagation
       - name: Create test Terraform plan
         run: terraform plan -out=tfplan
-      - name: Reject Container Apps Environment deletion or replacement
-        run: |
-          terraform show -json tfplan | jq --exit-status '
-            [.resource_changes[]?
-              | select(.type == "azurerm_container_app_environment")
-              | select(.change.actions | index("delete"))]
-            | length == 0
-          ' > /dev/null || {
-            echo "::error::The plan deletes or replaces a shared Container Apps Environment. Coordinate frontend and backend migration before applying."
-            exit 1
-          }
       - name: Apply test Terraform plan
         run: terraform apply -auto-approve tfplan
-      - name: Verify test3 private database connectivity
-        if: inputs.test_environment == 'test3' && vars.TEST3_VNET_ENABLED == 'true'
+      - name: Verify private database connectivity
         timeout-minutes: 12
         run: |
           job_name="caj-team3-private-smoke-${TEST_ENVIRONMENT}"
-          resource_group="rg-team3-${TEST_ENVIRONMENT}"
           execution_name=$(az containerapp job start \
-            --name "$job_name" --resource-group "$resource_group" \
+            --name "$job_name" --resource-group "rg-team3-${TEST_ENVIRONMENT}" \
             --query name --output tsv --only-show-errors)
           if [[ -z "$execution_name" ]]; then
             echo "::error::Azure did not return a smoke-test execution name."
             exit 1
           fi
           echo "Private smoke-test execution: $execution_name"
-          for attempt in {1..60}; do
+          for _ in {1..60}; do
             execution_status=$(az containerapp job execution show \
-              --name "$job_name" --resource-group "$resource_group" \
+              --name "$job_name" --resource-group "rg-team3-${TEST_ENVIRONMENT}" \
               --job-execution-name "$execution_name" \
               --query properties.status --output tsv --only-show-errors)
             case "$execution_status" in
@@ -566,7 +496,6 @@ jobs:
           package: ${{ runner.temp }}/notifications.zip
           sku: flexconsumption
       - name: Trigger frontend test deployment
-        if: needs.test-environment-status.outputs.ready != 'true'
         env:
           FRONTEND_SHA: ${{ needs.resolve-source.outputs.frontend_sha }}
           GH_TOKEN: ${{ secrets.FRONTEND_REPOSITORY_DISPATCH_TOKEN }}

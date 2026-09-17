@@ -73,6 +73,11 @@ output "postgresql_fqdn" {
   value       = module.postgresql.fqdn
 }
 
+output "postgresql_public_network_access_enabled" {
+  description = "Effective public network access setting of the dev PostgreSQL server."
+  value       = module.postgresql.public_network_access_enabled
+}
+
 output "postgresql_database_name" {
   description = "Name of the dev application database."
   value       = module.postgresql.database_name

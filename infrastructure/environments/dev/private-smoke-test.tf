@@ -34,7 +34,7 @@ resource "azurerm_container_app_job" "private_smoke_test" {
       cpu     = 0.25
       memory  = "0.5Gi"
       command = ["node", "--import", "tsx", "--input-type=module", "--eval"]
-      args    = ["${file("${path.module}/private-smoke-test.mjs")}\nawait runPrivateSmokeTest();"]
+      args    = ["${file("${path.module}/../test/private-smoke-test.mjs")}\nawait runPrivateSmokeTest();"]
 
       env {
         name        = "DATABASE_URL"
