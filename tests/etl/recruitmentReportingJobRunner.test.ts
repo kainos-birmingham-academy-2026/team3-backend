@@ -89,6 +89,19 @@ describe("RecruitmentReportingJob", () => {
 			2,
 		);
 		expect(mockExec).toHaveBeenCalledWith(
+			expect.stringContaining("$8::TIMESTAMPTZ, $9::TIMESTAMPTZ"),
+			11,
+			1,
+			99,
+			3,
+			4,
+			2,
+			"REJECTED",
+			"2026-09-10T09:00:00.000Z",
+			"2026-09-12T10:00:00.000Z",
+			false,
+		);
+		expect(mockExec).toHaveBeenCalledWith(
 			expect.stringContaining("$4::DATE"),
 			new Date("2026-09-15T00:00:00.000Z"),
 			1,

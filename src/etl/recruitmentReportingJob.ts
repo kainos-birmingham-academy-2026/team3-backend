@@ -233,7 +233,7 @@ export class RecruitmentReportingJob {
 	private async writeApplicationFacts(rows: ApplicationFact[]): Promise<void> {
 		for (const row of rows) {
 			await this.prisma.$executeRawUnsafe(
-				"INSERT INTO reporting.fact_application (application_id, job_role_id, user_key, capability_id, band_id, location_id, status_name, submitted_at, status_updated_at, is_deleted_in_source, source_updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW()) ON CONFLICT (application_id) DO UPDATE SET job_role_id = EXCLUDED.job_role_id, user_key = EXCLUDED.user_key, capability_id = EXCLUDED.capability_id, band_id = EXCLUDED.band_id, location_id = EXCLUDED.location_id, status_name = EXCLUDED.status_name, submitted_at = EXCLUDED.submitted_at, status_updated_at = EXCLUDED.status_updated_at, is_deleted_in_source = EXCLUDED.is_deleted_in_source, source_updated_at = NOW();",
+				"INSERT INTO reporting.fact_application (application_id, job_role_id, user_key, capability_id, band_id, location_id, status_name, submitted_at, status_updated_at, is_deleted_in_source, source_updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8::TIMESTAMPTZ, $9::TIMESTAMPTZ, $10, NOW()) ON CONFLICT (application_id) DO UPDATE SET job_role_id = EXCLUDED.job_role_id, user_key = EXCLUDED.user_key, capability_id = EXCLUDED.capability_id, band_id = EXCLUDED.band_id, location_id = EXCLUDED.location_id, status_name = EXCLUDED.status_name, submitted_at = EXCLUDED.submitted_at, status_updated_at = EXCLUDED.status_updated_at, is_deleted_in_source = EXCLUDED.is_deleted_in_source, source_updated_at = NOW();",
 				row.applicationId,
 				row.jobRoleId,
 				row.userKey,
