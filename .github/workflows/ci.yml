@@ -245,6 +245,8 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.resolve-source.outputs.backend_sha }}
       - name: Sign in to Azure
         uses: azure/login@v2
         with:
