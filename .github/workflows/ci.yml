@@ -31,6 +31,11 @@ on:
         required: true
         type: string
         default: main
+      deploy_frontend:
+        description: Whether to trigger the frontend test deployment after the backend deployment
+        required: true
+        type: boolean
+        default: true
 permissions:
   contents: read
 
@@ -533,6 +538,7 @@ jobs:
           package: ${{ runner.temp }}/notifications.zip
           sku: flexconsumption
       - name: Trigger frontend test deployment
+        if: inputs.deploy_frontend
         env:
           FRONTEND_SHA: ${{ needs.resolve-source.outputs.frontend_sha }}
           GH_TOKEN: ${{ secrets.FRONTEND_REPOSITORY_DISPATCH_TOKEN }}

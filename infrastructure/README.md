@@ -170,6 +170,24 @@ or grant access to the reporting tables. For private environments or
 production, use an on-premises data gateway with private network reachability
 instead of enabling public database access.
 
+#### Run reporting ETL on demand
+
+Each test environment includes the manual job
+`caj-team3-etl-<environment>`. It runs the compiled recruitment-reporting ETL
+inside the Container Apps environment, where it can resolve and reach the
+private PostgreSQL endpoint. After deploying the test environment, start it
+with:
+
+```bash
+az containerapp job start \
+	--name caj-team3-etl-test3 \
+	--resource-group rg-team3-test3
+```
+
+Inspect the returned execution name in Container Apps or with
+`az containerapp job execution show`. A successful execution exits with status
+`Succeeded`; its logs include the vacancy and application rows processed.
+
 #### Private PostgreSQL access
 
 The dev and test roots create:

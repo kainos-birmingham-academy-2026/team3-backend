@@ -185,3 +185,18 @@ run "power_bi_firewall_excluded_from_private_test1" {
     error_message = "Test1 must not allow Azure services through the PostgreSQL firewall."
   }
 }
+
+run "manual_recruitment_reporting_job" {
+  command = plan
+
+  plan_options {
+    target = [
+      azurerm_container_app_job.recruitment_reporting,
+    ]
+  }
+
+  assert {
+    condition     = azurerm_container_app_job.recruitment_reporting.name == "caj-team3-etl-test3" && azurerm_container_app_job.recruitment_reporting.replica_retry_limit == 0 && azurerm_container_app_job.recruitment_reporting.template[0].container[0].command == tolist(["./node_modules/.bin/tsx"]) && azurerm_container_app_job.recruitment_reporting.template[0].container[0].args == tolist(["dist/etl/runRecruitmentReporting.js"])
+    error_message = "Test3 must provide a bounded manual job that runs the compiled recruitment reporting ETL."
+  }
+}
