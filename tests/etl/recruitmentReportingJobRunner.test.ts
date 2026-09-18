@@ -78,6 +78,23 @@ describe("RecruitmentReportingJob", () => {
 			2,
 			"Birmingham",
 		);
+		expect(mockExec).toHaveBeenCalledWith(
+			expect.stringContaining("VALUES ($1::DATE, $2"),
+			"2026-09-15",
+			1,
+			3,
+			4,
+			2,
+			"OPEN",
+			2,
+		);
+		expect(mockExec).toHaveBeenCalledWith(
+			expect.stringContaining("$4::DATE"),
+			new Date("2026-09-15T00:00:00.000Z"),
+			1,
+			1,
+			"2026-09-15",
+		);
 		expect(mockExec).toHaveBeenCalledTimes(6);
 	});
 });

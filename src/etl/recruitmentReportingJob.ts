@@ -218,7 +218,7 @@ export class RecruitmentReportingJob {
 	): Promise<void> {
 		for (const row of rows) {
 			await this.prisma.$executeRawUnsafe(
-				"INSERT INTO reporting.fact_vacancy_daily (snapshot_date, job_role_id, capability_id, band_id, location_id, status_name, number_of_open_positions) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (snapshot_date, job_role_id) DO UPDATE SET capability_id = EXCLUDED.capability_id, band_id = EXCLUDED.band_id, location_id = EXCLUDED.location_id, status_name = EXCLUDED.status_name, number_of_open_positions = EXCLUDED.number_of_open_positions;",
+				"INSERT INTO reporting.fact_vacancy_daily (snapshot_date, job_role_id, capability_id, band_id, location_id, status_name, number_of_open_positions) VALUES ($1::DATE, $2, $3, $4, $5, $6, $7) ON CONFLICT (snapshot_date, job_role_id) DO UPDATE SET capability_id = EXCLUDED.capability_id, band_id = EXCLUDED.band_id, location_id = EXCLUDED.location_id, status_name = EXCLUDED.status_name, number_of_open_positions = EXCLUDED.number_of_open_positions;",
 				row.snapshotDate,
 				row.jobRoleId,
 				row.capabilityId,
@@ -254,7 +254,7 @@ export class RecruitmentReportingJob {
 		applicationCount: number,
 	): Promise<void> {
 		await this.prisma.$executeRawUnsafe(
-			"INSERT INTO reporting.etl_run_log (run_started_at, run_completed_at, status, rows_processed, last_snapshot_date) VALUES ($1, NOW(), 'SUCCESS', $2 + $3, $4);",
+			"INSERT INTO reporting.etl_run_log (run_started_at, run_completed_at, status, rows_processed, last_snapshot_date) VALUES ($1, NOW(), 'SUCCESS', $2 + $3, $4::DATE);",
 			snapshotDate,
 			vacancyCount,
 			applicationCount,
