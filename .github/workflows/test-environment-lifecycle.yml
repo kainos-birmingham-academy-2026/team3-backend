@@ -1,11 +1,6 @@
 name: Test environment lifecycle
 
 on:
-  schedule:
-    - cron: "15 1 * * 1-5"
-      timezone: Europe/London
-    - cron: "30 15 * * 1-5"
-      timezone: Europe/London
   workflow_dispatch:
     inputs:
       action:
