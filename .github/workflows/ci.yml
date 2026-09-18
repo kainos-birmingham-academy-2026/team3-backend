@@ -32,7 +32,7 @@ on:
         type: string
         default: main
       deploy_frontend:
-        description: Whether to trigger the frontend test deployment after the backend deployment
+        description: Deploy frontend after backend deployment
         required: true
         type: boolean
         default: true
